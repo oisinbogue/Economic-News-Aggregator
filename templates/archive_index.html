@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Archive — {{ site.title }}{% endblock %}
+
+{% block content %}
+<p class="breadcrumb"><a href="../index.html">&#8592; Home</a></p>
+<h1 class="section-title">Archive</h1>
+{% if days %}
+<ul class="archive-list">
+  {% for d in days %}
+  <li><a href="{{ d.date }}.html">{{ d.date }}</a><span class="archive-count">{{ d.count }} stor{{ 'y' if d.count == 1 else 'ies' }}</span></li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="empty-note">No archived days yet.</p>
+{% endif %}
+{% endblock %}

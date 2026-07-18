@@ -13,17 +13,36 @@ run:
   fetch_concurrency: 30
   fetch_timeout_seconds: 15
   max_articles_per_run: 300
+  max_summaries_per_run: 20  # Cerebras free tier is 5 req/min; keeps a single incremental Actions run to well under ~9 minutes
 
 validate_feeds:
   concurrency: 20
   timeout_seconds: 15
 
+cluster:
+  # Only articles fetched within this window are eligible to join/form a
+  # cluster -- keeps union-find from linking unrelated stories that happen
+  # to reuse the same recurring headline words months apart.
+  window_days: 3
+  title_shared_words: 3     # union-find edge: title significant-word overlap >= this
+  tfidf_cosine_threshold: 0.65  # union-find edge: TF-IDF cosine similarity > this (needs scikit-learn)
+  carousel_cap: 5           # brief feature #1: carousel shows up to this many articles per cluster
+
+curate:
+  max_candidates: 40  # shortlist size sent to the LLM for top-10 picking, keeps the prompt inside the 8,192-token context
+
 llm:
   provider: cerebras
-  model: llama-3.3-70b
+  # Llama 3.3 70B (the brief's original choice) is no longer offered on this
+  # account's free tier -- /v1/models returns zai-glm-4.7, gemma-4-31b, and
+  # gpt-oss-120b. Using gpt-oss-120b (confirmed with user 2026-07-18);
+  # zai-glm-4.7 is being deprecated 2026-08-17.
+  model: gpt-oss-120b
   # CEREBRAS_API_KEY is read from the environment (.env locally, GitHub
   # Actions secret in CI) -- never stored here.
 
 site:
   title: Economic News Aggregator
-  base_url: ""  # filled in once GitHub Pages is live (Phase 5)
+  base_url: "https://oisinbogue.github.io/Economic-News-Aggregator/"
+  output_dir: site        # pipeline.build writes the static site here
+  archive_window_days: 3  # clusters within this window (of "today") show on the homepage; older ones only appear in the archive

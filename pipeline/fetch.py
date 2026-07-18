@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import ssl
 import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -169,6 +170,25 @@ def article_exists(conn, url_hash: str) -> bool:
     return row is not None
 
 
+def classify_fetch_error(exc: Exception) -> str:
+    """Buckets a feed-fetch failure into the same taxonomy v1 used
+    (http_<code>/timeout/dns/ssl/connection), so feed-health tracking (Phase 6)
+    can tell "this feed moved" apart from "this feed had one bad night."
+    """
+    if isinstance(exc, httpx.HTTPStatusError):
+        return f"http_{exc.response.status_code}"
+    if isinstance(exc, httpx.TimeoutException):
+        return "timeout"
+    if isinstance(exc, httpx.ConnectError):
+        msg = str(exc)
+        if "NameResolutionError" in msg or "getaddrinfo failed" in msg or "Name or service not known" in msg:
+            return "dns"
+        if "SSL" in msg or isinstance(exc.__cause__, ssl.SSLError):
+            return "ssl"
+        return "connection"
+    return "other"
+
+
 async def process_feed(
     client: httpx.AsyncClient,
     semaphore: asyncio.Semaphore,
@@ -182,16 +202,18 @@ async def process_feed(
     async with semaphore:
         try:
             changed, parsed, new_headers = await fetch_feed(client, feed, fetch_timeout)
-        except (httpx.HTTPError, httpx.TimeoutException):
+        except (httpx.HTTPError, httpx.TimeoutException) as exc:
+            error_type = classify_fetch_error(exc)
             with get_connection() as conn:
                 conn.execute(
                     """
                     UPDATE feeds
                     SET consecutive_failures = consecutive_failures + 1,
-                        active = CASE WHEN consecutive_failures + 1 >= ? THEN 0 ELSE active END
+                        active = CASE WHEN consecutive_failures + 1 >= ? THEN 0 ELSE active END,
+                        last_error_type = ?
                     WHERE id = ?
                     """,
-                    (MAX_CONSECUTIVE_FAILURES, feed["id"]),
+                    (MAX_CONSECUTIVE_FAILURES, error_type, feed["id"]),
                 )
             async with stats_lock:
                 stats.feeds_failed += 1
@@ -202,6 +224,7 @@ async def process_feed(
             update_fields = {
                 "last_success": datetime.now(timezone.utc).isoformat(),
                 "consecutive_failures": 0,
+                "last_error_type": None,
             }
             if changed:
                 update_fields["etag"] = new_headers.get("etag")

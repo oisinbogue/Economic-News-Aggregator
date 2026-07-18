@@ -1,0 +1,39 @@
+{% macro cluster_card(cluster, rank=None) %}
+<article class="cluster-card"
+         data-countries="{{ cluster.countries|join(',') }}"
+         data-topics="{{ cluster.topic_list|join(',') }}">
+  {% if rank %}<div class="rank-badge">#{{ rank }}</div>{% endif %}
+  <div class="carousel">
+    <div class="carousel-track">
+      {% for m in cluster.members %}
+      <div class="carousel-slide{% if loop.first %} active{% endif %}">
+        <h3><a href="{{ m.url }}" target="_blank" rel="noopener">{{ m.title }}</a></h3>
+        <div class="meta">
+          <span class="source">{{ m.source_name }}</span>
+          {% if m.country %}<span class="country">{{ m.country }}</span>{% endif %}
+          <span class="date">{{ m.fetched_display }}</span>
+        </div>
+        {% if m.summary %}<p class="summary">{{ m.summary }}</p>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% if cluster.members|length > 1 %}
+    <button type="button" class="carousel-nav prev" aria-label="Previous take">&#8592;</button>
+    <button type="button" class="carousel-nav next" aria-label="Next take">&#8594;</button>
+    <div class="carousel-footer">
+      <div class="carousel-dots">
+        {% for m in cluster.members %}<span class="dot{% if loop.first %} active{% endif %}"></span>{% endfor %}
+      </div>
+      <div class="carousel-count">
+        <span class="carousel-pos">1</span> / {{ cluster.members|length }}
+        {% if cluster.is_perspectives %}&middot; multiple perspectives{% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  {% if cluster.rationale %}<p class="rationale">Why it matters: {{ cluster.rationale }}</p>{% endif %}
+  {% if cluster.topic_list %}
+  <div class="tag-row">{% for t in cluster.topic_list %}<span class="tag">{{ t }}</span>{% endfor %}</div>
+  {% endif %}
+</article>
+{% endmacro %}

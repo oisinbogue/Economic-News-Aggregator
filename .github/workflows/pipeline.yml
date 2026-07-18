@@ -1,0 +1,103 @@
+name: Incremental pipeline
+
+# Runs several times through the day rather than one overnight batch, so a
+# transient failure or a single dead feed only costs a couple of hours of
+# freshness instead of a full day (v1 died silently for a whole scheduling
+# cycle -- see PROJECT_BRIEF.md section 1).
+on:
+  schedule:
+    - cron: "0 6,9,12,15,18,21 * * *"
+  workflow_dispatch: {}
+
+# Never let two runs touch the cached db at once.
+concurrency:
+  group: pipeline-db
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Restore article archive
+        uses: actions/cache/restore@v4
+        with:
+          path: data/aggregator.db
+          key: aggregator-db-${{ github.run_id }}
+          restore-keys: |
+            aggregator-db-
+
+      - name: Initialise schema
+        run: python -m pipeline.db
+
+      - name: Check whether the feeds table needs seeding
+        id: feeds_check
+        run: |
+          count=$(sqlite3 data/aggregator.db "SELECT COUNT(*) FROM feeds;" 2>/dev/null || echo 0)
+          echo "count=$count" >> "$GITHUB_OUTPUT"
+
+      - name: Populate feeds table (first run only)
+        if: steps.feeds_check.outputs.count == '0'
+        run: python -m pipeline.validate_feeds
+
+      - name: Fetch new articles
+        run: python -m pipeline.fetch
+
+      - name: Summarise + translate
+        env:
+          CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
+        run: python -m pipeline.summarize
+
+      - name: Tag (country + topics)
+        run: python -m pipeline.tag
+
+      - name: Cluster related stories
+        run: python -m pipeline.cluster
+
+      - name: Curate daily top 10
+        env:
+          CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
+        run: python -m pipeline.curate
+
+      - name: Build static site
+        run: python -m pipeline.build
+
+      - name: Write exports (CSV, latest.json, feed.xml)
+        run: python -m pipeline.export
+
+      - name: Save article archive
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: data/aggregator.db
+          key: aggregator-db-${{ github.run_id }}
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: run
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

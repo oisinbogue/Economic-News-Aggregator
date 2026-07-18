@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% import "_cluster_card.html" as cards %}
+
+{% block title %}{{ day }} — {{ site.title }}{% endblock %}
+
+{% block content %}
+<p class="breadcrumb"><a href="index.html">&#8592; Archive</a></p>
+<h1 class="section-title">{{ day }}</h1>
+
+{% for group in groups %}
+<section class="section">
+  <h2 class="section-title">{{ group.name }}</h2>
+  <div class="card-grid">
+    {% for cluster in group.clusters %}
+      {{ cards.cluster_card(cluster) }}
+    {% endfor %}
+  </div>
+</section>
+{% endfor %}
+{% endblock %}

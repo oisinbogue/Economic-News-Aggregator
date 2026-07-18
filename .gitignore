@@ -8,3 +8,4 @@ data/aggregator.db-wal
 data/aggregator.db-shm
 *.log
 .DS_Store
+/site/

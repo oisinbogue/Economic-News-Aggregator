@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ site.title }}{% endblock %}</title>
+  <link rel="stylesheet" href="{{ asset_prefix }}static/style.css">
+  <link rel="alternate" type="application/rss+xml" title="{{ site.title }}" href="{{ asset_prefix }}feed.xml">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-row">
+      <a class="brand" href="{{ asset_prefix }}index.html">{{ site.title }}</a>
+      <nav class="site-nav">
+        <a href="{{ asset_prefix }}index.html">Home</a>
+        <a href="{{ asset_prefix }}archive/index.html">Archive</a>
+      </nav>
+    </div>
+    <div class="search-row">
+      <input type="search" id="search-box" placeholder="Search articles..." autocomplete="off">
+      <div id="search-results" class="search-results" hidden></div>
+    </div>
+    <div class="filter-row" id="filter-row">
+      {% if site.all_topics %}
+      <div class="filter-group" data-facet="topic">
+        <span class="filter-label">Topic:</span>
+        {% for t in site.all_topics %}
+        <button type="button" class="chip" data-facet="topic" data-value="{{ t }}">{{ t }}</button>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% if site.all_countries %}
+      <div class="filter-group" data-facet="country">
+        <span class="filter-label">Country:</span>
+        {% for c in site.all_countries %}
+        <button type="button" class="chip" data-facet="country" data-value="{{ c }}">{{ c }}</button>
+        {% endfor %}
+      </div>
+      {% endif %}
+      <button type="button" id="clear-filters" class="chip chip-clear" hidden>Clear filters</button>
+    </div>
+  </header>
+
+  <main class="site-main">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      Generated {{ site.generated }} &middot; <a href="{{ asset_prefix }}archive/index.html">Full archive</a>
+      &middot; <a href="{{ asset_prefix }}feed.xml">RSS</a>
+      &middot; <a href="{{ asset_prefix }}latest.json">latest.json</a>
+      &middot; <a href="{{ asset_prefix }}exports/master.csv">Master CSV</a>
+    </p>
+  </footer>
+
+  <script src="{{ asset_prefix }}static/app.js" data-search-index="{{ asset_prefix }}search-index.json" defer></script>
+</body>
+</html>

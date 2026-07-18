@@ -40,7 +40,8 @@ CREATE TABLE IF NOT EXISTS feeds (
     consecutive_failures INTEGER NOT NULL DEFAULT 0,  -- reset to 0 on any successful fetch
     last_success        TEXT,                         -- ISO8601 timestamp, NULL until first success
     etag                TEXT,                         -- ETag from the last fetch response, for conditional GETs
-    last_modified       TEXT                          -- Last-Modified from the last fetch response, for conditional GETs
+    last_modified       TEXT,                         -- Last-Modified from the last fetch response, for conditional GETs
+    last_error_type     TEXT                          -- classification of the most recent failure (http_404, timeout, dns, ssl, connection, other); NULL after a success
 );
 
 -- One row per article. url_hash (sha256 of the canonical URL) is the PK so
@@ -54,11 +55,13 @@ CREATE TABLE IF NOT EXISTS articles (
     url             TEXT NOT NULL,
     published       TEXT,           -- ISO8601, from feed metadata (may be NULL/unreliable)
     fetched         TEXT NOT NULL,  -- ISO8601, when our pipeline first saw it
-    raw_text        TEXT,           -- extracted article body (trafilatura fallback if feed content is thin)
+    raw_text        TEXT,           -- extracted article body (trafilatura fallback if feed content is thin); English after translation
+    original_raw_text TEXT,         -- raw_text before translation, if translated
     summary         TEXT,
     language        TEXT,
     country         TEXT,
-    topics          TEXT,           -- comma-separated or JSON list, kept as free text in this phase
+    topics          TEXT,           -- comma-separated theme names matched from config/taxonomy.yaml; '' if tagged with no match, NULL if not yet tagged
+    score           INTEGER,        -- count of matched taxonomy keywords (aggregator.py:489-522 score_entry); used to rank cluster members, NOT the daily top 10 (that's LLM-curated, see daily_top10)
     cluster_id      INTEGER REFERENCES clusters(id),
     processed_status TEXT NOT NULL DEFAULT 'fetched'
                     CHECK (processed_status IN ('fetched','extracted','summarised','done','error'))
@@ -87,6 +90,19 @@ CREATE TABLE IF NOT EXISTS predictions (
     status          TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open','resolved','expired')),
     verdict         TEXT,            -- filled in once resolved: e.g. "correct", "incorrect"
     verdict_evidence TEXT
+);
+
+-- LLM-curated daily top 10 (brief feature #3 -- replaces v1's keyword-count
+-- sort). Scoped by date rather than a column on clusters because the same
+-- cluster's significance ranking can differ day to day, and this pipeline
+-- re-curates several times through the day as more news comes in: each
+-- pipeline.curate run for "today" deletes and re-inserts today's rows.
+CREATE TABLE IF NOT EXISTS daily_top10 (
+    date            TEXT NOT NULL,   -- ISO8601 date (UTC) this ranking is for
+    rank            INTEGER NOT NULL,
+    cluster_id      INTEGER NOT NULL REFERENCES clusters(id),
+    rationale       TEXT,            -- LLM's one-sentence reason for inclusion/rank
+    PRIMARY KEY (date, rank)
 );
 
 -- Audit log of every pipeline invocation, so `run.py all` history and
@@ -140,12 +156,17 @@ def init_db() -> None:
     with get_connection() as conn:
         conn.executescript(SCHEMA)
         existing_feed_cols = {row["name"] for row in conn.execute("PRAGMA table_info(feeds)")}
-        for col, ddl in (("etag", "TEXT"), ("last_modified", "TEXT")):
+        for col, ddl in (("etag", "TEXT"), ("last_modified", "TEXT"), ("last_error_type", "TEXT")):
             if col not in existing_feed_cols:
                 conn.execute(f"ALTER TABLE feeds ADD COLUMN {col} {ddl}")
         existing_run_cols = {row["name"] for row in conn.execute("PRAGMA table_info(runs)")}
         if "detail" not in existing_run_cols:
             conn.execute("ALTER TABLE runs ADD COLUMN detail TEXT")
+        existing_article_cols = {row["name"] for row in conn.execute("PRAGMA table_info(articles)")}
+        if "original_raw_text" not in existing_article_cols:
+            conn.execute("ALTER TABLE articles ADD COLUMN original_raw_text TEXT")
+        if "score" not in existing_article_cols:
+            conn.execute("ALTER TABLE articles ADD COLUMN score INTEGER")
 
 
 if __name__ == "__main__":

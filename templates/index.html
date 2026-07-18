@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% import "_cluster_card.html" as cards %}
+
+{% block content %}
+{% if top10 %}
+<section class="section" id="top10">
+  <h1 class="section-title">Today's Top 10 <span class="section-sub">curated for significance, {{ today }}</span></h1>
+  <div class="card-grid">
+    {% for cluster in top10 %}
+      {{ cards.cluster_card(cluster, rank=cluster.rank) }}
+    {% endfor %}
+  </div>
+</section>
+{% else %}
+<p class="empty-note">No curated top 10 yet today -- check back after the next pipeline run, or see the <a href="archive/index.html">archive</a>.</p>
+{% endif %}
+
+{% for group in groups %}
+<section class="section">
+  <h2 class="section-title">{{ group.name }}</h2>
+  <div class="card-grid">
+    {% for cluster in group.clusters %}
+      {{ cards.cluster_card(cluster) }}
+    {% endfor %}
+  </div>
+</section>
+{% endfor %}
+{% endblock %}

@@ -2,3 +2,5 @@ feedparser
 httpx
 trafilatura
 PyYAML
+scikit-learn
+Jinja2
