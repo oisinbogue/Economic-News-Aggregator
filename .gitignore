@@ -1,0 +1,10 @@
+.env
+.venv/
+venv/
+__pycache__/
+*.pyc
+data/aggregator.db
+data/aggregator.db-wal
+data/aggregator.db-shm
+*.log
+.DS_Store
