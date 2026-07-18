@@ -72,8 +72,12 @@ Scheduling is GitHub Actions (not local/OS-level) — see
 predictions → tag → cluster → curate → resolve → build → export chain six
 times a day, persists
 `data/aggregator.db` between runs via `actions/cache` (the db is
-gitignored, so it's never committed), and deploys the rendered `site/`
-directory to GitHub Pages via `actions/upload-pages-artifact` +
+gitignored, so it's never committed). Because `actions/cache` is
+best-effort (7-day LRU eviction, 10GB/repo cap) and would otherwise be the
+*only* copy of the article archive, every run also backs up a gzipped
+snapshot to the `db-latest` GitHub Release, restoring from it automatically
+if the cache ever comes back empty. The workflow also deploys the rendered
+`site/` directory to GitHub Pages via `actions/upload-pages-artifact` +
 `actions/deploy-pages` (a separate `deploy` job, not a `gh-pages` branch
 commit). Add `CEREBRAS_API_KEY` as a repo secret at Settings → Secrets and
 variables → Actions, and set Pages source to "GitHub Actions" (Settings →

@@ -15,7 +15,7 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -33,13 +33,32 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Restore article archive
+      - name: Restore article archive from cache
         uses: actions/cache/restore@v4
         with:
           path: data/aggregator.db
           key: aggregator-db-${{ github.run_id }}
           restore-keys: |
             aggregator-db-
+
+      # actions/cache is best-effort (7-day LRU, 10GB/repo cap) -- it can be
+      # evicted with no warning. The durable copy of record is a compressed
+      # snapshot on the "db-latest" GitHub Release, refreshed at the end of
+      # every run (see "Back up article archive" step below). Only fall
+      # back to it if the cache didn't have the db at all, so a healthy
+      # cache hit isn't needlessly overwritten by a slightly older release.
+      - name: Restore article archive from durable backup (cache miss only)
+        if: ${{ !hashFiles('data/aggregator.db') }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "No cached db found -- trying durable backup from the db-latest release"
+          if gh release download db-latest --repo "${{ github.repository }}" --pattern 'aggregator.db.gz' --output data/aggregator.db.gz --clobber; then
+            gunzip -f data/aggregator.db.gz
+            echo "Restored data/aggregator.db from GitHub Release db-latest"
+          else
+            echo "No durable backup found either -- starting fresh (first run)"
+          fi
 
       - name: Initialise schema
         run: python -m pipeline.db
@@ -89,12 +108,35 @@ jobs:
       - name: Write exports (CSV, latest.json, feed.xml)
         run: python -m pipeline.export
 
-      - name: Save article archive
+      - name: Save article archive to cache
         if: always()
         uses: actions/cache/save@v4
         with:
           path: data/aggregator.db
           key: aggregator-db-${{ github.run_id }}
+
+      # Durable copy of record -- see the restore step above. Runs even if
+      # an earlier step failed, so a mid-run crash still banks whatever
+      # progress was made rather than losing it until the next success.
+      - name: Back up article archive to GitHub Releases
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ ! -f data/aggregator.db ]; then
+            echo "No db present -- nothing to back up"
+            exit 0
+          fi
+          gzip -kf data/aggregator.db
+          if gh release view db-latest --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            gh release upload db-latest data/aggregator.db.gz --repo "${{ github.repository }}" --clobber
+          else
+            gh release create db-latest data/aggregator.db.gz \
+              --repo "${{ github.repository }}" \
+              --title "Article archive (automated rolling backup)" \
+              --notes "Durable backup of data/aggregator.db, overwritten every pipeline run. Not a project release -- see PROJECT_BRIEF.md." \
+              --prerelease
+          fi
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
