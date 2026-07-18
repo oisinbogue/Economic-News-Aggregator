@@ -1,0 +1,241 @@
+name,url,country,language,topic_hint,region,subsection,previously_disabled
+Irish Times - Business,https://politepaul.com/fd/1NQdUkwmwc8T.xml,Ireland,en,Irish News,IRELAND,Irish News,0
+Irish Examiner - Business,https://feeds.feedburner.com/iebusiness,Ireland,en,Irish News,IRELAND,Irish News,0
+Irish Independent - Business,https://www.independent.ie/business/rss,Ireland,en,Irish News,IRELAND,Irish News,0
+RTE News - Business,https://www.rte.ie/rss/business.xml,Ireland,en,Irish News,IRELAND,Irish News,0
+RTE News - Top Stories,https://www.rte.ie/rss/news.xml,Ireland,en,Irish News,IRELAND,Irish News,0
+The Journal,https://www.thejournal.ie/feed/,Ireland,en,Irish News,IRELAND,Irish News,0
+Business Post,https://businesspost.ie/feed/,Ireland,en,Irish News,IRELAND,Irish News,1
+The Currency,https://thecurrency.news/feed/,Ireland,en,Irish News,IRELAND,Irish News,0
+Fora.ie,https://fora.ie/feed/,Ireland,en,Irish News,IRELAND,Irish News,1
+Silicon Republic,https://www.siliconrepublic.com/feed/,Ireland,en,Irish News,IRELAND,Irish News,0
+Noteworthy (Journal Investigations),https://www.noteworthy.ie/feed/,Ireland,en,Irish News,IRELAND,Irish News,1
+ESRI - Research,https://www.esri.ie/publications/feed,Ireland,en,Irish Government & Institutions,IRELAND,Irish Government & Institutions,1
+Central Bank of Ireland – News,https://www.centralbank.ie/feeds/news-media-feed,Ireland,en,Irish Government & Institutions,IRELAND,Irish Government & Institutions,0
+Central Bank of Ireland – Markets Updates,https://www.centralbank.ie/feeds/markets-updates-feed,Ireland,en,Irish Government & Institutions,IRELAND,Irish Government & Institutions,0
+Irish Fiscal Advisory Council,https://www.fiscalcouncil.ie/feed/,Ireland,en,Irish Government & Institutions,IRELAND,Irish Government & Institutions,0
+CSO Ireland - Press Releases,https://www.cso.ie/en/newsandevents/pressreleases/feed/,Ireland,en,Irish Government & Institutions,IRELAND,Irish Government & Institutions,1
+TASC,https://www.tasc.ie/feed/,Ireland,en,Irish Think Tanks & Research,IRELAND,Irish Think Tanks & Research,1
+Nevin Economic Research Institute,https://www.nerinstitute.net/feed/,Ireland,en,Irish Think Tanks & Research,IRELAND,Irish Think Tanks & Research,1
+IBEC,https://www.ibec.ie/news-media/ibec-news/news-and-press-releases/rss,Ireland,en,Irish Think Tanks & Research,IRELAND,Irish Think Tanks & Research,1
+Oireachtas News,https://www.oireachtas.ie/en/latest/news/feed/,Ireland,en,Irish Politics,IRELAND,Irish Politics,1
+The Guardian - Economics,https://www.theguardian.com/business/economics/rss,United Kingdom,en,UK News,UNITED KINGDOM,UK News,0
+The Guardian - Business,https://www.theguardian.com/uk/business/rss,United Kingdom,en,UK News,UNITED KINGDOM,UK News,0
+BBC News - Business,https://feeds.bbci.co.uk/news/business/rss.xml,United Kingdom,en,UK News,UNITED KINGDOM,UK News,0
+BBC News - Economy,https://feeds.bbci.co.uk/news/business/economy/rss.xml,United Kingdom,en,UK News,UNITED KINGDOM,UK News,0
+City A.M.,https://www.cityam.com/feed/,United Kingdom,en,UK News,UNITED KINGDOM,UK News,0
+Telegraph - Business,https://www.telegraph.co.uk/business/rss.xml,United Kingdom,en,UK News,UNITED KINGDOM,UK News,0
+New Statesman,https://www.newstatesman.com/feed/,United Kingdom,en,UK News,UNITED KINGDOM,UK News,0
+The Spectator - Business,https://www.spectator.co.uk/category/business/feed/,United Kingdom,en,UK News,UNITED KINGDOM,UK News,1
+Financial Times (free),https://www.ft.com/rss/home,United Kingdom,en,UK News,UNITED KINGDOM,UK News,0
+Bank of England - News,https://www.bankofengland.co.uk/rss/news,United Kingdom,en,UK Institutions,UNITED KINGDOM,UK Institutions,0
+Bank of England - Research,https://www.bankofengland.co.uk/rss/publications,United Kingdom,en,UK Institutions,UNITED KINGDOM,UK Institutions,0
+Office for Budget Responsibility,https://obr.uk/feed/,United Kingdom,en,UK Institutions,UNITED KINGDOM,UK Institutions,0
+ONS (Office for National Statistics),https://www.ons.gov.uk/feed?format=atom,United Kingdom,en,UK Institutions,UNITED KINGDOM,UK Institutions,1
+Resolution Foundation,https://www.resolutionfoundation.org/feed/,United Kingdom,en,UK Think Tanks,UNITED KINGDOM,UK Think Tanks,0
+Institute for Fiscal Studies,https://ifs.org.uk/publications/feed,United Kingdom,en,UK Think Tanks,UNITED KINGDOM,UK Think Tanks,1
+National Institute of Economic and Social Research,https://www.niesr.ac.uk/feed,United Kingdom,en,UK Think Tanks,UNITED KINGDOM,UK Think Tanks,0
+LSE British Politics & Policy Blog,https://blogs.lse.ac.uk/politicsandpolicy/feed/,United Kingdom,en,UK Think Tanks,UNITED KINGDOM,UK Think Tanks,0
+LSE CEP,https://politepaul.com/fd/Okb1cDoeXAKg.xml,United Kingdom,en,UK Think Tanks,UNITED KINGDOM,UK Think Tanks,0
+Fabian Society,https://fabians.org.uk/feed/,United Kingdom,en,UK Think Tanks,UNITED KINGDOM,UK Think Tanks,0
+Adam Smith Institute,https://www.adamsmith.org/blog/rss.xml,United Kingdom,en,UK Think Tanks,UNITED KINGDOM,UK Think Tanks,0
+Bruegel,https://www.bruegel.org/rss.xml,Europe (Western),en,EU-Wide Sources,EUROPE — WESTERN,EU-Wide Sources,0
+VoxEU,https://cepr.org/rss/vox-content,Europe (Western),en,EU-Wide Sources,EUROPE — WESTERN,EU-Wide Sources,0
+Social Europe,https://www.socialeurope.eu/feed,Europe (Western),en,EU-Wide Sources,EUROPE — WESTERN,EU-Wide Sources,0
+EUobserver - Economy,https://euobserver.com/rss,Europe (Western),en,EU-Wide Sources,EUROPE — WESTERN,EU-Wide Sources,0
+Politico Europe,https://www.politico.eu/feed/,Europe (Western),en,EU-Wide Sources,EUROPE — WESTERN,EU-Wide Sources,0
+EurActiv,https://www.euractiv.com/feed/,Europe (Western),en,EU-Wide Sources,EUROPE — WESTERN,EU-Wide Sources,1
+The Parliament Magazine,https://www.theparliamentmagazine.eu/rss.xml,Europe (Western),en,EU-Wide Sources,EUROPE — WESTERN,EU-Wide Sources,1
+European Central Bank - Press Releases,https://www.ecb.europa.eu/rss/press.html,Europe (Western),en,EU Institutions,EUROPE — WESTERN,EU Institutions,0
+European Central Bank - Research,https://www.ecb.europa.eu/rss/wppub.html,Europe (Western),en,EU Institutions,EUROPE — WESTERN,EU Institutions,0
+European Commission - Economic News,https://ec.europa.eu/economy_finance/rss/economy_en.rss,Europe (Western),en,EU Institutions,EUROPE — WESTERN,EU Institutions,1
+Eurostat - News Releases,https://ec.europa.eu/eurostat/web/rss,Europe (Western),en,EU Institutions,EUROPE — WESTERN,EU Institutions,0
+CEPR,https://cepr.org/rss.xml,Europe (Western),en,EU Institutions,EUROPE — WESTERN,EU Institutions,0
+European Parliament - News,https://www.europarl.europa.eu/rss/doc/top-stories/en.xml,Europe (Western),en,EU Institutions,EUROPE — WESTERN,EU Institutions,0
+European Parliament - Economics,https://www.europarl.europa.eu/rss/topic/907/en.xml,Europe (Western),en,EU Institutions,EUROPE — WESTERN,EU Institutions,0
+Handelsblatt Global,https://www.handelsblatt.com/contentexport/feed/schlagzeilen,Europe (Western),de,Germany,EUROPE — WESTERN,Germany,0
+Deutsche Welle - Business,https://rss.dw.com/rdf/rss-en-bus,Europe (Western),en,Germany,EUROPE — WESTERN,Germany,0
+Bundesbank - Press Releases,https://www.bundesbank.de/service/rss/en/633306/feed.rss,Europe (Western),de,Germany,EUROPE — WESTERN,Germany,0
+Ifo Institute,https://www.ifo.de/en/rss/presse.xml,Europe (Western),de,Germany,EUROPE — WESTERN,Germany,1
+Le Monde - Economie,https://www.lemonde.fr/economie/rss_full.xml,Europe (Western),fr,France,EUROPE — WESTERN,France,0
+France 24 - Economy,https://www.france24.com/en/rss,Europe (Western),fr,France,EUROPE — WESTERN,France,0
+El País - Economy,https://feeds.elpais.com/mrss-s/pages/ep/site/english.elpais.com/portada,Europe (Western),es,Spain,EUROPE — WESTERN,Spain,0
+El Confidencial,https://www.elconfidencial.com/rss/economia.xml,Europe (Western),es,Spain,EUROPE — WESTERN,Spain,0
+Corriere della Sera - Economy,https://www.corriere.it/rss/economia.xml,Europe (Western),it,Italy,EUROPE — WESTERN,Italy,0
+NRC Handelsblad,https://www.nrc.nl/rss/,Europe (Western),nl,Netherlands,EUROPE — WESTERN,Netherlands,0
+De Nederlandsche Bank,https://www.dnb.nl/en/rss/,Europe (Western),nl,Netherlands,EUROPE — WESTERN,Netherlands,1
+Riksbank (Sweden) - News,https://www.riksbank.se/en-gb/rss/,Europe (Western),sv,Nordics,EUROPE — WESTERN,Nordics,1
+Norges Bank - News,https://www.norges-bank.no/en/rss/,Europe (Western),no,Nordics,EUROPE — WESTERN,Nordics,1
+Bank of Finland,https://www.suomenpankki.fi/en/rss/,Europe (Western),fi,Nordics,EUROPE — WESTERN,Nordics,1
+Copenhagen Economics,https://www.copenhageneconomics.com/feed/,Europe (Western),en,Nordics,EUROPE — WESTERN,Nordics,0
+Swiss National Bank,https://www.snb.ch/en/rss/rssnews.xml,Europe (Western),de,Switzerland,EUROPE — WESTERN,Switzerland,1
+Warsaw Business Journal,https://wbj.pl/feed/,Europe (Eastern/Central),en,news,EUROPE — EASTERN & CENTRAL,,1
+Prague Morning,https://www.praguemonitor.com/feed/,Europe (Eastern/Central),en,news,EUROPE — EASTERN & CENTRAL,,0
+Budapest Business Journal,https://bbj.hu/feed/,Europe (Eastern/Central),en,news,EUROPE — EASTERN & CENTRAL,,0
+Kyiv Independent - Economy,https://kyivindependent.com/category/economy/feed/,Europe (Eastern/Central),en,news,EUROPE — EASTERN & CENTRAL,,1
+Euractiv Central & Eastern Europe,https://www.euractiv.com/sections/central-europe/feed/,Europe (Eastern/Central),en,news,EUROPE — EASTERN & CENTRAL,,1
+Emerging Europe,https://emerging-europe.com/feed/,Europe (Eastern/Central),en,news,EUROPE — EASTERN & CENTRAL,,0
+bne Intellinews,https://www.intellinews.com/rss/,Europe (Eastern/Central),en,news,EUROPE — EASTERN & CENTRAL,,1
+Baltic Times,https://www.baltictimes.com/rss/news/,Europe (Eastern/Central),en,news,EUROPE — EASTERN & CENTRAL,,1
+Romanian Insider,https://www.romania-insider.com/feed/,Europe (Eastern/Central),en,news,EUROPE — EASTERN & CENTRAL,,0
+New York Times - Business,https://rss.nytimes.com/services/xml/rss/nyt/Business.xml,United States,en,Major US News,UNITED STATES,Major US News,0
+New York Times - Economy,https://rss.nytimes.com/services/xml/rss/nyt/Economy.xml,United States,en,Major US News,UNITED STATES,Major US News,0
+Washington Post - Business,https://feeds.washingtonpost.com/rss/business,United States,en,Major US News,UNITED STATES,Major US News,0
+Reuters - Business,https://rss.app/feeds/9fSoShIXTLIR40J5.xml,United States,en,Major US News,UNITED STATES,Major US News,0
+Reuters - Economy,https://rss.app/feed/X3b3gLbcmBVmxTzR,United States,en,Major US News,UNITED STATES,Major US News,1
+Reuters – Markets,https://rss.app/feed/VdzGLA9PpqxUvPoQ,United States,en,Major US News,UNITED STATES,Major US News,1
+Associated Press - Business,https://rsshub.app/apnews/topics/business,United States,en,Major US News,UNITED STATES,Major US News,1
+Bloomberg - Economics,https://feeds.bloomberg.com/economics/news.rss,United States,en,Major US News,UNITED STATES,Major US News,0
+Axios - Economy,https://www.axios.com/feeds/feed.rss,United States,en,Major US News,UNITED STATES,Major US News,0
+NPR - Economy,https://feeds.npr.org/1017/rss.xml,United States,en,Major US News,UNITED STATES,Major US News,0
+Vox - Economics,https://www.vox.com/rss/money,United States,en,Major US News,UNITED STATES,Major US News,1
+Slate - Business,https://slate.com/feeds/business.rss,United States,en,Major US News,UNITED STATES,Major US News,0
+Federal Reserve - Press Releases,https://www.federalreserve.gov/feeds/press_all.xml,United States,en,US Federal Reserve,UNITED STATES,US Federal Reserve,0
+Federal Reserve - Research,https://www.federalreserve.gov/feeds/feds.xml,United States,en,US Federal Reserve,UNITED STATES,US Federal Reserve,0
+NY Fed - Liberty Street Economics Blog,https://libertystreeteconomics.newyorkfed.org/feed/,United States,en,US Federal Reserve,UNITED STATES,US Federal Reserve,0
+Chicago Fed - Research,https://www.chicagofed.org/utilities/rss/chicago-fed-research.ashx,United States,en,US Federal Reserve,UNITED STATES,US Federal Reserve,1
+San Francisco Fed - Research,https://www.frbsf.org/rss/,United States,en,US Federal Reserve,UNITED STATES,US Federal Reserve,0
+Atlanta Fed - Macroblog,https://www.atlantafed.org/rss,United States,en,US Federal Reserve,UNITED STATES,US Federal Reserve,1
+Minneapolis Fed - Research,https://www.minneapolisfed.org/rss/publications-research.xml,United States,en,US Federal Reserve,UNITED STATES,US Federal Reserve,1
+Dallas Fed - Research,https://www.dallasfed.org/rss/releases.xml,United States,en,US Federal Reserve,UNITED STATES,US Federal Reserve,0
+Kansas City Fed,https://www.kansascityfed.org/rss/research/,United States,en,US Federal Reserve,UNITED STATES,US Federal Reserve,1
+Bureau of Labor Statistics,https://www.bls.gov/feed/bls_latest.rss,United States,en,US Government,UNITED STATES,US Government,0
+Bureau of Economic Analysis,https://apps.bea.gov/rss/rss.xml,United States,en,US Government,UNITED STATES,US Government,0
+Congressional Budget Office,https://www.cbo.gov/about/feed/reports,United States,en,US Government,UNITED STATES,US Government,1
+US Census Bureau - Economic News,https://www.census.gov/economic-indicators/rss.xml,United States,en,US Government,UNITED STATES,US Government,1
+Brookings Institution,https://www.brookings.edu/feed/,United States,en,US Think Tanks,UNITED STATES,US Think Tanks,1
+Peterson Institute for International Economics,https://www.piie.com/rss.xml,United States,en,US Think Tanks,UNITED STATES,US Think Tanks,1
+Economic Policy Institute,https://www.epi.org/feed/,United States,en,US Think Tanks,UNITED STATES,US Think Tanks,0
+Urban Institute,https://www.urban.org/rss.xml,United States,en,US Think Tanks,UNITED STATES,US Think Tanks,1
+Cato Institute,https://www.cato.org/rss/recent-op-eds,United States,en,US Think Tanks,UNITED STATES,US Think Tanks,1
+Roosevelt Institute,https://rooseveltinstitute.org/feed/,United States,en,US Think Tanks,UNITED STATES,US Think Tanks,0
+Niskanen Center,https://www.niskanencenter.org/feed/,United States,en,US Think Tanks,UNITED STATES,US Think Tanks,0
+Hamilton Project,https://www.hamiltonproject.org/feed/,United States,en,US Think Tanks,UNITED STATES,US Think Tanks,0
+Milken Institute,https://milkeninstitute.org/rss.xml,United States,en,US Think Tanks,UNITED STATES,US Think Tanks,0
+American Enterprise Institute,https://www.aei.org/feed/,United States,en,US Think Tanks,UNITED STATES,US Think Tanks,0
+Center on Budget and Policy Priorities,https://www.cbpp.org/rss.xml,United States,en,US Think Tanks,UNITED STATES,US Think Tanks,1
+Pew Research Center - Economics,https://feeds.pewresearch.org/pewresearch/rss,United States,en,US Think Tanks,UNITED STATES,US Think Tanks,1
+Globe and Mail - Business,https://www.theglobeandmail.com/arc/outboundfeeds/rss/category/business/,Canada,en,news,CANADA,,0
+Financial Post,https://financialpost.com/feed/,Canada,en,news,CANADA,,0
+CBC News - Business,https://www.cbc.ca/cmlink/rss-business,Canada,en,news,CANADA,,1
+Bank of Canada,https://www.bankofcanada.ca/feed/,Canada,en,news,CANADA,,0
+C.D. Howe Institute,https://cdhowe.org/feed/,Canada,en,news,CANADA,,0
+Fraser Institute,https://www.fraserinstitute.org/rss,Canada,en,news,CANADA,,1
+Americas Society / Council of the Americas,https://www.as-coa.org/rss.xml,Latin America,en,news,LATIN AMERICA,,0
+ECLAC (UN Economic Commission for Latin America),https://www.cepal.org/en/rss/novedades.xml,Latin America,en,news,LATIN AMERICA,,1
+Inter-American Development Bank,https://blogs.iadb.org/feed/,Latin America,en,news,LATIN AMERICA,,1
+El Financiero Mexico,https://www.elfinanciero.com.mx/rss,Latin America,es,news,LATIN AMERICA,,0
+Folha de S.Paulo - Economy,https://feeds.folha.uol.com.br/mercado/rss091.xml,Latin America,pt,news,LATIN AMERICA,,0
+Buenos Aires Times,https://batimes.com.ar/feed/,Latin America,en,news,LATIN AMERICA,,0
+Colombia Reports,https://colombiareports.com/feed/,Latin America,en,news,LATIN AMERICA,,0
+Merco Press (Southern Cone),https://en.mercopress.com/rss,Latin America,en,news,LATIN AMERICA,,0
+Latin Trade,https://latintrade.com/feed/,Latin America,en,news,LATIN AMERICA,,1
+Rio Times,https://riotimesonline.com/feed/,Latin America,en,news,LATIN AMERICA,,0
+Business Day South Africa,https://businessday.ng/feed/,Africa,en,news,AFRICA,,0
+Financial Mail South Africa,https://businessday.ng/feed/,Africa,en,news,AFRICA,,0
+The East African,https://www.theeastafrican.co.ke/rss/,Africa,en,news,AFRICA,,1
+The Continent,https://mg.co.za/the-continent/feed/,Africa,en,news,AFRICA,,1
+This Day Nigeria,https://www.thisdaylive.com/index.php/feed/,Africa,en,news,AFRICA,,0
+Daily Monitor Uganda,https://www.monitor.co.ug/uganda/rss/,Africa,en,news,AFRICA,,1
+African Business Magazine,https://african.business/feed,Africa,en,news,AFRICA,,0
+Quartz Africa,https://qz.com/africa/rss,Africa,en,news,AFRICA,,1
+How We Made It In Africa,https://www.howwemadeitinafrica.com/feed/,Africa,en,news,AFRICA,,0
+African Development Bank,https://www.afdb.org/en/rss/news,Africa,en,news,AFRICA,,1
+Ventures Africa,https://venturesafrica.com/feed/,Africa,en,news,AFRICA,,1
+The Africa Report,https://www.theafricareport.com/feed/,Africa,en,news,AFRICA,,1
+Daily Maverick - Economy,https://www.dailymaverick.co.za/rss/,Africa,en,news,AFRICA,,0
+Arab News - Business,https://www.arabnews.com/rss.xml/business-economy,Middle East,en,news,MIDDLE EAST,,1
+The National UAE - Business,https://www.thenationalnews.com/rss/business.xml,Middle East,en,news,MIDDLE EAST,,1
+Gulf News - Business,https://gulfnews.com/rss/business,Middle East,en,news,MIDDLE EAST,,1
+Middle East Eye - Economy,https://www.middleeasteye.net/rss,Middle East,en,news,MIDDLE EAST,,0
+Al-Monitor - Economy,https://www.al-monitor.com/rss/economy,Middle East,en,news,MIDDLE EAST,,1
+Jerusalem Post - Business,https://www.jpost.com/Rss/RssFeedsBusinessAndTech.aspx,Middle East,en,news,MIDDLE EAST,,1
+IMF MENA,https://www.imf.org/en/news/rss,Middle East,en,news,MIDDLE EAST,,1
+Caixin Global,https://www.caixinglobal.com/rss/,China/Greater China,en,news,CHINA & GREATER CHINA,,1
+Nikkei Asia - China,https://asia.nikkei.com/rss/feed/nar,China/Greater China,en,news,CHINA & GREATER CHINA,,0
+South China Morning Post - Business,https://www.scmp.com/rss/91/feed,China/Greater China,en,news,CHINA & GREATER CHINA,,0
+Global Times - Economy,https://www.globaltimes.cn/rss/economy.xml,China/Greater China,en,news,CHINA & GREATER CHINA,,1
+China Daily - Business,https://www.chinadaily.com.cn/rss/bizchina_rss.xml,China/Greater China,en,news,CHINA & GREATER CHINA,,0
+The Wire China,https://www.thewirechina.com/feed/,China/Greater China,en,news,CHINA & GREATER CHINA,,0
+People's Bank of China,https://politepaul.com/fd/XxxizH84d44o.xml,China/Greater China,en,news,CHINA & GREATER CHINA,,0
+Taipei Times - Business,https://www.taipeitimes.com/xml/biz.rss,China/Greater China,en,news,CHINA & GREATER CHINA,,1
+Economic Times India,https://economictimes.indiatimes.com/rssfeedstopstories.cms,India,en,news,INDIA,,0
+Business Standard,https://www.business-standard.com/rss/economy-policy-101.rss,India,en,news,INDIA,,1
+Mint - Economy,https://www.livemint.com/rss/economy,India,en,news,INDIA,,0
+The Hindu - Business,https://www.thehindu.com/business/feeder/default.rss,India,en,news,INDIA,,0
+Hindustan Times - Business,https://www.hindustantimes.com/feeds/rss/business/rssfeed.xml,India,en,news,INDIA,,0
+Reserve Bank of India,https://rbidocs.rbi.org.in/rdocs/PressRelease/english/pressrelease.xml,India,en,news,INDIA,,1
+NITI Aayog,https://niti.gov.in/rss.xml,India,en,news,INDIA,,0
+Japan Times - Business,https://www.japantimes.co.jp/feed/business/,Japan/South Korea,en,news,JAPAN & SOUTH KOREA,,1
+Nikkei Asia,https://asia.nikkei.com/rss/feed/nar,Japan/South Korea,en,news,JAPAN & SOUTH KOREA,,0
+Bank of Japan - News,https://www.boj.or.jp/en/announcements/release_rss.xml,Japan/South Korea,en,news,JAPAN & SOUTH KOREA,,1
+Korea JoongAng Daily - Business,https://koreajoongangdaily.joins.com/rss/sectbiz.xml,Japan/South Korea,en,news,JAPAN & SOUTH KOREA,,1
+Korea Times - Business,https://www.koreatimes.co.kr/www/rss/biz.xml,Japan/South Korea,en,news,JAPAN & SOUTH KOREA,,0
+Bank of Korea,https://www.bok.or.kr/eng/selectBoardRss.do?menuNaviId=1783,Japan/South Korea,en,news,JAPAN & SOUTH KOREA,,1
+Bangkok Post - Business,https://www.bangkokpost.com/rss/data/business.xml,Southeast Asia,en,news,SOUTHEAST ASIA,,0
+Jakarta Post - Business,https://www.thejakartapost.com/json/news/business.rss,Southeast Asia,en,news,SOUTHEAST ASIA,,1
+Philippine Daily Inquirer - Business,https://business.inquirer.net/feed,Southeast Asia,en,news,SOUTHEAST ASIA,,0
+Vietnam Investment Review,https://vir.com.vn/rss/news.rss,Southeast Asia,en,news,SOUTHEAST ASIA,,1
+The Star Malaysia - Business,https://www.thestar.com.my/rss/Business/,Southeast Asia,en,news,SOUTHEAST ASIA,,1
+Straits Times - Business,https://www.straitstimes.com/news/business/rss.xml,Southeast Asia,en,news,SOUTHEAST ASIA,,0
+Myanmar Times - Business,https://www.mmtimes.com/rss/business,Southeast Asia,en,news,SOUTHEAST ASIA,,1
+Khmer Times - Business,https://www.khmertimeskh.com/feed/,Southeast Asia,en,news,SOUTHEAST ASIA,,1
+ASEAN Economic Monitor,https://aric.adb.org/feeds/news.xml,Southeast Asia,en,news,SOUTHEAST ASIA,,1
+Asian Development Bank,https://www.adb.org/news/rss,Southeast Asia,en,news,SOUTHEAST ASIA,,1
+Australian Financial Review,https://www.afr.com/rss/feed.xml,Australia/New Zealand,en,news,AUSTRALIA & NEW ZEALAND,,0
+Sydney Morning Herald - Business,https://www.smh.com.au/rss/business.xml,Australia/New Zealand,en,news,AUSTRALIA & NEW ZEALAND,,0
+The Australian - Business,https://www.theaustralian.com.au/feed,Australia/New Zealand,en,news,AUSTRALIA & NEW ZEALAND,,1
+ABC News Australia - Business,https://www.abc.net.au/news/feed/45910/rss.xml,Australia/New Zealand,en,news,AUSTRALIA & NEW ZEALAND,,0
+Reserve Bank of Australia,https://www.rba.gov.au/rss/rss-cb-speeches.xml,Australia/New Zealand,en,news,AUSTRALIA & NEW ZEALAND,,0
+Grattan Institute,https://grattan.edu.au/feed/,Australia/New Zealand,en,news,AUSTRALIA & NEW ZEALAND,,0
+Australia Institute,https://australiainstitute.org.au/feed/,Australia/New Zealand,en,news,AUSTRALIA & NEW ZEALAND,,0
+NZ Herald - Business,https://www.nzherald.co.nz/business/rss/,Australia/New Zealand,en,news,AUSTRALIA & NEW ZEALAND,,1
+Reserve Bank of New Zealand,https://www.rbnz.govt.nz/hub/rss/publications.xml,Australia/New Zealand,en,news,AUSTRALIA & NEW ZEALAND,,1
+Moscow Times - Business,https://www.themoscowtimes.com/rss/news,Russia/Former Soviet States,en,news,RUSSIA & FORMER SOVIET STATES,,0
+Meduza (English),https://meduza.io/rss/en/all,Russia/Former Soviet States,en,news,RUSSIA & FORMER SOVIET STATES,,0
+Eurasianet,https://eurasianet.org/rss,Russia/Former Soviet States,en,news,RUSSIA & FORMER SOVIET STATES,,0
+Latvian Public Broadcasting Economy,https://eng.lsm.lv/rss/?category=economy,Russia/Former Soviet States,en,news,RUSSIA & FORMER SOVIET STATES,,0
+Estonian Postimees (English),https://news.postimees.ee/rss,Russia/Former Soviet States,en,news,RUSSIA & FORMER SOVIET STATES,,0
+IMF Blog,https://www.imf.org/en/News/rss?language=eng,International,en,news,INTERNATIONAL & MULTILATERAL,,1
+World Bank Blog,https://blogs.worldbank.org/feed,International,en,news,INTERNATIONAL & MULTILATERAL,,1
+OECD News,https://www.oecd.org/newsroom/rss/newsfeed.xml,International,en,news,INTERNATIONAL & MULTILATERAL,,1
+OECD - Economic Surveys,https://www.oecd-ilibrary.org/rss/content/publication/19990588,International,en,news,INTERNATIONAL & MULTILATERAL,,1
+UN News - Economic Development,https://news.un.org/feed/subscribe/en/news/topic/economic-development/feed/rss.xml,International,en,news,INTERNATIONAL & MULTILATERAL,,0
+WTO News,https://www.wto.org/english/news_e/rss_e/rss_news_e.xml,International,en,news,INTERNATIONAL & MULTILATERAL,,1
+BIS (Bank for International Settlements),https://www.bis.org/rss/index.htm,International,en,news,INTERNATIONAL & MULTILATERAL,,1
+UNCTAD,https://unctad.org/rss.xml,International,en,news,INTERNATIONAL & MULTILATERAL,,1
+G20,https://www.g20.org/rss/,International,en,news,INTERNATIONAL & MULTILATERAL,,0
+Project Syndicate,https://www.project-syndicate.org/rss,International,en,news,INTERNATIONAL & MULTILATERAL,,0
+Chatham House,https://www.chathamhouse.org/rss.xml,International,en,news,INTERNATIONAL THINK TANKS,,1
+Wilson Center,https://www.wilsoncenter.org/rss.xml,International,en,news,INTERNATIONAL THINK TANKS,,1
+Carnegie Endowment,https://carnegieendowment.org/rss/,International,en,news,INTERNATIONAL THINK TANKS,,1
+Atlantic Council,https://www.atlanticcouncil.org/feed/,International,en,news,INTERNATIONAL THINK TANKS,,0
+RAND Corporation,https://www.rand.org/news.xml,International,en,news,INTERNATIONAL THINK TANKS,,0
+McKinsey Global Institute,https://www.mckinsey.com/mgi/rss,International,en,news,INTERNATIONAL THINK TANKS,,1
+Oxford Economics,https://www.oxfordeconomics.com/feed/,International,en,news,INTERNATIONAL THINK TANKS,,0
+Chatham House Research,https://www.chathamhouse.org/rss-research.xml,International,en,news,INTERNATIONAL THINK TANKS,,1
+Adam Tooze - Chartbook,https://adamtooze.substack.com/feed,International,en,news,INDEPENDENT ECONOMISTS & SUBSTACKS,,0
+Noah Smith - Noahpinion,https://noahpinion.substack.com/feed,International,en,news,INDEPENDENT ECONOMISTS & SUBSTACKS,,0
+Matt Klein - The Overshoot,https://theovershoot.co/feed,International,en,news,INDEPENDENT ECONOMISTS & SUBSTACKS,,0
+Brad DeLong - Grasping Reality,https://braddelong.substack.com/feed,International,en,news,INDEPENDENT ECONOMISTS & SUBSTACKS,,0
+Branko Milanovic - globalinequality,https://branko2f7.substack.com/feed,International,en,news,INDEPENDENT ECONOMISTS & SUBSTACKS,,0
+Tony Yates - longandvariable,https://longandvariable.wordpress.com/feed/,International,en,news,INDEPENDENT ECONOMISTS & SUBSTACKS,,0
+Dario Perkins,https://darioperkins.substack.com/feed,International,en,news,INDEPENDENT ECONOMISTS & SUBSTACKS,,1
+Isabella Weber,https://isabellaweber.substack.com/feed,International,en,news,INDEPENDENT ECONOMISTS & SUBSTACKS,,1
+Ronan Lyons (Irish Housing),https://ronanlyons.com/feed/,International,en,news,INDEPENDENT ECONOMISTS & SUBSTACKS,,1
+Constantin Gurdgiev,https://trueeconomics.blogspot.com/feeds/posts/default,International,en,news,INDEPENDENT ECONOMISTS & SUBSTACKS,,0
+Frances Coppola - Coppola Comment,https://www.coppolacomment.com/feeds/posts/default,International,en,news,INDEPENDENT ECONOMISTS & SUBSTACKS,,0
+Simon Wren-Lewis - Mainly Macro,https://mainlymacro.blogspot.com/feeds/posts/default,International,en,news,INDEPENDENT ECONOMISTS & SUBSTACKS,,1
+Paul Krugman Newsletter,https://paulkrugman.substack.com/feed,International,en,news,INDEPENDENT ECONOMISTS & SUBSTACKS,,0
+Barry Ritholtz - The Big Picture,https://ritholtz.com/feed/,International,en,news,INDEPENDENT ECONOMISTS & SUBSTACKS,,0
+Diane Coyle - The Enlightened Economist,http://www.enlightenmenteconomics.com/blog/index.php/feed/,International,en,news,INDEPENDENT ECONOMISTS & SUBSTACKS,,0
+Tim Harford - Undercover Economist,https://timharford.com/feed/,International,en,news,INDEPENDENT ECONOMISTS & SUBSTACKS,,0
+Wolfgang Munchau - Eurointelligence,https://www.eurointelligence.com/rss/comments.rss,International,en,news,INDEPENDENT ECONOMISTS & SUBSTACKS,,1
+Eric Lonergan,https://www.philosophyofmoney.net/feed/,International,en,news,INDEPENDENT ECONOMISTS & SUBSTACKS,,0
+NBER Working Papers,https://www.nber.org/rss/new.xml,International,en,news,ACADEMIC & PREPRINT,,0
+IZA Discussion Papers,https://www.iza.org/rss/dp.xml,International,en,news,ACADEMIC & PREPRINT,,1
+Vox Development,https://voxdev.org/rss.xml,International,en,news,ACADEMIC & PREPRINT,,0
+SSRN Economics (Most Downloaded),https://papers.ssrn.com/sol3/Jeljour_results.cfm?form_name=journalbrowse&journal_id=1360956&Network=no&SortOrder=ab_approval_date&download=yes&rss=1,International,en,news,ACADEMIC & PREPRINT,,1
+Trading Economics - Major Indicators,https://tradingeconomics.com/rss/news.aspx,International,en,news,DATA & INDICATOR RELEASES,,1
+FRED Blog (St. Louis Fed),https://fredblog.stlouisfed.org/feed/,International,en,news,DATA & INDICATOR RELEASES,,0
+Eurostat Press Releases,https://ec.europa.eu/eurostat/web/rss,International,en,news,DATA & INDICATOR RELEASES,,1

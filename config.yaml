@@ -1,0 +1,29 @@
+# Central pipeline configuration. All paths are relative to the repo root
+# (see pipeline/config.py:resolve_path) so this file works unchanged on a
+# laptop checkout and on the GitHub Actions runner.
+
+paths:
+  db_file: data/aggregator.db
+  feeds_csv: data/feeds.csv
+  feeds_validated_csv: data/feeds_validated.csv
+  feeds_yaml: config/feeds.yaml
+  taxonomy_yaml: config/taxonomy.yaml
+
+run:
+  fetch_concurrency: 30
+  fetch_timeout_seconds: 15
+  max_articles_per_run: 300
+
+validate_feeds:
+  concurrency: 20
+  timeout_seconds: 15
+
+llm:
+  provider: cerebras
+  model: llama-3.3-70b
+  # CEREBRAS_API_KEY is read from the environment (.env locally, GitHub
+  # Actions secret in CI) -- never stored here.
+
+site:
+  title: Economic News Aggregator
+  base_url: ""  # filled in once GitHub Pages is live (Phase 5)

@@ -1,0 +1,580 @@
+keywords:
+  IRELAND (Economic & Policy Specific):
+    active:
+    - Irish economy
+    - Irish housing market
+    - Irish budget
+    - Irish demographics
+    - Irish national debt
+    - Irish fiscal policy
+    - Irish property market
+    - Irish inflation
+    - Irish GDP
+    - Irish competitiveness
+    - Irish corporation tax
+    - ESRI
+    - Central Bank of Ireland
+    - Oireachtas committee
+    - Irish exchequer
+    - Irish labour market
+    - Daft report
+    - MyHome report
+    disabled: []
+  HOUSING & PROPERTY:
+    active:
+    - housing crisis
+    - housing supply
+    - housing shortage
+    - rent inflation
+    - rent pressure zone
+    - mortgage rates
+    - property prices
+    - house prices
+    - homelessness crisis
+    - social housing
+    - affordable housing
+    - build to rent
+    - planning permission
+    - construction costs
+    - residential development
+    - first time buyer
+    - land value
+    - vacant homes
+    - housing affordability
+    - eviction ban
+    disabled: []
+  DEMOGRAPHICS & MIGRATION:
+    active:
+    - population growth
+    - birth rate
+    - fertility rate
+    - aging population
+    - old age dependency
+    - youth unemployment
+    - brain drain
+    - skilled migration
+    - labour shortage
+    - diaspora
+    - urbanisation
+    - rural depopulation
+    - demographic dividend
+    - pension crisis
+    disabled: []
+  MACROECONOMICS:
+    active:
+    - inflation rate
+    - interest rate decision
+    - rate hike
+    - rate cut
+    - recession risk
+    - GDP growth
+    - economic contraction
+    - household debt
+    - sovereign debt
+    - national debt
+    - budget deficit
+    - fiscal surplus
+    - austerity measures
+    - economic stimulus
+    - quantitative easing
+    - quantitative tightening
+    - money supply
+    - central bank policy
+    - monetary tightening
+    - monetary easing
+    - stagflation
+    - cost of living crisis
+    - real wages
+    - purchasing power
+    disabled: []
+  TRADE & GLOBALISATION:
+    active:
+    - trade war
+    - trade tariffs
+    - trade deficit
+    - trade surplus
+    - globalisation
+    - supply chain disruption
+    - foreign direct investment
+    - multinational corporation
+    - corporation tax reform
+    - tax haven
+    - offshoring
+    - nearshoring
+    - reshoring
+    - deglobalisation
+    - protectionism
+    - free trade agreement
+    - WTO dispute
+    - export growth
+    disabled: []
+  INEQUALITY & LABOUR:
+    active:
+    - wealth inequality
+    - income inequality
+    - wealth gap
+    - working poverty
+    - middle class squeeze
+    - wage growth
+    - minimum wage increase
+    - gig economy
+    - zero hours contract
+    - collective bargaining
+    - trade union
+    - labour market
+    - unemployment rate
+    - underemployment
+    - executive pay
+    - gender pay gap
+    disabled: []
+  EUROPE & ECB:
+    active:
+    - European Central Bank
+    - ECB interest rates
+    - ECB rate decision
+    - eurozone inflation
+    - eurozone recession
+    - eurozone GDP
+    - European Commission economy
+    - EU fiscal rules
+    - EU budget
+    - EU single market
+    - EU trade policy
+    - euro exchange rate
+    - Brexit impact
+    - European sovereign debt
+    - EU energy policy
+    - EU industrial policy
+    - Stability and Growth Pact
+    disabled: []
+  GLOBAL ECONOMY:
+    active:
+    - Chinese economy
+    - US economy
+    - India economy
+    - Russia economy
+    - Iran economy
+    - Federal Reserve decision
+    - emerging market debt
+    - commodity prices
+    - energy crisis
+    - oil price
+    - gas price
+    - food inflation
+    - food security
+    - global recession
+    - global trade
+    - US dollar strength
+    - currency crisis
+    - capital flight
+    - IMF forecast
+    - World Bank outlook
+    - bond yields
+    - yield curve
+    disabled: []
+region_slug_map:
+  IRELAND: ireland
+  UNITED KINGDOM: uk
+  EUROPE — WESTERN: europe
+  EUROPE — EASTERN & CENTRAL: europe
+  RUSSIA & FORMER SOVIET STATES: europe
+  UNITED STATES: us
+  CANADA: canada
+  LATIN AMERICA: latam
+  CHINA & GREATER CHINA: asia-pacific
+  INDIA: asia-pacific
+  JAPAN & SOUTH KOREA: asia-pacific
+  SOUTHEAST ASIA: asia-pacific
+  AUSTRALIA & NEW ZEALAND: asia-pacific
+  AFRICA: africa-me
+  MIDDLE EAST: africa-me
+  ACADEMIC & PREPRINT: global
+  DATA & INDICATOR RELEASES: global
+  INDEPENDENT ECONOMISTS & SUBSTACKS: global
+  INTERNATIONAL & MULTILATERAL: global
+  INTERNATIONAL THINK TANKS: global
+theme_priority:
+- IRELAND
+- HOUSING & PROPERTY
+- DEMOGRAPHICS & MIGRATION
+- INEQUALITY & LABOUR
+- EUROPE & ECB
+- TRADE & GLOBALISATION
+- MACROECONOMICS
+- GLOBAL ECONOMY
+category_display_order:
+- IRELAND
+- HOUSING & PROPERTY
+- MACROECONOMICS
+- GLOBAL ECONOMY
+- TRADE & GLOBALISATION
+- INEQUALITY & LABOUR
+- DEMOGRAPHICS & MIGRATION
+- General
+- EUROPE & ECB
+subcategory_rules:
+  GLOBAL ECONOMY:
+  - name: US Economy
+    keywords:
+    - united states
+    - us economy
+    - federal reserve
+    - 'fed '
+    - trump
+    - wall street
+    - washington
+    - american economy
+    - us gdp
+    - us jobs
+    - us dollar
+  - name: China Economy
+    keywords:
+    - china
+    - chinese
+    - beijing
+    - yuan
+    - xi jinping
+    - 'prc '
+    - hong kong economy
+    - taiwan economy
+  - name: European Economy
+    keywords:
+    - eurozone
+    - euro area
+    - germany
+    - france
+    - italy
+    - spain
+    - eu economy
+    - european economy
+    - ecb rate
+  - name: UK Economy
+    keywords:
+    - united kingdom
+    - british economy
+    - uk economy
+    - bank of england
+    - sterling
+    - british gdp
+    - uk jobs
+  - name: Energy & Commodities
+    keywords:
+    - oil price
+    - opec
+    - energy crisis
+    - natural gas
+    - crude oil
+    - commodity
+    - coal price
+    - oil shock
+    - gas price
+    - lng
+  - name: Trade & Tariffs
+    keywords:
+    - tariff
+    - trade war
+    - trade deficit
+    - trade surplus
+    - export ban
+    - import duty
+    - supply chain
+    - wto
+    - customs duty
+  - name: Emerging Markets
+    keywords:
+    - emerging market
+    - india economy
+    - brazil economy
+    - indonesia
+    - vietnam
+    - developing economies
+    - mexico economy
+    - africa economy
+    - southeast asia
+  - name: Financial Markets
+    keywords:
+    - stock market
+    - bond yield
+    - equity market
+    - market crash
+    - market rally
+    - financial crisis
+    - banking sector
+    - interest rate
+  IRELAND:
+  - name: Housing & Property
+    keywords:
+    - housing
+    - 'rent '
+    - property
+    - mortgage
+    - landlord
+    - tenant
+    - planning permission
+    - construction
+    - house price
+  - name: Labour & Employment
+    keywords:
+    - employment
+    - jobs
+    - unemployment
+    - workers
+    - wage
+    - labour market
+    - hiring
+    - layoffs
+    - redundanc
+  - name: Government & Fiscal
+    keywords:
+    - budget
+    - government
+    - fiscal
+    - taxation
+    - public spending
+    - national debt
+    - oireachtas
+    - dail
+    - minister
+  - name: Business & FDI
+    keywords:
+    - business
+    - investment
+    - fdi
+    - multinational
+    - startup
+    - enterprise
+    - pharma
+    - tech company
+    - corporation
+  - name: Economy & Growth
+    keywords:
+    - gdp
+    - growth
+    - inflation
+    - recession
+    - economic
+    - output
+    - gnp
+    - central bank of ireland
+  MACROECONOMICS:
+  - name: Inflation & Prices
+    keywords:
+    - inflation
+    - cpi
+    - price level
+    - deflation
+    - cost of living
+    - price rise
+    - purchasing power
+    - price index
+  - name: Interest Rates & Monetary Policy
+    keywords:
+    - interest rate
+    - central bank
+    - monetary policy
+    - rate cut
+    - rate hike
+    - quantitative easing
+    - base rate
+    - policy rate
+  - name: Growth & GDP
+    keywords:
+    - gdp
+    - economic growth
+    - recession
+    - contraction
+    - expansion
+    - output gap
+    - gdp growth
+  - name: Labour & Employment
+    keywords:
+    - unemployment rate
+    - labour market
+    - payroll
+    - jobless
+    - employment rate
+    - job market
+    - nonfarm
+  TRADE & GLOBALISATION:
+  - name: Tariffs & Trade Wars
+    keywords:
+    - tariff
+    - trade war
+    - trade dispute
+    - protectionism
+    - customs duty
+    - retaliation
+    - trade barrier
+    - import tariff
+  - name: Supply Chains
+    keywords:
+    - supply chain
+    - logistics
+    - shipping
+    - 'port '
+    - manufacturing
+    - reshoring
+    - offshoring
+    - nearshoring
+  - name: Trade Agreements
+    keywords:
+    - trade agreement
+    - free trade
+    - trade deal
+    - bilateral
+    - multilateral
+    - wto ruling
+    - trade negotiations
+  - name: Globalisation
+    keywords:
+    - globalisation
+    - globalization
+    - deglobalisation
+    - decoupling
+    - world trade
+    - international trade
+  EUROPE & ECB:
+  - name: ECB & Monetary Policy
+    keywords:
+    - ecb
+    - european central bank
+    - lagarde
+    - rate decision
+    - monetary policy
+    - quantitative easing
+    - deposit rate
+  - name: EU Policy
+    keywords:
+    - european commission
+    - european parliament
+    - european council
+    - eu regulation
+    - brussels
+    - von der leyen
+    - eu law
+  - name: Eurozone Economy
+    keywords:
+    - eurozone
+    - euro area
+    - single currency
+    - stability pact
+    - fiscal rules
+    - sovereign debt
+  - name: EU Countries
+    keywords:
+    - germany
+    - france
+    - italy
+    - spain
+    - netherlands
+    - poland
+    - austria
+    - greece
+    - belgium
+    - czech
+    - hungarian
+  HOUSING & PROPERTY:
+  - name: Prices & Affordability
+    keywords:
+    - house price
+    - property price
+    - affordability
+    - market value
+    - sale price
+    - price rise
+    - home price
+  - name: Rental Market
+    keywords:
+    - 'rent '
+    - rental
+    - landlord
+    - tenant
+    - eviction
+    - lease
+    - renter
+    - rental income
+  - name: Planning & Development
+    keywords:
+    - planning
+    - development
+    - construction
+    - build
+    - zoning
+    - density
+    - planning permission
+    - developer
+  - name: Policy & Schemes
+    keywords:
+    - government scheme
+    - help to buy
+    - social housing
+    - affordable housing
+    - subsidy
+    - housing policy
+  INEQUALITY & LABOUR:
+  - name: Wages & Income
+    keywords:
+    - wage
+    - salary
+    - 'pay '
+    - minimum wage
+    - pay gap
+    - income inequality
+    - earnings
+    - compensation
+  - name: Workers & Unions
+    keywords:
+    - trade union
+    - 'union '
+    - strike
+    - collective bargaining
+    - workers rights
+    - industrial action
+    - labour dispute
+  - name: Poverty & Welfare
+    keywords:
+    - poverty
+    - welfare
+    - social protection
+    - inequality
+    - deprivation
+    - low income
+    - benefit
+  - name: Future of Work
+    keywords:
+    - automation
+    - ai jobs
+    - artificial intelligence
+    - robot
+    - gig economy
+    - remote work
+    - platform work
+    - future of work
+  DEMOGRAPHICS & MIGRATION:
+  - name: Immigration & Asylum
+    keywords:
+    - immigration
+    - immigrant
+    - migrant
+    - asylum
+    - refugee
+    - border control
+    - visa
+    - deportation
+  - name: Population & Ageing
+    keywords:
+    - ageing
+    - aging
+    - birth rate
+    - fertility rate
+    - population growth
+    - demographic
+    - elderly
+    - pension age
+  - name: Emigration & Diaspora
+    keywords:
+    - emigration
+    - diaspora
+    - brain drain
+    - emigrant
+    - return migration

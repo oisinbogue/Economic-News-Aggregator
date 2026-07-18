@@ -1,0 +1,317 @@
+url,name,country,language,topic_hint,status,resolved_url,notes
+https://politepaul.com/fd/1NQdUkwmwc8T.xml,Irish Times - Business,Ireland,en,Irish News,dead,https://politepaul.com/fd/1NQdUkwmwc8T.xml,"Client error '404 Not Found' for url 'https://politepaul.com/fd/1NQdUkwmwc8T.xml'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://feeds.feedburner.com/iebusiness,Irish Examiner - Business,Ireland,en,Irish News,ok,https://feeds.feedburner.com/iebusiness,
+https://www.independent.ie/business/rss,Irish Independent - Business,Ireland,en,Irish News,redirected,https://www.independent.ie/business/rss/,
+https://www.rte.ie/rss/business.xml,RTE News - Business,Ireland,en,Irish News,redirected,https://www.rte.ie/feeds/rss/?index=/news/business/&limit=20,
+https://www.rte.ie/rss/news.xml,RTE News - Top Stories,Ireland,en,Irish News,redirected,https://www.rte.ie/feeds/rss/?index=/news/&limit=20,
+https://www.thejournal.ie/feed/,The Journal,Ireland,en,Irish News,ok,https://www.thejournal.ie/feed/,
+https://businesspost.ie/feed/,Business Post,Ireland,en,Irish News,dead,https://businesspost.ie/feed/,no entries found and no feed link discovered
+https://thecurrency.news/feed/,The Currency,Ireland,en,Irish News,ok,https://thecurrency.news/feed/,
+https://fora.ie/feed/,Fora.ie,Ireland,en,Irish News,dead,https://fora.ie/feed/,"Client error '404 Not Found' for url 'https://fora.ie/feed/'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://www.siliconrepublic.com/feed/,Silicon Republic,Ireland,en,Irish News,ok,https://www.siliconrepublic.com/feed/,
+https://www.noteworthy.ie/feed/,Noteworthy (Journal Investigations),Ireland,en,Irish News,discovered,https://www.thejournal.ie/feed/,found via homepage <link rel=alternate>
+https://www.esri.ie/publications/feed,ESRI - Research,Ireland,en,Irish Government & Institutions,dead,https://www.esri.ie/publications/feed,"Client error '404 Not Found' for url 'https://www.esri.ie/publications/feed'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://www.centralbank.ie/feeds/news-media-feed,Central Bank of Ireland – News,Ireland,en,Irish Government & Institutions,ok,https://www.centralbank.ie/feeds/news-media-feed,
+https://www.centralbank.ie/feeds/markets-updates-feed,Central Bank of Ireland – Markets Updates,Ireland,en,Irish Government & Institutions,ok,https://www.centralbank.ie/feeds/markets-updates-feed,
+https://www.fiscalcouncil.ie/feed/,Irish Fiscal Advisory Council,Ireland,en,Irish Government & Institutions,ok,https://www.fiscalcouncil.ie/feed/,
+https://www.cso.ie/en/newsandevents/pressreleases/feed/,CSO Ireland - Press Releases,Ireland,en,Irish Government & Institutions,dead,https://www.cso.ie/en/newsandevents/pressreleases/feed/,"Client error '404 Not Found' for url 'https://www.cso.ie/en/newsandevents/pressreleases/feed/'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://www.tasc.ie/feed/,TASC,Ireland,en,Irish Think Tanks & Research,dead,https://www.tasc.ie/feed/,"Client error '404 Not Found' for url 'https://www.tasc.ie/feed/'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://www.nerinstitute.net/feed/,Nevin Economic Research Institute,Ireland,en,Irish Think Tanks & Research,dead,https://www.nerinstitute.net/feed/,"Client error '404 Not Found' for url 'https://www.nerinstitute.net/feed/'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://www.ibec.ie/news-media/ibec-news/news-and-press-releases/rss,IBEC,Ireland,en,Irish Think Tanks & Research,dead,https://www.ibec.ie/news-media/ibec-news/news-and-press-releases/rss,"Client error '404 Not Found' for url 'https://www.ibec.ie/news-media/ibec-news/news-and-press-releases/rss'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://www.oireachtas.ie/en/latest/news/feed/,Oireachtas News,Ireland,en,Irish Politics,dead,https://www.oireachtas.ie/en/latest/news/feed/,no entries found and no feed link discovered
+https://www.theguardian.com/business/economics/rss,The Guardian - Economics,United Kingdom,en,UK News,ok,https://www.theguardian.com/business/economics/rss,
+https://www.theguardian.com/uk/business/rss,The Guardian - Business,United Kingdom,en,UK News,ok,https://www.theguardian.com/uk/business/rss,
+https://feeds.bbci.co.uk/news/business/rss.xml,BBC News - Business,United Kingdom,en,UK News,ok,https://feeds.bbci.co.uk/news/business/rss.xml,
+https://feeds.bbci.co.uk/news/business/economy/rss.xml,BBC News - Economy,United Kingdom,en,UK News,ok,https://feeds.bbci.co.uk/news/business/economy/rss.xml,
+https://www.cityam.com/feed/,City A.M.,United Kingdom,en,UK News,ok,https://www.cityam.com/feed/,
+https://www.telegraph.co.uk/business/rss.xml,Telegraph - Business,United Kingdom,en,UK News,ok,https://www.telegraph.co.uk/business/rss.xml,
+https://www.newstatesman.com/feed/,New Statesman,United Kingdom,en,UK News,dead,https://www.newstatesman.com/feed/,"Client error '403 Forbidden' for url 'https://www.newstatesman.com/feed/'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+https://www.spectator.co.uk/category/business/feed/,The Spectator - Business,United Kingdom,en,UK News,dead,https://www.spectator.co.uk/category/business/feed/,"Client error '404 Not Found' for url 'https://spectator.com/category/business/feed/'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://www.ft.com/rss/home,Financial Times (free),United Kingdom,en,UK News,redirected,https://www.ft.com/rss/home/international,
+https://www.bankofengland.co.uk/rss/news,Bank of England - News,United Kingdom,en,UK Institutions,ok,https://www.bankofengland.co.uk/rss/news,
+https://www.bankofengland.co.uk/rss/publications,Bank of England - Research,United Kingdom,en,UK Institutions,ok,https://www.bankofengland.co.uk/rss/publications,
+https://obr.uk/feed/,Office for Budget Responsibility,United Kingdom,en,UK Institutions,ok,https://obr.uk/feed/,
+https://www.ons.gov.uk/feed?format=atom,ONS (Office for National Statistics),United Kingdom,en,UK Institutions,dead,https://www.ons.gov.uk/feed?format=atom,"Client error '404 Not Found' for url 'https://www.ons.gov.uk/feed?format=atom'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://www.resolutionfoundation.org/feed/,Resolution Foundation,United Kingdom,en,UK Think Tanks,ok,https://www.resolutionfoundation.org/feed/,
+https://ifs.org.uk/publications/feed,Institute for Fiscal Studies,United Kingdom,en,UK Think Tanks,dead,https://ifs.org.uk/publications/feed,"Client error '403 Forbidden' for url 'https://ifs.org.uk/publications/feed'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+https://www.niesr.ac.uk/feed,National Institute of Economic and Social Research,United Kingdom,en,UK Think Tanks,redirected,https://niesr.ac.uk/feed,
+https://blogs.lse.ac.uk/politicsandpolicy/feed/,LSE British Politics & Policy Blog,United Kingdom,en,UK Think Tanks,ok,https://blogs.lse.ac.uk/politicsandpolicy/feed/,
+https://politepaul.com/fd/Okb1cDoeXAKg.xml,LSE CEP,United Kingdom,en,UK Think Tanks,dead,https://politepaul.com/fd/Okb1cDoeXAKg.xml,"Client error '404 Not Found' for url 'https://politepaul.com/fd/Okb1cDoeXAKg.xml'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://fabians.org.uk/feed/,Fabian Society,United Kingdom,en,UK Think Tanks,ok,https://fabians.org.uk/feed/,
+https://www.adamsmith.org/blog/rss.xml,Adam Smith Institute,United Kingdom,en,UK Think Tanks,redirected,https://www.adamsmith.org/blog?format=rss,
+https://www.bruegel.org/rss.xml,Bruegel,Europe (Western),en,EU-Wide Sources,ok,https://www.bruegel.org/rss.xml,
+https://cepr.org/rss/vox-content,VoxEU,Europe (Western),en,EU-Wide Sources,ok,https://cepr.org/rss/vox-content,
+https://www.socialeurope.eu/feed,Social Europe,Europe (Western),en,EU-Wide Sources,ok,https://www.socialeurope.eu/feed,
+https://euobserver.com/rss,EUobserver - Economy,Europe (Western),en,EU-Wide Sources,redirected,https://euobserver.com/feed/,
+https://www.politico.eu/feed/,Politico Europe,Europe (Western),en,EU-Wide Sources,ok,https://www.politico.eu/feed/,
+https://www.euractiv.com/feed/,EurActiv,Europe (Western),en,EU-Wide Sources,dead,https://www.euractiv.com/feed/,"Client error '403 Forbidden' for url 'https://www.euractiv.com/feed/'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+https://www.theparliamentmagazine.eu/rss.xml,The Parliament Magazine,Europe (Western),en,EU-Wide Sources,dead,https://www.theparliamentmagazine.eu/rss.xml,"Client error '404 Page Not Found' for url 'https://www.theparliamentmagazine.eu/rss.xml'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://www.ecb.europa.eu/rss/press.html,European Central Bank - Press Releases,Europe (Western),en,EU Institutions,ok,https://www.ecb.europa.eu/rss/press.html,
+https://www.ecb.europa.eu/rss/wppub.html,European Central Bank - Research,Europe (Western),en,EU Institutions,ok,https://www.ecb.europa.eu/rss/wppub.html,
+https://ec.europa.eu/economy_finance/rss/economy_en.rss,European Commission - Economic News,Europe (Western),en,EU Institutions,dead,https://ec.europa.eu/economy_finance/rss/economy_en.rss,"Client error '404 (Not Found)' for url 'https://ec.europa.eu/economy_finance/rss/economy_en.rss'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://ec.europa.eu/eurostat/web/rss,Eurostat - News Releases,Europe (Western),en,EU Institutions,dead,https://ec.europa.eu/eurostat/web/rss,no entries found and no feed link discovered
+https://cepr.org/rss.xml,CEPR,Europe (Western),en,EU Institutions,ok,https://cepr.org/rss.xml,
+https://www.europarl.europa.eu/rss/doc/top-stories/en.xml,European Parliament - News,Europe (Western),en,EU Institutions,ok,https://www.europarl.europa.eu/rss/doc/top-stories/en.xml,
+https://www.europarl.europa.eu/rss/topic/907/en.xml,European Parliament - Economics,Europe (Western),en,EU Institutions,ok,https://www.europarl.europa.eu/rss/topic/907/en.xml,
+https://www.handelsblatt.com/contentexport/feed/schlagzeilen,Handelsblatt Global,Europe (Western),de,Germany,redirected,https://feeds.cms.handelsblatt.com/schlagzeilen,
+https://rss.dw.com/rdf/rss-en-bus,Deutsche Welle - Business,Europe (Western),en,Germany,ok,https://rss.dw.com/rdf/rss-en-bus,
+https://www.bundesbank.de/service/rss/en/633306/feed.rss,Bundesbank - Press Releases,Europe (Western),de,Germany,ok,https://www.bundesbank.de/service/rss/en/633306/feed.rss,
+https://www.ifo.de/en/rss/presse.xml,Ifo Institute,Europe (Western),de,Germany,dead,https://www.ifo.de/en/rss/presse.xml,"Client error '404 Not Found' for url 'https://www.ifo.de/en/rss/presse.xml'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://www.lemonde.fr/economie/rss_full.xml,Le Monde - Economie,Europe (Western),fr,France,ok,https://www.lemonde.fr/economie/rss_full.xml,
+https://www.france24.com/en/rss,France 24 - Economy,Europe (Western),fr,France,ok,https://www.france24.com/en/rss,
+https://feeds.elpais.com/mrss-s/pages/ep/site/english.elpais.com/portada,El País - Economy,Europe (Western),es,Spain,ok,https://feeds.elpais.com/mrss-s/pages/ep/site/english.elpais.com/portada,
+https://www.elconfidencial.com/rss/economia.xml,El Confidencial,Europe (Western),es,Spain,redirected,https://rss.elconfidencial.com/economia/,
+https://www.corriere.it/rss/economia.xml,Corriere della Sera - Economy,Europe (Western),it,Italy,ok,https://www.corriere.it/rss/economia.xml,
+https://www.nrc.nl/rss/,NRC Handelsblad,Europe (Western),nl,Netherlands,ok,https://www.nrc.nl/rss/,
+https://www.dnb.nl/en/rss/,De Nederlandsche Bank,Europe (Western),nl,Netherlands,dead,https://www.dnb.nl/en/rss/,no entries found and no feed link discovered
+https://www.riksbank.se/en-gb/rss/,Riksbank (Sweden) - News,Europe (Western),sv,Nordics,dead,https://www.riksbank.se/en-gb/rss/,no entries found and no feed link discovered
+https://www.norges-bank.no/en/rss/,Norges Bank - News,Europe (Western),no,Nordics,dead,https://www.norges-bank.no/en/rss/,"Client error '404 Not Found' for url 'https://www.norges-bank.no/en/rss/'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://www.suomenpankki.fi/en/rss/,Bank of Finland,Europe (Western),fi,Nordics,dead,https://www.suomenpankki.fi/en/rss/,"Client error '404 Not Found' for url 'https://www.suomenpankki.fi/en/rss/'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://www.copenhageneconomics.com/feed/,Copenhagen Economics,Europe (Western),en,Nordics,redirected,https://copenhageneconomics.com/feed/,
+https://www.snb.ch/en/rss/rssnews.xml,Swiss National Bank,Europe (Western),de,Switzerland,dead,https://www.snb.ch/en/rss/rssnews.xml,"Client error '404 Not Found' for url 'https://www.snb.ch/en/rss/rssnews.xml'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://wbj.pl/feed/,Warsaw Business Journal,Europe (Eastern/Central),en,news,dead,https://wbj.pl/feed/,"Client error '404 Page not exists' for url 'https://wbj.pl/feed/'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://www.praguemonitor.com/feed/,Prague Morning,Europe (Eastern/Central),en,news,redirected,https://praguemonitor.com/feed/,
+https://bbj.hu/feed/,Budapest Business Journal,Europe (Eastern/Central),en,news,ok,https://bbj.hu/feed/,
+https://kyivindependent.com/category/economy/feed/,Kyiv Independent - Economy,Europe (Eastern/Central),en,news,discovered,https://kyivindependent.com/news-archive/rss/,found via homepage <link rel=alternate>
+https://www.euractiv.com/sections/central-europe/feed/,Euractiv Central & Eastern Europe,Europe (Eastern/Central),en,news,dead,https://www.euractiv.com/sections/central-europe/feed/,"Client error '403 Forbidden' for url 'https://www.euractiv.com/sections/central-europe/feed/'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+https://emerging-europe.com/feed/,Emerging Europe,Europe (Eastern/Central),en,news,ok,https://emerging-europe.com/feed/,
+https://www.intellinews.com/rss/,bne Intellinews,Europe (Eastern/Central),en,news,discovered,https://www.intellinews.com/feed/,found via homepage <link rel=alternate>
+https://www.baltictimes.com/rss/news/,Baltic Times,Europe (Eastern/Central),en,news,dead,https://www.baltictimes.com/rss/news/,no entries found and no feed link discovered
+https://www.romania-insider.com/feed/,Romanian Insider,Europe (Eastern/Central),en,news,redirected,https://www.romania-insider.com/feed,
+https://rss.nytimes.com/services/xml/rss/nyt/Business.xml,New York Times - Business,United States,en,Major US News,ok,https://rss.nytimes.com/services/xml/rss/nyt/Business.xml,
+https://rss.nytimes.com/services/xml/rss/nyt/Economy.xml,New York Times - Economy,United States,en,Major US News,ok,https://rss.nytimes.com/services/xml/rss/nyt/Economy.xml,
+https://feeds.washingtonpost.com/rss/business,Washington Post - Business,United States,en,Major US News,ok,https://feeds.washingtonpost.com/rss/business,
+https://rss.app/feeds/9fSoShIXTLIR40J5.xml,Reuters - Business,United States,en,Major US News,dead,https://rss.app/feeds/9fSoShIXTLIR40J5.xml,"Client error '402 Payment Required' for url 'https://rss.app/feeds/9fSoShIXTLIR40J5.xml'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/402"
+https://rss.app/feed/X3b3gLbcmBVmxTzR,Reuters - Economy,United States,en,Major US News,dead,https://rss.app/feed/X3b3gLbcmBVmxTzR,no entries found and no feed link discovered
+https://rss.app/feed/VdzGLA9PpqxUvPoQ,Reuters – Markets,United States,en,Major US News,dead,https://rss.app/feed/VdzGLA9PpqxUvPoQ,no entries found and no feed link discovered
+https://rsshub.app/apnews/topics/business,Associated Press - Business,United States,en,Major US News,dead,https://rsshub.app/apnews/topics/business,"Client error '403 Forbidden' for url 'https://rsshub.app/apnews/topics/business'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+https://feeds.bloomberg.com/economics/news.rss,Bloomberg - Economics,United States,en,Major US News,redirected,https://www.bloomberg.com/feeds/economics/news.rss,
+https://www.axios.com/feeds/feed.rss,Axios - Economy,United States,en,Major US News,redirected,https://api.axios.com/feed/,
+https://feeds.npr.org/1017/rss.xml,NPR - Economy,United States,en,Major US News,ok,https://feeds.npr.org/1017/rss.xml,
+https://www.vox.com/rss/money,Vox - Economics,United States,en,Major US News,discovered,https://www.vox.com/rss/index.xml,found via homepage <link rel=alternate>
+https://slate.com/feeds/business.rss,Slate - Business,United States,en,Major US News,ok,https://slate.com/feeds/business.rss,
+https://www.federalreserve.gov/feeds/press_all.xml,Federal Reserve - Press Releases,United States,en,US Federal Reserve,ok,https://www.federalreserve.gov/feeds/press_all.xml,
+https://www.federalreserve.gov/feeds/feds.xml,Federal Reserve - Research,United States,en,US Federal Reserve,ok,https://www.federalreserve.gov/feeds/feds.xml,
+https://libertystreeteconomics.newyorkfed.org/feed/,NY Fed - Liberty Street Economics Blog,United States,en,US Federal Reserve,ok,https://libertystreeteconomics.newyorkfed.org/feed/,
+https://www.chicagofed.org/utilities/rss/chicago-fed-research.ashx,Chicago Fed - Research,United States,en,US Federal Reserve,dead,https://www.chicagofed.org/utilities/rss/chicago-fed-research.ashx,"Client error '404 Not Found' for url 'https://www.chicagofed.org/utilities/rss/chicago-fed-research.ashx'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://www.frbsf.org/rss/,San Francisco Fed - Research,United States,en,US Federal Reserve,redirected,https://www.frbsf.org/feed/,
+https://www.atlantafed.org/rss,Atlanta Fed - Macroblog,United States,en,US Federal Reserve,dead,https://www.atlantafed.org/rss,no entries found and no feed link discovered
+https://www.minneapolisfed.org/rss/publications-research.xml,Minneapolis Fed - Research,United States,en,US Federal Reserve,dead,https://www.minneapolisfed.org/rss/publications-research.xml,"Client error '404 Not Found' for url 'https://www.minneapolisfed.org/rss/publications-research.xml'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://www.dallasfed.org/rss/releases.xml,Dallas Fed - Research,United States,en,US Federal Reserve,ok,https://www.dallasfed.org/rss/releases.xml,
+https://www.kansascityfed.org/rss/research/,Kansas City Fed,United States,en,US Federal Reserve,dead,https://www.kansascityfed.org/rss/research/,"Client error '404 Not Found' for url 'https://www.kansascityfed.org/rss/research/'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://www.bls.gov/feed/bls_latest.rss,Bureau of Labor Statistics,United States,en,US Government,ok,https://www.bls.gov/feed/bls_latest.rss,
+https://apps.bea.gov/rss/rss.xml,Bureau of Economic Analysis,United States,en,US Government,ok,https://apps.bea.gov/rss/rss.xml,
+https://www.cbo.gov/about/feed/reports,Congressional Budget Office,United States,en,US Government,dead,https://www.cbo.gov/about/feed/reports,"Client error '403 Forbidden' for url 'https://www.cbo.gov/about/feed/reports'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+https://www.census.gov/economic-indicators/rss.xml,US Census Bureau - Economic News,United States,en,US Government,dead,https://www.census.gov/economic-indicators/rss.xml,no entries found and no feed link discovered
+https://www.brookings.edu/feed/,Brookings Institution,United States,en,US Think Tanks,dead,https://www.brookings.edu/feed/,no entries found and no feed link discovered
+https://www.piie.com/rss.xml,Peterson Institute for International Economics,United States,en,US Think Tanks,dead,https://www.piie.com/rss.xml,"Client error '404 Not Found' for url 'https://www.piie.com/rss.xml'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://www.epi.org/feed/,Economic Policy Institute,United States,en,US Think Tanks,ok,https://www.epi.org/feed/,
+https://www.urban.org/rss.xml,Urban Institute,United States,en,US Think Tanks,dead,https://www.urban.org/rss.xml,"Client error '403 Forbidden' for url 'https://www.urban.org/rss.xml'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+https://www.cato.org/rss/recent-op-eds,Cato Institute,United States,en,US Think Tanks,dead,https://www.cato.org/rss/recent-op-eds,"Client error '403 Forbidden' for url 'https://www.cato.org/rss/recent-op-eds'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+https://rooseveltinstitute.org/feed/,Roosevelt Institute,United States,en,US Think Tanks,ok,https://rooseveltinstitute.org/feed/,
+https://www.niskanencenter.org/feed/,Niskanen Center,United States,en,US Think Tanks,ok,https://www.niskanencenter.org/feed/,
+https://www.hamiltonproject.org/feed/,Hamilton Project,United States,en,US Think Tanks,ok,https://www.hamiltonproject.org/feed/,
+https://milkeninstitute.org/rss.xml,Milken Institute,United States,en,US Think Tanks,ok,https://milkeninstitute.org/rss.xml,
+https://www.aei.org/feed/,American Enterprise Institute,United States,en,US Think Tanks,ok,https://www.aei.org/feed/,
+https://www.cbpp.org/rss.xml,Center on Budget and Policy Priorities,United States,en,US Think Tanks,dead,https://www.cbpp.org/rss.xml,"Client error '403 Forbidden' for url 'https://www.cbpp.org/rss.xml'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+https://feeds.pewresearch.org/pewresearch/rss,Pew Research Center - Economics,United States,en,US Think Tanks,dead,https://feeds.pewresearch.org/pewresearch/rss,[Errno 11001] getaddrinfo failed
+https://www.theglobeandmail.com/arc/outboundfeeds/rss/category/business/,Globe and Mail - Business,Canada,en,news,ok,https://www.theglobeandmail.com/arc/outboundfeeds/rss/category/business/,
+https://financialpost.com/feed/,Financial Post,Canada,en,news,redirected,https://financialpost.com/feed,
+https://www.cbc.ca/cmlink/rss-business,CBC News - Business,Canada,en,news,dead,https://www.cbc.ca/cmlink/rss-business,no entries found and no feed link discovered
+https://www.bankofcanada.ca/feed/,Bank of Canada,Canada,en,news,ok,https://www.bankofcanada.ca/feed/,
+https://cdhowe.org/feed/,C.D. Howe Institute,Canada,en,news,redirected,https://cdhowe.org/publication/feed/,
+https://www.fraserinstitute.org/rss,Fraser Institute,Canada,en,news,dead,https://www.fraserinstitute.org/rss,"Client error '403 Forbidden' for url 'https://www.fraserinstitute.org/rss'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+https://www.as-coa.org/rss.xml,Americas Society / Council of the Americas,Latin America,en,news,dead,https://www.as-coa.org/rss.xml,"Client error '403 Forbidden' for url 'https://www.as-coa.org/rss.xml'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+https://www.cepal.org/en/rss/novedades.xml,ECLAC (UN Economic Commission for Latin America),Latin America,en,news,dead,https://www.cepal.org/en/rss/novedades.xml,"Client error '404 Not Found' for url 'https://www.cepal.org/en/rss/novedades.xml'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://blogs.iadb.org/feed/,Inter-American Development Bank,Latin America,en,news,dead,https://blogs.iadb.org/feed/,"Client error '403 Forbidden' for url 'https://www.iadb.org/en/idb-blog'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+https://www.elfinanciero.com.mx/rss,El Financiero Mexico,Latin America,es,news,redirected,https://www.elfinanciero.com.mx/arc/outboundfeeds/rss/?outputType=xml,
+https://feeds.folha.uol.com.br/mercado/rss091.xml,Folha de S.Paulo - Economy,Latin America,pt,news,ok,https://feeds.folha.uol.com.br/mercado/rss091.xml,
+https://batimes.com.ar/feed/,Buenos Aires Times,Latin America,en,news,dead,https://batimes.com.ar/feed/,no entries found and no feed link discovered
+https://colombiareports.com/feed/,Colombia Reports,Latin America,en,news,ok,https://colombiareports.com/feed/,
+https://en.mercopress.com/rss,Merco Press (Southern Cone),Latin America,en,news,ok,https://en.mercopress.com/rss,
+https://latintrade.com/feed/,Latin Trade,Latin America,en,news,dead,https://latintrade.com/feed/,"Client error '403 Forbidden' for url 'https://latintrade.com/feed/'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+https://riotimesonline.com/feed/,Rio Times,Latin America,en,news,redirected,https://www.riotimesonline.com/feed/,
+https://businessday.ng/feed/,Business Day South Africa,Africa,en,news,ok,https://businessday.ng/feed/,
+https://businessday.ng/feed/,Financial Mail South Africa,Africa,en,news,ok,https://businessday.ng/feed/,
+https://www.theeastafrican.co.ke/rss/,The East African,Africa,en,news,discovered,https://www.theeastafrican.co.ke/rss.xml,found via homepage <link rel=alternate>
+https://mg.co.za/the-continent/feed/,The Continent,Africa,en,news,discovered,https://mg.co.za/atom/,found via homepage <link rel=alternate>
+https://www.thisdaylive.com/index.php/feed/,This Day Nigeria,Africa,en,news,redirected,https://www.thisdaylive.com/feed/,
+https://www.monitor.co.ug/uganda/rss/,Daily Monitor Uganda,Africa,en,news,dead,https://www.monitor.co.ug/uganda/rss/,"Client error '403 Forbidden' for url 'https://www.monitor.co.ug/uganda/rss/'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+https://african.business/feed,African Business Magazine,Africa,en,news,ok,https://african.business/feed,
+https://qz.com/africa/rss,Quartz Africa,Africa,en,news,dead,https://qz.com/africa/rss,"Client error '403 Forbidden' for url 'https://qz.com/africa/rss'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+https://www.howwemadeitinafrica.com/feed/,How We Made It In Africa,Africa,en,news,ok,https://www.howwemadeitinafrica.com/feed/,
+https://www.afdb.org/en/rss/news,African Development Bank,Africa,en,news,dead,https://www.afdb.org/en/rss/news,"Client error '403 Forbidden' for url 'https://www.afdb.org/en/rss/news'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+https://venturesafrica.com/feed/,Ventures Africa,Africa,en,news,dead,https://venturesafrica.com/feed/,"Server error '526 <none>' for url 'https://venturesafrica.com/feed/'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/526"
+https://www.theafricareport.com/feed/,The Africa Report,Africa,en,news,ok,https://www.theafricareport.com/feed/,
+https://www.dailymaverick.co.za/rss/,Daily Maverick - Economy,Africa,en,news,redirected,https://www.dailymaverick.co.za/dmrss/,
+https://www.arabnews.com/rss.xml/business-economy,Arab News - Business,Middle East,en,news,ok,https://www.arabnews.com/rss.xml/business-economy,
+https://www.thenationalnews.com/rss/business.xml,The National UAE - Business,Middle East,en,news,dead,https://www.thenationalnews.com/rss/business.xml,"Client error '404 Not Found' for url 'https://www.thenationalnews.com/rss/business.xml'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://gulfnews.com/rss/business,Gulf News - Business,Middle East,en,news,dead,https://gulfnews.com/rss/business,"Client error '404 Not Found' for url 'https://gulfnews.com/rss/business'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://www.middleeasteye.net/rss,Middle East Eye - Economy,Middle East,en,news,ok,https://www.middleeasteye.net/rss,
+https://www.al-monitor.com/rss/economy,Al-Monitor - Economy,Middle East,en,news,dead,https://www.al-monitor.com/rss/economy,"Client error '403 Forbidden' for url 'https://www.al-monitor.com/rss/economy'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+https://www.jpost.com/Rss/RssFeedsBusinessAndTech.aspx,Jerusalem Post - Business,Middle East,en,news,dead,https://www.jpost.com/Rss/RssFeedsBusinessAndTech.aspx,"Client error '404 Not Found' for url 'https://www.jpost.com/rss/rssfeedsbusinessandtech.aspx'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://www.imf.org/en/news/rss,IMF MENA,Middle East,en,news,dead,https://www.imf.org/en/news/rss,"Client error '403 Forbidden' for url 'https://www.imf.org/en/news/rss'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+https://www.caixinglobal.com/rss/,Caixin Global,China/Greater China,en,news,dead,https://www.caixinglobal.com/rss/,"Client error '403 Forbidden' for url 'https://www.caixinglobal.com/rss/'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+https://asia.nikkei.com/rss/feed/nar,Nikkei Asia - China,China/Greater China,en,news,ok,https://asia.nikkei.com/rss/feed/nar,
+https://www.scmp.com/rss/91/feed,South China Morning Post - Business,China/Greater China,en,news,redirected,https://www.scmp.com/rss/91/feed/,
+https://www.globaltimes.cn/rss/economy.xml,Global Times - Economy,China/Greater China,en,news,dead,https://www.globaltimes.cn/rss/economy.xml,"Client error '404 Not Found' for url 'https://www.globaltimes.cn/rss/economy.xml'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://www.chinadaily.com.cn/rss/bizchina_rss.xml,China Daily - Business,China/Greater China,en,news,ok,https://www.chinadaily.com.cn/rss/bizchina_rss.xml,
+https://www.thewirechina.com/feed/,The Wire China,China/Greater China,en,news,ok,https://www.thewirechina.com/feed/,
+https://politepaul.com/fd/XxxizH84d44o.xml,People's Bank of China,China/Greater China,en,news,dead,https://politepaul.com/fd/XxxizH84d44o.xml,"Client error '404 Not Found' for url 'https://politepaul.com/fd/XxxizH84d44o.xml'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://www.taipeitimes.com/xml/biz.rss,Taipei Times - Business,China/Greater China,en,news,dead,https://www.taipeitimes.com/xml/biz.rss,"Client error '404 Not Found' for url 'https://www.taipeitimes.com/xml/biz.rss'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://economictimes.indiatimes.com/rssfeedstopstories.cms,Economic Times India,India,en,news,ok,https://economictimes.indiatimes.com/rssfeedstopstories.cms,
+https://www.business-standard.com/rss/economy-policy-101.rss,Business Standard,India,en,news,dead,https://www.business-standard.com/rss/economy-policy-101.rss,"Client error '403 Forbidden' for url 'https://www.business-standard.com/rss/economy-policy-101.rss'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+https://www.livemint.com/rss/economy,Mint - Economy,India,en,news,ok,https://www.livemint.com/rss/economy,
+https://www.thehindu.com/business/feeder/default.rss,The Hindu - Business,India,en,news,ok,https://www.thehindu.com/business/feeder/default.rss,
+https://www.hindustantimes.com/feeds/rss/business/rssfeed.xml,Hindustan Times - Business,India,en,news,ok,https://www.hindustantimes.com/feeds/rss/business/rssfeed.xml,
+https://rbidocs.rbi.org.in/rdocs/PressRelease/english/pressrelease.xml,Reserve Bank of India,India,en,news,dead,https://rbidocs.rbi.org.in/rdocs/PressRelease/english/pressrelease.xml,no entries found and no feed link discovered
+https://niti.gov.in/rss.xml,NITI Aayog,India,en,news,ok,https://niti.gov.in/rss.xml,
+https://www.japantimes.co.jp/feed/business/,Japan Times - Business,Japan/South Korea,en,news,dead,https://www.japantimes.co.jp/feed/business/,"Client error '404 Not Found' for url 'https://www.japantimes.co.jp/feed/business/'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://asia.nikkei.com/rss/feed/nar,Nikkei Asia,Japan/South Korea,en,news,ok,https://asia.nikkei.com/rss/feed/nar,
+https://www.boj.or.jp/en/announcements/release_rss.xml,Bank of Japan - News,Japan/South Korea,en,news,dead,https://www.boj.or.jp/en/announcements/release_rss.xml,no entries found and no feed link discovered
+https://koreajoongangdaily.joins.com/rss/sectbiz.xml,Korea JoongAng Daily - Business,Japan/South Korea,en,news,dead,https://koreajoongangdaily.joins.com/rss/sectbiz.xml,no entries found and no feed link discovered
+https://www.koreatimes.co.kr/www/rss/biz.xml,Korea Times - Business,Japan/South Korea,en,news,dead,https://www.koreatimes.co.kr/www/rss/biz.xml,no entries found and no feed link discovered
+https://www.bok.or.kr/eng/selectBoardRss.do?menuNaviId=1783,Bank of Korea,Japan/South Korea,en,news,dead,https://www.bok.or.kr/eng/selectBoardRss.do?menuNaviId=1783,"Client error '404 ' for url 'https://www.bok.or.kr/eng/selectBoardRss.do?menuNaviId=1783'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://www.bangkokpost.com/rss/data/business.xml,Bangkok Post - Business,Southeast Asia,en,news,ok,https://www.bangkokpost.com/rss/data/business.xml,
+https://www.thejakartapost.com/json/news/business.rss,Jakarta Post - Business,Southeast Asia,en,news,dead,https://www.thejakartapost.com/json/news/business.rss,"Client error '404 Not Found' for url 'https://www.thejakartapost.com/json/news/business.rss'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://business.inquirer.net/feed,Philippine Daily Inquirer - Business,Southeast Asia,en,news,dead,https://business.inquirer.net/feed,"Client error '403 Forbidden' for url 'https://business.inquirer.net/feed'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+https://vir.com.vn/rss/news.rss,Vietnam Investment Review,Southeast Asia,en,news,discovered,https://vir.com.vn/rss_feed/,found via homepage <link rel=alternate>
+https://www.thestar.com.my/rss/Business/,The Star Malaysia - Business,Southeast Asia,en,news,dead,https://www.thestar.com.my/rss/Business/,"Client error '404 Not Found' for url 'https://www.thestar.com.my/rss/Business/'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://www.straitstimes.com/news/business/rss.xml,Straits Times - Business,Southeast Asia,en,news,ok,https://www.straitstimes.com/news/business/rss.xml,
+https://www.mmtimes.com/rss/business,Myanmar Times - Business,Southeast Asia,en,news,dead,https://www.mmtimes.com/rss/business,no entries found and no feed link discovered
+https://www.khmertimeskh.com/feed/,Khmer Times - Business,Southeast Asia,en,news,dead,https://www.khmertimeskh.com/feed/,"Client error '403 Forbidden' for url 'https://www.khmertimeskh.com/feed/'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+https://aric.adb.org/feeds/news.xml,ASEAN Economic Monitor,Southeast Asia,en,news,dead,https://aric.adb.org/feeds/news.xml,"Client error '404 Not Found' for url 'https://aric.adb.org/error.php'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://www.adb.org/news/rss,Asian Development Bank,Southeast Asia,en,news,dead,https://www.adb.org/news/rss,"Client error '403 Forbidden' for url 'https://www.adb.org/news/rss'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+https://www.afr.com/rss/feed.xml,Australian Financial Review,Australia/New Zealand,en,news,ok,https://www.afr.com/rss/feed.xml,
+https://www.smh.com.au/rss/business.xml,Sydney Morning Herald - Business,Australia/New Zealand,en,news,ok,https://www.smh.com.au/rss/business.xml,
+https://www.theaustralian.com.au/feed,The Australian - Business,Australia/New Zealand,en,news,dead,https://www.theaustralian.com.au/feed,"Client error '403 Forbidden' for url 'https://www.theaustralian.com.au/feed'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+https://www.abc.net.au/news/feed/45910/rss.xml,ABC News Australia - Business,Australia/New Zealand,en,news,ok,https://www.abc.net.au/news/feed/45910/rss.xml,
+https://www.rba.gov.au/rss/rss-cb-speeches.xml,Reserve Bank of Australia,Australia/New Zealand,en,news,ok,https://www.rba.gov.au/rss/rss-cb-speeches.xml,
+https://grattan.edu.au/feed/,Grattan Institute,Australia/New Zealand,en,news,dead,https://grattan.edu.au/feed/,"Client error '403 Forbidden' for url 'https://grattan.edu.au/feed/'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+https://australiainstitute.org.au/feed/,Australia Institute,Australia/New Zealand,en,news,ok,https://australiainstitute.org.au/feed/,
+https://www.nzherald.co.nz/business/rss/,NZ Herald - Business,Australia/New Zealand,en,news,dead,https://www.nzherald.co.nz/business/rss/,"Client error '404 Not Found' for url 'https://www.nzherald.co.nz/business/rss/'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://www.rbnz.govt.nz/hub/rss/publications.xml,Reserve Bank of New Zealand,Australia/New Zealand,en,news,dead,https://www.rbnz.govt.nz/hub/rss/publications.xml,"Client error '403 Forbidden' for url 'https://www.rbnz.govt.nz/hub/rss/publications.xml'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+https://www.themoscowtimes.com/rss/news,Moscow Times - Business,Russia/Former Soviet States,en,news,ok,https://www.themoscowtimes.com/rss/news,
+https://meduza.io/rss/en/all,Meduza (English),Russia/Former Soviet States,en,news,ok,https://meduza.io/rss/en/all,
+https://eurasianet.org/rss,Eurasianet,Russia/Former Soviet States,en,news,ok,https://eurasianet.org/rss,
+https://eng.lsm.lv/rss/?category=economy,Latvian Public Broadcasting Economy,Russia/Former Soviet States,en,news,ok,https://eng.lsm.lv/rss/?category=economy,
+https://news.postimees.ee/rss,Estonian Postimees (English),Russia/Former Soviet States,en,news,ok,https://news.postimees.ee/rss,
+https://www.imf.org/en/News/rss?language=eng,IMF Blog,International,en,news,dead,https://www.imf.org/en/News/rss?language=eng,"Client error '403 Forbidden' for url 'https://www.imf.org/en/News/rss?language=eng'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+https://blogs.worldbank.org/feed,World Bank Blog,International,en,news,dead,https://blogs.worldbank.org/feed,"Client error '404 Not Found' for url 'https://blogs.worldbank.org/en/feed'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://www.oecd.org/newsroom/rss/newsfeed.xml,OECD News,International,en,news,dead,https://www.oecd.org/newsroom/rss/newsfeed.xml,"Client error '403 Forbidden' for url 'https://www.oecd.org/newsroom/rss/newsfeed.xml'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+https://www.oecd-ilibrary.org/rss/content/publication/19990588,OECD - Economic Surveys,International,en,news,dead,https://www.oecd-ilibrary.org/rss/content/publication/19990588,"Client error '403 Forbidden' for url 'https://www.oecd-ilibrary.org/rss/content/publication/19990588'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+https://news.un.org/feed/subscribe/en/news/topic/economic-development/feed/rss.xml,UN News - Economic Development,International,en,news,ok,https://news.un.org/feed/subscribe/en/news/topic/economic-development/feed/rss.xml,
+https://www.wto.org/english/news_e/rss_e/rss_news_e.xml,WTO News,International,en,news,dead,https://www.wto.org/english/news_e/rss_e/rss_news_e.xml,no entries found and no feed link discovered
+https://www.bis.org/rss/index.htm,BIS (Bank for International Settlements),International,en,news,dead,https://www.bis.org/rss/index.htm,no entries found and no feed link discovered
+https://unctad.org/rss.xml,UNCTAD,International,en,news,dead,https://unctad.org/rss.xml,"Client error '403 Forbidden' for url 'https://unctad.org/rss.xml'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+https://www.g20.org/rss/,G20,International,en,news,dead,https://www.g20.org/rss/,no entries found and no feed link discovered
+https://www.project-syndicate.org/rss,Project Syndicate,International,en,news,ok,https://www.project-syndicate.org/rss,
+https://www.chathamhouse.org/rss.xml,Chatham House,International,en,news,dead,https://www.chathamhouse.org/rss.xml,"Client error '403 Forbidden' for url 'https://www.chathamhouse.org/rss.xml'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+https://www.wilsoncenter.org/rss.xml,Wilson Center,International,en,news,dead,https://www.wilsoncenter.org/rss.xml,"Client error '404 Not Found' for url 'https://www.wilsoncenter.org/rss.xml'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://carnegieendowment.org/rss/,Carnegie Endowment,International,en,news,dead,https://carnegieendowment.org/rss/,no entries found and no feed link discovered
+https://www.atlanticcouncil.org/feed/,Atlantic Council,International,en,news,dead,https://www.atlanticcouncil.org/feed/,"Client error '403 Forbidden' for url 'https://www.atlanticcouncil.org/feed/'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+https://www.rand.org/news.xml,RAND Corporation,International,en,news,dead,https://www.rand.org/news.xml,no entries found and no feed link discovered
+https://www.mckinsey.com/mgi/rss,McKinsey Global Institute,International,en,news,dead,https://www.mckinsey.com/mgi/rss,"Client error '404 Not Found' for url 'https://www.mckinsey.com/mgi/rss'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://www.oxfordeconomics.com/feed/,Oxford Economics,International,en,news,ok,https://www.oxfordeconomics.com/feed/,
+https://www.chathamhouse.org/rss-research.xml,Chatham House Research,International,en,news,dead,https://www.chathamhouse.org/rss-research.xml,"Client error '403 Forbidden' for url 'https://www.chathamhouse.org/rss-research.xml'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+https://adamtooze.substack.com/feed,Adam Tooze - Chartbook,International,en,news,ok,https://adamtooze.substack.com/feed,
+https://noahpinion.substack.com/feed,Noah Smith - Noahpinion,International,en,news,redirected,https://www.noahpinion.blog/feed,
+https://theovershoot.co/feed,Matt Klein - The Overshoot,International,en,news,ok,https://theovershoot.co/feed,
+https://braddelong.substack.com/feed,Brad DeLong - Grasping Reality,International,en,news,ok,https://braddelong.substack.com/feed,
+https://branko2f7.substack.com/feed,Branko Milanovic - globalinequality,International,en,news,ok,https://branko2f7.substack.com/feed,
+https://longandvariable.wordpress.com/feed/,Tony Yates - longandvariable,International,en,news,ok,https://longandvariable.wordpress.com/feed/,
+https://darioperkins.substack.com/feed,Dario Perkins,International,en,news,dead,https://darioperkins.substack.com/feed,no entries found and no feed link discovered
+https://isabellaweber.substack.com/feed,Isabella Weber,International,en,news,dead,https://isabellaweber.substack.com/feed,no entries found and no feed link discovered
+https://ronanlyons.com/feed/,Ronan Lyons (Irish Housing),International,en,news,dead,https://ronanlyons.com/feed/,"Client error '404 Not Found' for url 'https://www.ronanlyons.com/feed/'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://trueeconomics.blogspot.com/feeds/posts/default,Constantin Gurdgiev,International,en,news,ok,https://trueeconomics.blogspot.com/feeds/posts/default,
+https://www.coppolacomment.com/feeds/posts/default,Frances Coppola - Coppola Comment,International,en,news,ok,https://www.coppolacomment.com/feeds/posts/default,
+https://mainlymacro.blogspot.com/feeds/posts/default,Simon Wren-Lewis - Mainly Macro,International,en,news,dead,https://mainlymacro.blogspot.com/feeds/posts/default,no entries found and no feed link discovered
+https://paulkrugman.substack.com/feed,Paul Krugman Newsletter,International,en,news,ok,https://paulkrugman.substack.com/feed,
+https://ritholtz.com/feed/,Barry Ritholtz - The Big Picture,International,en,news,ok,https://ritholtz.com/feed/,
+http://www.enlightenmenteconomics.com/blog/index.php/feed/,Diane Coyle - The Enlightened Economist,International,en,news,ok,http://www.enlightenmenteconomics.com/blog/index.php/feed/,
+https://timharford.com/feed/,Tim Harford - Undercover Economist,International,en,news,ok,https://timharford.com/feed/,
+https://www.eurointelligence.com/rss/comments.rss,Wolfgang Munchau - Eurointelligence,International,en,news,dead,https://www.eurointelligence.com/rss/comments.rss,no entries found and no feed link discovered
+https://www.philosophyofmoney.net/feed/,Eric Lonergan,International,en,news,ok,https://www.philosophyofmoney.net/feed/,
+https://www.nber.org/rss/new.xml,NBER Working Papers,International,en,news,dead,https://www.nber.org/rss/new.xml,"Client error '403 Forbidden' for url 'https://www.nber.org/rss/new.xml'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+https://www.iza.org/rss/dp.xml,IZA Discussion Papers,International,en,news,dead,https://www.iza.org/rss/dp.xml,"Client error '404 Not Found' for url 'https://www.iza.org/rss/dp.xml'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+https://voxdev.org/rss.xml,Vox Development,International,en,news,ok,https://voxdev.org/rss.xml,
+https://papers.ssrn.com/sol3/Jeljour_results.cfm?form_name=journalbrowse&journal_id=1360956&Network=no&SortOrder=ab_approval_date&download=yes&rss=1,SSRN Economics (Most Downloaded),International,en,news,dead,https://papers.ssrn.com/sol3/Jeljour_results.cfm?form_name=journalbrowse&journal_id=1360956&Network=no&SortOrder=ab_approval_date&download=yes&rss=1,"Client error '403 Forbidden' for url 'https://papers.ssrn.com/sol3/Jeljour_results.cfm?form_name=journalbrowse&journal_id=1360956&Network=no&SortOrder=ab_approval_date&download=yes&rss=1'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+https://tradingeconomics.com/rss/news.aspx,Trading Economics - Major Indicators,International,en,news,dead,https://tradingeconomics.com/rss/news.aspx,no entries found and no feed link discovered
+https://fredblog.stlouisfed.org/feed/,FRED Blog (St. Louis Fed),International,en,news,ok,https://fredblog.stlouisfed.org/feed/,
+https://ec.europa.eu/eurostat/web/rss,Eurostat Press Releases,International,en,news,dead,https://ec.europa.eu/eurostat/web/rss,no entries found and no feed link discovered
