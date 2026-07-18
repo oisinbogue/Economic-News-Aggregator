@@ -62,6 +62,11 @@ jobs:
           CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
         run: python -m pipeline.summarize
 
+      - name: Extract predictions
+        env:
+          CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
+        run: python -m pipeline.predictions
+
       - name: Tag (country + topics)
         run: python -m pipeline.tag
 
@@ -72,6 +77,11 @@ jobs:
         env:
           CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
         run: python -m pipeline.curate
+
+      - name: Resolve due predictions
+        env:
+          CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
+        run: python -m pipeline.resolve
 
       - name: Build static site
         run: python -m pipeline.build

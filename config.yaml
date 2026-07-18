@@ -13,7 +13,18 @@ run:
   fetch_concurrency: 30
   fetch_timeout_seconds: 15
   max_articles_per_run: 300
-  max_summaries_per_run: 20  # Cerebras free tier is 5 req/min; keeps a single incremental Actions run to well under ~9 minutes
+  # Cerebras free tier is 5 req/min (pipeline.cerebras throttles to one call
+  # every 13s across the whole process). A run can touch up to 4 throttled
+  # stages -- summarize (up to 2 calls/article), predictions, curate (1
+  # call), resolve -- so these limits are kept modest to keep a single
+  # incremental Actions run comfortably under GitHub's job time budget
+  # rather than maximising throughput per run; the workflow runs 6x/day
+  # (.github/workflows/pipeline.yml) so a smaller per-run cap still clears
+  # the backlog within a few hours.
+  max_summaries_per_run: 20
+  max_predictions_per_run: 10  # pipeline.predictions (extraction) and pipeline.resolve (resolution) both read this
+  recovery_check_interval_hours: 24  # brief feature #5: how often an auto-deactivated feed gets one probe retry rather than being permanently dead
+  recovery_probes_per_run: 15  # cap on how many inactive feeds get probed in a single run, alongside the active-feed fetch
 
 validate_feeds:
   concurrency: 20
@@ -40,6 +51,13 @@ llm:
   model: gpt-oss-120b
   # CEREBRAS_API_KEY is read from the environment (.env locally, GitHub
   # Actions secret in CI) -- never stored here.
+
+predictions:
+  # brief feature #8: how long after a prediction's horizon_date we keep
+  # checking the archive for resolving coverage before giving up and marking
+  # it 'expired' with no verdict, rather than checking forever.
+  resolution_grace_days: 21
+  max_candidate_articles: 15  # archive search results shown to the LLM when proposing a verdict, keeps the prompt inside context
 
 site:
   title: Economic News Aggregator

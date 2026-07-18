@@ -102,6 +102,38 @@ def _feed_names(conn) -> dict[int, str]:
     return {row["id"]: row["name"] for row in conn.execute("SELECT id, name FROM feeds")}
 
 
+def _load_feed_health(conn, recovery_interval_hours: float) -> list[dict]:
+    """Per-feed status for the source health dashboard (brief feature #5).
+
+    Reads the live feeds table -- there's no separate history log, just the
+    streak/timestamp state fetch.py already maintains, which is enough to
+    show what auto-recovery is actually doing: a "healthy" feed working
+    fine, a "degraded" feed accumulating failures but still being fetched
+    every run, or an "inactive" feed that got auto-deactivated and is now
+    only probed occasionally (recovery_check_interval_hours) rather than
+    abandoned for good the way v1's mark_dead_feeds.py left it.
+    """
+    rows = [dict(row) for row in conn.execute("SELECT * FROM feeds ORDER BY name")]
+    for row in rows:
+        if not row["active"]:
+            row["status"] = "inactive"
+            if row.get("last_attempt"):
+                next_check = datetime.fromisoformat(row["last_attempt"]) + timedelta(hours=recovery_interval_hours)
+                row["next_recovery_check"] = _fmt_date(next_check.isoformat())
+            else:
+                row["next_recovery_check"] = "next run"
+        elif row["consecutive_failures"] > 0:
+            row["status"] = "degraded"
+        else:
+            row["status"] = "healthy"
+        row["last_success_display"] = _fmt_date(row.get("last_success"))
+        row["last_attempt_display"] = _fmt_date(row.get("last_attempt"))
+
+    status_order = {"inactive": 0, "degraded": 1, "healthy": 2}
+    rows.sort(key=lambda r: (status_order[r["status"]], -r["consecutive_failures"]))
+    return rows
+
+
 def _load_all_leads(conn) -> list[dict]:
     """One row per cluster: its representative (lead) article, joined with
     feed name for display. Ordered newest-first."""
@@ -179,6 +211,85 @@ def build_search_index(conn, feed_names: dict[int, str]) -> list[dict]:
     return index
 
 
+def _prediction_display(p: dict) -> dict:
+    evidence = json.loads(p["verdict_evidence"]) if p.get("verdict_evidence") else {"reasoning": "", "articles": []}
+    p["reasoning"] = evidence.get("reasoning", "")
+    p["evidence_articles"] = evidence.get("articles", [])
+    return p
+
+
+def _load_prediction_data(conn, feed_names: dict[int, str]) -> dict:
+    """Resolved-prediction leaderboard + read-only pending-review queue for
+    predictions.html (brief feature #8, "Output"). Confirmation itself
+    happens locally via `python -m pipeline.review` -- see that module's
+    docstring for why a static GitHub Pages site can't do it in-browser.
+    """
+    pending = [
+        _prediction_display(dict(row))
+        for row in conn.execute(
+            "SELECT * FROM predictions WHERE status = 'pending_review' ORDER BY horizon_date ASC"
+        )
+    ]
+
+    resolved = [
+        dict(row)
+        for row in conn.execute(
+            """
+            SELECT predictions.*, articles.topics AS source_topics, articles.feed_id AS source_feed_id
+            FROM predictions
+            LEFT JOIN articles ON articles.url_hash = predictions.source
+            WHERE predictions.status = 'resolved'
+            """
+        )
+    ]
+
+    def _accuracy(rows: list[dict]) -> dict:
+        correct = sum(1 for r in rows if r["verdict"] == "correct")
+        incorrect = sum(1 for r in rows if r["verdict"] == "incorrect")
+        unresolvable = sum(1 for r in rows if r["verdict"] == "unresolvable")
+        denom = correct + incorrect
+        return {
+            "total": len(rows), "correct": correct, "incorrect": incorrect,
+            "unresolvable": unresolvable,
+            "accuracy_pct": round(100 * correct / denom) if denom else None,
+        }
+
+    by_predictor: dict[str, list[dict]] = defaultdict(list)
+    for r in resolved:
+        by_predictor[r["predictor"] or "Unknown"].append(r)
+    predictor_leaderboard = [
+        {"name": name, **_accuracy(rows)} for name, rows in by_predictor.items()
+    ]
+    predictor_leaderboard.sort(key=lambda r: (-(r["accuracy_pct"] or -1), -r["total"]))
+
+    by_source: dict[str, list[dict]] = defaultdict(list)
+    for r in resolved:
+        if r.get("source_feed_id"):
+            by_source[feed_names.get(r["source_feed_id"], "Unknown source")].append(r)
+    source_leaderboard = [
+        {"name": name, **_accuracy(rows)} for name, rows in by_source.items()
+    ]
+    source_leaderboard.sort(key=lambda r: (-(r["accuracy_pct"] or -1), -r["total"]))
+
+    by_topic: dict[str, list[dict]] = defaultdict(list)
+    for r in resolved:
+        topics = [t for t in (r.get("source_topics") or "").split(",") if t] or ["Untagged"]
+        for t in topics:
+            by_topic[t].append(r)
+    topic_leaderboard = [
+        {"name": name, **_accuracy(rows)} for name, rows in by_topic.items()
+    ]
+    topic_leaderboard.sort(key=lambda r: (-(r["accuracy_pct"] or -1), -r["total"]))
+
+    return {
+        "pending": pending,
+        "predictor_leaderboard": predictor_leaderboard,
+        "source_leaderboard": source_leaderboard,
+        "topic_leaderboard": topic_leaderboard,
+        "resolved_count": len(resolved),
+    }
+
+
 def render_site() -> dict:
     cfg = get_config()
     site_cfg = cfg["site"]
@@ -213,11 +324,16 @@ def render_site() -> dict:
         lstrip_blocks=True,
     )
 
+    recovery_interval_hours = cfg["run"].get("recovery_check_interval_hours", 24)
+
     with get_connection() as conn:
         feed_names = _feed_names(conn)
         all_leads = _load_all_leads(conn)
         for lead in all_leads:
             _attach_carousel(conn, lead, feed_names, theme_priority)
+
+        feed_health = _load_feed_health(conn, recovery_interval_hours)
+        prediction_data = _load_prediction_data(conn, feed_names)
 
         today = date.today().isoformat()
         top10_rows = [
@@ -312,6 +428,23 @@ def render_site() -> dict:
         encoding="utf-8",
     )
 
+    # ---- source health dashboard (brief feature #5) ----
+    health_tmpl = env.get_template("health.html")
+    (output_dir / "health.html").write_text(
+        health_tmpl.render(
+            site=site_meta, feeds=feed_health,
+            recovery_interval_hours=recovery_interval_hours, asset_prefix="",
+        ),
+        encoding="utf-8",
+    )
+
+    # ---- prediction-accuracy tracker (brief feature #8) ----
+    predictions_tmpl = env.get_template("predictions.html")
+    (output_dir / "predictions.html").write_text(
+        predictions_tmpl.render(site=site_meta, predictions=prediction_data, asset_prefix=""),
+        encoding="utf-8",
+    )
+
     # ---- search index + static assets ----
     (output_dir / "search-index.json").write_text(
         json.dumps(search_index, ensure_ascii=False), encoding="utf-8"
@@ -323,6 +456,10 @@ def render_site() -> dict:
         "top10": len(top10),
         "archive_days": len(archive_days),
         "search_index_articles": len(search_index),
+        "feeds_inactive": sum(1 for f in feed_health if f["status"] == "inactive"),
+        "feeds_degraded": sum(1 for f in feed_health if f["status"] == "degraded"),
+        "predictions_pending_review": len(prediction_data["pending"]),
+        "predictions_resolved": prediction_data["resolved_count"],
     }
 
 
@@ -332,7 +469,10 @@ def main() -> dict:
     stats = render_site()
     print(
         f"Done: {stats['clusters']} cluster(s) rendered, {stats['top10']} in today's top 10, "
-        f"{stats['archive_days']} archive day(s), {stats['search_index_articles']} article(s) in the search index."
+        f"{stats['archive_days']} archive day(s), {stats['search_index_articles']} article(s) in the search index, "
+        f"{stats['feeds_inactive']} feed(s) inactive, {stats['feeds_degraded']} degraded, "
+        f"{stats['predictions_pending_review']} prediction(s) awaiting review, "
+        f"{stats['predictions_resolved']} resolved."
     )
     sys.stdout.flush()
     return stats

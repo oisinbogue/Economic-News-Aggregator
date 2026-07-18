@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Source health — {{ site.title }}{% endblock %}
+
+{% block content %}
+<h1 class="section-title">Source health</h1>
+<p class="section-note">
+  Feeds are auto-deactivated after repeated consecutive failures, but never abandoned:
+  an inactive feed is retried automatically about once every {{ recovery_interval_hours }} hours,
+  and a single successful probe reactivates it. Nothing here is a permanent kill switch.
+</p>
+{% if feeds %}
+<div class="health-table-wrap">
+  <table class="health-table">
+    <thead>
+      <tr>
+        <th>Status</th>
+        <th>Feed</th>
+        <th>Country</th>
+        <th>Failure streak</th>
+        <th>Last success</th>
+        <th>Last attempt</th>
+        <th>Last error</th>
+        <th>Next recovery check</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for f in feeds %}
+      <tr>
+        <td><span class="health-badge health-{{ f.status }}">{{ f.status }}</span></td>
+        <td>{{ f.name }}</td>
+        <td>{{ f.country or "" }}</td>
+        <td>{{ f.consecutive_failures }}</td>
+        <td>{{ f.last_success_display or "never" }}</td>
+        <td>{{ f.last_attempt_display or "never" }}</td>
+        <td>{{ f.last_error_type or "" }}</td>
+        <td>{{ f.next_recovery_check or "" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="empty-note">No feeds configured yet.</p>
+{% endif %}
+{% endblock %}

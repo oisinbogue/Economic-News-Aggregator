@@ -41,7 +41,8 @@ CREATE TABLE IF NOT EXISTS feeds (
     last_success        TEXT,                         -- ISO8601 timestamp, NULL until first success
     etag                TEXT,                         -- ETag from the last fetch response, for conditional GETs
     last_modified       TEXT,                         -- Last-Modified from the last fetch response, for conditional GETs
-    last_error_type     TEXT                          -- classification of the most recent failure (http_404, timeout, dns, ssl, connection, other); NULL after a success
+    last_error_type     TEXT,                         -- classification of the most recent failure (http_404, timeout, dns, ssl, connection, other); NULL after a success
+    last_attempt        TEXT                          -- ISO8601 timestamp of the most recent fetch attempt, success or failure; drives the auto-recovery cooldown for inactive feeds (see pipeline.fetch)
 );
 
 -- One row per article. url_hash (sha256 of the canonical URL) is the PK so
@@ -64,7 +65,8 @@ CREATE TABLE IF NOT EXISTS articles (
     score           INTEGER,        -- count of matched taxonomy keywords (aggregator.py:489-522 score_entry); used to rank cluster members, NOT the daily top 10 (that's LLM-curated, see daily_top10)
     cluster_id      INTEGER REFERENCES clusters(id),
     processed_status TEXT NOT NULL DEFAULT 'fetched'
-                    CHECK (processed_status IN ('fetched','extracted','summarised','done','error'))
+                    CHECK (processed_status IN ('fetched','extracted','summarised','done','error')),
+    prediction_checked INTEGER NOT NULL DEFAULT 0     -- 1 once the Phase 6 prediction-extraction pass has looked at this article, whether or not it found one -- keeps the pass from re-reading the same article forever
 );
 
 -- Groups of articles covering the same story, assigned during a later
@@ -87,9 +89,17 @@ CREATE TABLE IF NOT EXISTS predictions (
     direction       TEXT,            -- e.g. "up", "down", "unchanged"
     horizon_date    TEXT,            -- ISO8601 date the prediction is about
     logged_date     TEXT NOT NULL,   -- ISO8601, when we recorded the claim
-    status          TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open','resolved','expired')),
-    verdict         TEXT,            -- filled in once resolved: e.g. "correct", "incorrect"
-    verdict_evidence TEXT
+    -- open: horizon not yet reached, or reached but the resolve pass hasn't
+    --   found supporting coverage in the archive yet.
+    -- pending_review: resolve pass proposed a verdict from archive evidence;
+    --   awaiting one-click human confirmation (pipeline.review) -- never
+    --   auto-published (brief feature #8).
+    -- resolved: a human confirmed the proposed verdict.
+    -- expired: horizon passed and no resolving coverage turned up within
+    --   the grace period (predictions.resolution_grace_days) -- no verdict.
+    status          TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open','pending_review','resolved','expired')),
+    verdict         TEXT,            -- e.g. "correct", "incorrect", "unresolvable" -- set by the resolve pass, kept as-is on human confirmation
+    verdict_evidence TEXT            -- JSON: [{title, url, source}, ...] articles the LLM cited, plus its one-sentence reasoning
 );
 
 -- LLM-curated daily top 10 (brief feature #3 -- replaces v1's keyword-count
@@ -154,9 +164,26 @@ def get_connection() -> Iterator[sqlite3.Connection]:
 def init_db() -> None:
     """Creates all tables/indexes if they don't already exist. Safe to call every run."""
     with get_connection() as conn:
+        # SQLite can't ALTER a CHECK constraint, so a predictions table created
+        # under the old ('open','resolved','expired') definition has to be
+        # dropped and recreated to pick up 'pending_review'. Safe because this
+        # subsystem is new (Phase 6) -- there's no prior data to lose, and if a
+        # future run ever does have real rows this will simply stop matching
+        # the "no pending_review" trigger and skip the drop.
+        existing_predictions_sql = conn.execute(
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='predictions'"
+        ).fetchone()
+        if existing_predictions_sql and "pending_review" not in existing_predictions_sql["sql"]:
+            row_count = conn.execute("SELECT COUNT(*) AS n FROM predictions").fetchone()["n"]
+            if row_count == 0:
+                conn.execute("DROP TABLE predictions")
+
         conn.executescript(SCHEMA)
         existing_feed_cols = {row["name"] for row in conn.execute("PRAGMA table_info(feeds)")}
-        for col, ddl in (("etag", "TEXT"), ("last_modified", "TEXT"), ("last_error_type", "TEXT")):
+        for col, ddl in (
+            ("etag", "TEXT"), ("last_modified", "TEXT"), ("last_error_type", "TEXT"),
+            ("last_attempt", "TEXT"),
+        ):
             if col not in existing_feed_cols:
                 conn.execute(f"ALTER TABLE feeds ADD COLUMN {col} {ddl}")
         existing_run_cols = {row["name"] for row in conn.execute("PRAGMA table_info(runs)")}
@@ -167,6 +194,8 @@ def init_db() -> None:
             conn.execute("ALTER TABLE articles ADD COLUMN original_raw_text TEXT")
         if "score" not in existing_article_cols:
             conn.execute("ALTER TABLE articles ADD COLUMN score INTEGER")
+        if "prediction_checked" not in existing_article_cols:
+            conn.execute("ALTER TABLE articles ADD COLUMN prediction_checked INTEGER NOT NULL DEFAULT 0")
 
 
 if __name__ == "__main__":

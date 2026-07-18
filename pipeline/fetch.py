@@ -18,6 +18,16 @@ For each active feed:
      every feed on every run, and every article insert commits immediately, so
      a crash or Ctrl-C mid-run loses at most the one in-flight item -- nothing
      already written needs to be redone.
+  5. Auto-recovery (brief feature #5): a feed that's been auto-deactivated
+     after MAX_CONSECUTIVE_FAILURES isn't fetched forever after -- it's
+     deliberately NOT excluded from every future run the way v1's
+     mark_dead_feeds.py excluded feeds permanently. Instead, up to
+     `run.recovery_probes_per_run` of the longest-untried inactive feeds are
+     retried each run, but no more often than once every
+     `run.recovery_check_interval_hours` per feed (feeds.last_attempt tracks
+     this). A successful probe reactivates the feed and resets its streak;
+     a failed probe just updates last_attempt so it isn't retried again
+     until the next cooldown window.
 
 Usage: python -m pipeline.fetch  (or `python run.py fetch`)
 """
@@ -29,7 +39,7 @@ import hashlib
 import ssl
 import sys
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
 from time import mktime
 from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
@@ -69,6 +79,7 @@ class RunStats:
     feeds_tried: int = 0
     feeds_ok: int = 0
     feeds_failed: int = 0
+    feeds_recovered: int = 0
     new_articles: int = 0
 
 
@@ -200,6 +211,7 @@ async def process_feed(
     articles_remaining_lock: asyncio.Lock,
 ) -> None:
     async with semaphore:
+        now = datetime.now(timezone.utc).isoformat()
         try:
             changed, parsed, new_headers = await fetch_feed(client, feed, fetch_timeout)
         except (httpx.HTTPError, httpx.TimeoutException) as exc:
@@ -210,21 +222,25 @@ async def process_feed(
                     UPDATE feeds
                     SET consecutive_failures = consecutive_failures + 1,
                         active = CASE WHEN consecutive_failures + 1 >= ? THEN 0 ELSE active END,
-                        last_error_type = ?
+                        last_error_type = ?,
+                        last_attempt = ?
                     WHERE id = ?
                     """,
-                    (MAX_CONSECUTIVE_FAILURES, error_type, feed["id"]),
+                    (MAX_CONSECUTIVE_FAILURES, error_type, now, feed["id"]),
                 )
             async with stats_lock:
                 stats.feeds_failed += 1
             return
 
-        # Success (including 304 Not Modified) -- reset failure streak.
+        # Success (including 304 Not Modified) -- reset failure streak and
+        # reactivate if this was a recovery probe on a previously-inactive feed.
         with get_connection() as conn:
             update_fields = {
-                "last_success": datetime.now(timezone.utc).isoformat(),
+                "last_success": now,
+                "last_attempt": now,
                 "consecutive_failures": 0,
                 "last_error_type": None,
+                "active": 1,
             }
             if changed:
                 update_fields["etag"] = new_headers.get("etag")
@@ -236,6 +252,8 @@ async def process_feed(
             )
         async with stats_lock:
             stats.feeds_ok += 1
+            if not feed["active"]:
+                stats.feeds_recovered += 1
 
         if not changed or parsed is None:
             return
@@ -284,9 +302,28 @@ async def process_feed(
                 stats.new_articles += 1
 
 
-async def fetch_all(concurrency: int, timeout: float, max_articles: int) -> RunStats:
+async def fetch_all(
+    concurrency: int, timeout: float, max_articles: int,
+    recovery_interval_hours: float, recovery_probes_per_run: int,
+) -> RunStats:
+    cooldown_cutoff = (
+        datetime.now(timezone.utc) - timedelta(hours=recovery_interval_hours)
+    ).isoformat()
     with get_connection() as conn:
         feeds = [dict(row) for row in conn.execute("SELECT * FROM feeds WHERE active = 1")]
+        recovering = [
+            dict(row)
+            for row in conn.execute(
+                """
+                SELECT * FROM feeds
+                WHERE active = 0 AND (last_attempt IS NULL OR last_attempt <= ?)
+                ORDER BY last_attempt IS NOT NULL, last_attempt ASC
+                LIMIT ?
+                """,
+                (cooldown_cutoff, recovery_probes_per_run),
+            )
+        ]
+    feeds += recovering
 
     stats = RunStats(feeds_tried=len(feeds))
     if not feeds:
@@ -316,16 +353,23 @@ def main() -> RunStats:
     concurrency = cfg["run"].get("fetch_concurrency", 30)
     timeout = cfg["run"].get("fetch_timeout_seconds", 15)
     max_articles = cfg["run"].get("max_articles_per_run", 300)
+    recovery_interval_hours = cfg["run"].get("recovery_check_interval_hours", 24)
+    recovery_probes_per_run = cfg["run"].get("recovery_probes_per_run", 15)
 
-    print(f"Fetching active feeds ({concurrency} at a time, {timeout}s timeout, max {max_articles} new articles)...")
+    print(
+        f"Fetching active feeds ({concurrency} at a time, {timeout}s timeout, max {max_articles} new articles), "
+        f"probing up to {recovery_probes_per_run} inactive feed(s) for recovery..."
+    )
     started = datetime.now(timezone.utc)
-    stats = asyncio.run(fetch_all(concurrency, timeout, max_articles))
+    stats = asyncio.run(
+        fetch_all(concurrency, timeout, max_articles, recovery_interval_hours, recovery_probes_per_run)
+    )
     duration = (datetime.now(timezone.utc) - started).total_seconds()
 
     print(
         f"Done in {duration:.1f}s: "
-        f"{stats.feeds_tried} feeds tried, {stats.feeds_ok} ok, {stats.feeds_failed} failed, "
-        f"{stats.new_articles} new articles."
+        f"{stats.feeds_tried} feeds tried, {stats.feeds_ok} ok ({stats.feeds_recovered} recovered), "
+        f"{stats.feeds_failed} failed, {stats.new_articles} new articles."
     )
     sys.stdout.flush()
     return stats
