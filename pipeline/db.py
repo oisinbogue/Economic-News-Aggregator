@@ -115,20 +115,6 @@ CREATE TABLE IF NOT EXISTS daily_top10 (
     PRIMARY KEY (date, rank)
 );
 
--- Audit log of every pipeline invocation, so `run.py all` history and
--- resume/debugging don't depend on external log files.
-CREATE TABLE IF NOT EXISTS runs (
-    id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    command         TEXT NOT NULL,   -- validate/fetch/process/build/publish/all
-    started         TEXT NOT NULL,   -- ISO8601
-    finished        TEXT,            -- ISO8601, NULL while still running or if it crashed
-    status          TEXT NOT NULL DEFAULT 'running' CHECK (status IN ('running','success','failed')),
-    articles_in     INTEGER DEFAULT 0,
-    articles_out    INTEGER DEFAULT 0,
-    error_message   TEXT,
-    detail          TEXT             -- free-text stage-specific summary (e.g. feeds tried/ok/failed)
-);
-
 -- Lookup indexes for the queries each stage runs repeatedly.
 CREATE INDEX IF NOT EXISTS idx_articles_status ON articles(processed_status);
 CREATE INDEX IF NOT EXISTS idx_articles_feed ON articles(feed_id);
@@ -186,9 +172,11 @@ def init_db() -> None:
         ):
             if col not in existing_feed_cols:
                 conn.execute(f"ALTER TABLE feeds ADD COLUMN {col} {ddl}")
-        existing_run_cols = {row["name"] for row in conn.execute("PRAGMA table_info(runs)")}
-        if "detail" not in existing_run_cols:
-            conn.execute("ALTER TABLE runs ADD COLUMN detail TEXT")
+        # 'runs' was scaffolded early as a per-invocation audit log but never
+        # wired up by any pipeline stage (always 0 rows) -- GitHub Actions'
+        # own run history already serves that purpose. Drop it from any db
+        # created before this cleanup rather than leaving dead schema around.
+        conn.execute("DROP TABLE IF EXISTS runs")
         existing_article_cols = {row["name"] for row in conn.execute("PRAGMA table_info(articles)")}
         if "original_raw_text" not in existing_article_cols:
             conn.execute("ALTER TABLE articles ADD COLUMN original_raw_text TEXT")
