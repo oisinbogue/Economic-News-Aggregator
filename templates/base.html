@@ -63,7 +63,7 @@
 </div>
 {% endif %}
 
-<main class="site-main">
+<main class="site-main" data-pagefind-body>
   {% block content %}{% endblock %}
 </main>
 
@@ -76,6 +76,6 @@
   </div>
 </footer>
 
-<script src="{{ asset_prefix }}static/app.js" data-search-index="{{ asset_prefix }}search-index.json" defer></script>
+<script src="{{ asset_prefix }}static/app.js" data-pagefind="{{ asset_prefix }}pagefind/pagefind.js" defer></script>
 </body>
 </html>

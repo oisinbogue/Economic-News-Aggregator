@@ -60,12 +60,13 @@ python -m pipeline.curate          # LLM-curated daily top 10 -> daily_top10 tab
 python -m pipeline.resolve         # propose verdicts for predictions past their horizon (never auto-published)
 python -m pipeline.build           # render the static site into site/ (incl. health.html, predictions.html)
 python -m pipeline.export          # write site/exports/*.csv, latest.json, feed.xml
+npx -y pagefind --site site        # build the search index (site/pagefind/) -- requires Node, matches CI
 python -m pipeline.review          # local, one-keypress confirmation of proposed prediction verdicts
 ```
 
 Open `site/index.html` via a local server (not `file://` -- the search box
-fetches `search-index.json`, which browsers block over `file://`), e.g.:
-`cd site && python -m http.server 8000`.
+loads Pagefind's JS/WASM via `fetch`, which browsers block over `file://`),
+e.g.: `cd site && python -m http.server 8000`.
 
 Scheduling is GitHub Actions (not local/OS-level) — see
 `.github/workflows/pipeline.yml`, which runs the full fetch → summarize →

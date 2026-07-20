@@ -1,10 +1,15 @@
-// Carousel nav, country/topic filter chips, client-side search against
-// search-index.json, dark-mode toggle, and the topbar search expand/collapse
-// (brief Phase 4: carousel arrow nav, filters, search).
+// Carousel nav, country/topic filter chips, Pagefind-backed search,
+// dark-mode toggle, and the topbar search expand/collapse.
 // No build step / framework -- the whole site is static files, so this
-// stays plain DOM + fetch.
+// stays plain DOM + fetch (Pagefind's own JS/WASM is lazy-loaded via
+// dynamic import when the user first searches).
 (function () {
   "use strict";
+
+  // Shared between initFilters and initSearch so an active chip selection
+  // narrows an in-progress search instead of the two systems being separate.
+  var activeFilters = { topic: new Set(), country: new Set() };
+  var searchRefresh = null;
 
   function initCarousels() {
     document.querySelectorAll(".carousel").forEach(function (carousel) {
@@ -37,7 +42,7 @@
     var sections = document.querySelectorAll(".section");
     if (!chips.length || !cards.length) return;
 
-    var active = { topic: new Set(), country: new Set() };
+    var active = activeFilters;
 
     function applyFilters() {
       var anyActive = active.topic.size > 0 || active.country.size > 0;
@@ -62,6 +67,8 @@
         var hasVisible = !!section.querySelector(".cluster-card:not(.filtered-out)");
         section.classList.toggle("filtered-out", !hasVisible);
       });
+
+      if (searchRefresh) searchRefresh();
     }
 
     chips.forEach(function (chip) {
@@ -148,32 +155,29 @@
   function initSearch() {
     var box = document.getElementById("search-box");
     var results = document.getElementById("search-results");
-    var script = document.currentScript || document.querySelector("script[data-search-index]");
+    var script = document.currentScript || document.querySelector("script[data-pagefind]");
     if (!box || !results || !script) return;
 
-    var indexUrl = script.getAttribute("data-search-index");
-    var indexPromise = null;
+    // Resolved to an absolute URL because dynamic import() from a classic
+    // (non-module) script rejects bare/relative specifiers without an
+    // import map -- see "Failed to resolve module specifier".
+    var pagefindUrl = new URL(script.getAttribute("data-pagefind"), document.baseURI).href;
+    var pagefindPromise = null;
 
-    function loadIndex() {
-      if (!indexPromise) {
-        indexPromise = fetch(indexUrl).then(function (r) { return r.json(); }).catch(function () { return []; });
+    function loadPagefind() {
+      if (!pagefindPromise) {
+        pagefindPromise = import(pagefindUrl).then(function (mod) {
+          return mod.init().then(function () { return mod; });
+        });
       }
-      return indexPromise;
+      return pagefindPromise;
     }
 
-    function render(matches, query) {
-      if (!matches.length) {
-        results.innerHTML = '<div class="sr-empty">No matches for "' + escapeHtml(query) + '"</div>';
-        results.hidden = false;
-        return;
-      }
-      results.innerHTML = matches.slice(0, 20).map(function (item) {
-        return '<a href="' + escapeHtml(item.u) + '" target="_blank" rel="noopener">' +
-          escapeHtml(item.t) +
-          '<div class="sr-source">' + escapeHtml(item.s) + (item.c ? " &middot; " + escapeHtml(item.c) : "") +
-          (item.d ? " &middot; " + escapeHtml(item.d) : "") + "</div></a>";
-      }).join("");
-      results.hidden = false;
+    function currentFilters() {
+      var f = {};
+      if (activeFilters.topic.size) f.topic = Array.from(activeFilters.topic);
+      if (activeFilters.country.size) f.country = Array.from(activeFilters.country);
+      return f;
     }
 
     function escapeHtml(s) {
@@ -182,26 +186,58 @@
       });
     }
 
+    function render(datas, query) {
+      var items = [];
+      datas.forEach(function (d) {
+        if (d.sub_results && d.sub_results.length) {
+          d.sub_results.forEach(function (sr) {
+            items.push({ url: sr.url, title: sr.title, excerpt: sr.excerpt });
+          });
+        } else {
+          items.push({ url: d.url, title: (d.meta && d.meta.title) || d.url, excerpt: d.excerpt });
+        }
+      });
+
+      if (!items.length) {
+        results.innerHTML = '<div class="sr-empty">No matches for "' + escapeHtml(query) + '"</div>';
+        results.hidden = false;
+        return;
+      }
+      results.innerHTML = items.slice(0, 20).map(function (item) {
+        return '<a href="' + escapeHtml(item.url) + '">' +
+          escapeHtml(item.title) +
+          '<div class="sr-source">' + (item.excerpt || "") + "</div></a>";
+      }).join("");
+      results.hidden = false;
+    }
+
+    function runSearch(query) {
+      loadPagefind().then(function (pagefind) {
+        return pagefind.search(query, { filters: currentFilters() });
+      }).then(function (search) {
+        return Promise.all(search.results.slice(0, 20).map(function (r) { return r.data(); }));
+      }).then(function (datas) {
+        render(datas, query);
+      });
+    }
+
     var debounceTimer = null;
     box.addEventListener("input", function () {
-      var query = box.value.trim().toLowerCase();
+      var query = box.value.trim();
       clearTimeout(debounceTimer);
       if (!query) {
         results.hidden = true;
         return;
       }
-      debounceTimer = setTimeout(function () {
-        loadIndex().then(function (items) {
-          var matches = items.filter(function (item) {
-            return (item.t && item.t.toLowerCase().indexOf(query) !== -1) ||
-              (item.sm && item.sm.toLowerCase().indexOf(query) !== -1) ||
-              (item.c && item.c.toLowerCase().indexOf(query) !== -1) ||
-              (item.tp && item.tp.join(" ").toLowerCase().indexOf(query) !== -1);
-          });
-          render(matches, query);
-        });
-      }, 150);
+      debounceTimer = setTimeout(function () { runSearch(query); }, 150);
     });
+
+    // Called when the active topic/country chips change so a search
+    // already in progress narrows to the new filter set immediately.
+    searchRefresh = function () {
+      var query = box.value.trim();
+      if (query) runSearch(query);
+    };
 
     document.addEventListener("click", function (e) {
       if (!results.contains(e.target) && e.target !== box) {

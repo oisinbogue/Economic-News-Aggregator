@@ -3,16 +3,15 @@
 Renders `data/aggregator.db` into a static site under `site.output_dir`
 (config.yaml) with Jinja2 templates: a homepage (LLM-curated top 10 +
 category-grouped carousels of everything else clustered in the last
-`site.archive_window_days` days), a full date-indexed archive, and a
-client-side search/filter index over every article that made it into a
-cluster.
+`site.archive_window_days` days) and a full date-indexed archive.
 
 Why client-side search rather than hitting SQLite from the page: the
 brief's hosting decision (Sec 2) is GitHub Pages, which serves static
-files only -- there's no server to run SQL against. `search-index.json`
-is the static-hosting-shaped answer to brief feature #7 ("queryable ...
-from day one") for the *site*; the db itself remains directly queryable
-for anyone with repo access, which is what feature #7 is really about.
+files only -- there's no server to run SQL against. Search (brief
+feature #7, "queryable ... from day one") is handled by Pagefind, which
+indexes the rendered HTML in a separate `pagefind --site site` step
+after this module runs (see the GitHub Actions workflow); the db itself
+remains directly queryable for anyone with repo access.
 
 Carousel ranking (brief feature #1, "5-article cap ... defined ranking")
 is pipeline.cluster.carousel_members -- this module doesn't reimplement
@@ -41,11 +40,6 @@ from pipeline.db import get_connection, init_db
 REPO_ROOT = Path(__file__).resolve().parent.parent
 TEMPLATES_DIR = REPO_ROOT / "templates"
 STATIC_DIR = REPO_ROOT / "static"
-
-# How much of an article's summary to show in the search index -- keeps
-# search-index.json a reasonable download without truncating so hard that
-# search results look content-free.
-SEARCH_SNIPPET_CHARS = 200
 
 
 def load_taxonomy_meta() -> dict:
@@ -182,33 +176,6 @@ def _group_by_theme(leads: list[dict], category_display_order: list[str]) -> lis
     for theme in ordered_themes(set(by_theme), category_display_order):
         groups.append({"name": theme, "clusters": by_theme[theme]})
     return groups
-
-
-def build_search_index(conn, feed_names: dict[int, str]) -> list[dict]:
-    rows = conn.execute(
-        """
-        SELECT articles.title, articles.url, articles.summary, articles.country,
-               articles.topics, articles.fetched, articles.feed_id, articles.cluster_id
-        FROM articles
-        WHERE articles.cluster_id IS NOT NULL
-        ORDER BY articles.fetched DESC
-        """
-    )
-    index = []
-    for row in rows:
-        d = dict(row)
-        summary = (d.get("summary") or "")[:SEARCH_SNIPPET_CHARS]
-        index.append({
-            "t": d["title"],
-            "u": d["url"],
-            "s": feed_names.get(d["feed_id"], ""),
-            "c": d.get("country") or "",
-            "tp": [t for t in (d.get("topics") or "").split(",") if t],
-            "d": (d.get("fetched") or "")[:10],
-            "sm": summary,
-            "cl": d["cluster_id"],
-        })
-    return index
 
 
 def _prediction_display(p: dict) -> dict:
@@ -358,8 +325,6 @@ def render_site() -> dict:
                     )
                 ]
 
-        search_index = build_search_index(conn, feed_names)
-
     leads_by_id = {lead["cluster_id"]: lead for lead in all_leads}
 
     top10 = []
@@ -454,17 +419,13 @@ def render_site() -> dict:
         encoding="utf-8",
     )
 
-    # ---- search index + static assets ----
-    (output_dir / "search-index.json").write_text(
-        json.dumps(search_index, ensure_ascii=False), encoding="utf-8"
-    )
+    # ---- static assets ----
     shutil.copytree(STATIC_DIR, output_dir / "static", dirs_exist_ok=True)
 
     return {
         "clusters": len(all_leads),
         "top10": len(top10),
         "archive_days": len(archive_days),
-        "search_index_articles": len(search_index),
         "feeds_inactive": sum(1 for f in feed_health if f["status"] == "inactive"),
         "feeds_degraded": sum(1 for f in feed_health if f["status"] == "degraded"),
         "predictions_pending_review": len(prediction_data["pending"]),
@@ -478,7 +439,7 @@ def main() -> dict:
     stats = render_site()
     print(
         f"Done: {stats['clusters']} cluster(s) rendered, {stats['top10']} in today's top 10, "
-        f"{stats['archive_days']} archive day(s), {stats['search_index_articles']} article(s) in the search index, "
+        f"{stats['archive_days']} archive day(s), "
         f"{stats['feeds_inactive']} feed(s) inactive, {stats['feeds_degraded']} degraded, "
         f"{stats['predictions_pending_review']} prediction(s) awaiting review, "
         f"{stats['predictions_resolved']} resolved."

@@ -30,6 +30,12 @@ jobs:
           python-version: "3.12"
           cache: pip
 
+      # Only used to run the Pagefind CLI (npx) against the built site --
+      # no package.json / npm dependency tree, just the one-off binary.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
       - name: Install dependencies
         run: pip install -r requirements.txt
 
@@ -115,6 +121,12 @@ jobs:
 
       - name: Write exports (CSV, latest.json, feed.xml)
         run: python -m pipeline.export
+
+      # Indexes the rendered HTML in site/ -- must run after the build and
+      # export steps, before the Pages artifact is packaged, so site/pagefind
+      # (JS + sharded index chunks) rides along in the upload below.
+      - name: Build search index (Pagefind)
+        run: npx -y pagefind --site site
 
       - name: Save article archive to cache
         if: always()

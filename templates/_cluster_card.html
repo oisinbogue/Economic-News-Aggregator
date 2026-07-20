@@ -2,6 +2,8 @@
 <article class="cluster-card"
          data-countries="{{ cluster.countries|join(',') }}"
          data-topics="{{ cluster.topic_list|join(',') }}">
+  {% for t in cluster.topic_list %}<span data-pagefind-filter="topic:{{ t }}" hidden></span>{% endfor %}
+  {% for c in cluster.countries %}<span data-pagefind-filter="country:{{ c }}" hidden></span>{% endfor %}
   {% if rank %}<div class="rank-badge" data-rank="{{ rank }}"></div>{% endif %}
   <div class="carousel">
     <div class="carousel-track">
@@ -10,7 +12,7 @@
         {% if m.image %}
         <div class="thumb-wrap"><a href="{{ m.url }}" target="_blank" rel="noopener"><div class="thumb" style="background-image:url('{{ m.image }}')"></div></a></div>
         {% endif %}
-        <h3><a href="{{ m.url }}" target="_blank" rel="noopener">{{ m.title }}</a></h3>
+        <h3{% if loop.first %} id="c-{{ cluster.cluster_id }}"{% endif %}><a href="{{ m.url }}" target="_blank" rel="noopener">{{ m.title }}</a></h3>
         <div class="meta">
           <span class="source">{{ m.source_name }}</span>
           {% if m.country %}<span class="country">{{ m.country }}</span>{% endif %}
