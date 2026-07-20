@@ -6,6 +6,7 @@ __pycache__/
 data/aggregator.db
 data/aggregator.db-wal
 data/aggregator.db-shm
+data/model_cache/
 *.log
 .DS_Store
 /site/

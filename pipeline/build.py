@@ -191,10 +191,15 @@ def _load_prediction_data(conn, feed_names: dict[int, str]) -> dict:
     happens locally via `python -m pipeline.review` -- see that module's
     docstring for why a static GitHub Pages site can't do it in-browser.
     """
+    # canonical_id IS NULL excludes rows pipeline.dedup_predictions collapsed
+    # into another prediction from the same cluster -- the canonical row
+    # (the one duplicates point at) has no canonical_id of its own, so it
+    # still shows.
     pending = [
         _prediction_display(dict(row))
         for row in conn.execute(
-            "SELECT * FROM predictions WHERE status = 'pending_review' ORDER BY horizon_date ASC"
+            "SELECT * FROM predictions WHERE status = 'pending_review' AND canonical_id IS NULL "
+            "ORDER BY horizon_date ASC"
         )
     ]
 
@@ -205,7 +210,7 @@ def _load_prediction_data(conn, feed_names: dict[int, str]) -> dict:
             SELECT predictions.*, articles.topics AS source_topics, articles.feed_id AS source_feed_id
             FROM predictions
             LEFT JOIN articles ON articles.url_hash = predictions.source
-            WHERE predictions.status = 'resolved'
+            WHERE predictions.status = 'resolved' AND predictions.canonical_id IS NULL
             """
         )
     ]

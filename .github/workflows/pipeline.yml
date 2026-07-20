@@ -40,6 +40,16 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      # The all-MiniLM-L6-v2 ONNX weights (~90MB) fastembed downloads on
+      # first use (pipeline.embed) -- cached separately from the db/pip
+      # caches since it only changes if embed.model in config.yaml changes,
+      # not every run.
+      - name: Restore embedding model cache
+        uses: actions/cache@v4
+        with:
+          path: data/model_cache
+          key: embed-model-${{ hashFiles('config.yaml') }}
+
       - name: Restore article archive from cache
         uses: actions/cache/restore@v4
         with:
@@ -96,6 +106,9 @@ jobs:
           CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
         run: python -m pipeline.summarize
 
+      - name: Embed article summaries
+        run: python -m pipeline.embed
+
       - name: Extract predictions
         env:
           CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
@@ -106,6 +119,9 @@ jobs:
 
       - name: Cluster related stories
         run: python -m pipeline.cluster
+
+      - name: Dedup near-duplicate predictions within clusters
+        run: python -m pipeline.dedup_predictions
 
       - name: Curate daily top 10
         env:

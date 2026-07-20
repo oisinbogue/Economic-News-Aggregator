@@ -30,14 +30,24 @@ validate_feeds:
   concurrency: 20
   timeout_seconds: 15
 
+embed:
+  # sentence-transformers/all-MiniLM-L6-v2 via fastembed (ONNX Runtime, no
+  # torch -- see pipeline/embed.py). 384-dim, CPU-fast enough for the
+  # Actions runner. Summary embeddings are computed once and reused by both
+  # pipeline.cluster and pipeline.dedup_predictions.
+  model: sentence-transformers/all-MiniLM-L6-v2
+  max_embeddings_per_run: 200
+
 cluster:
   # Only articles fetched within this window are eligible to join/form a
   # cluster -- keeps union-find from linking unrelated stories that happen
   # to reuse the same recurring headline words months apart.
   window_days: 3
-  title_shared_words: 3     # union-find edge: title significant-word overlap >= this
-  tfidf_cosine_threshold: 0.65  # union-find edge: TF-IDF cosine similarity > this (needs scikit-learn)
+  title_shared_words: 3     # union-find edge: title significant-word overlap >= this -- fallback only, used when an article has no embedding yet
+  embedding_cosine_threshold: 0.62  # union-find edge: summary-embedding cosine similarity > this -- see threshold-selection notes in pipeline/cluster.py
   carousel_cap: 5           # brief feature #1: carousel shows up to this many articles per cluster
+  chain_window_days: 14         # how far back to look for a "developing story" parent cluster
+  chain_cosine_threshold: 0.78  # centroid-to-centroid similarity needed to link a new cluster to an older one as a chain -- deliberately stricter than embedding_cosine_threshold since a false chain is worse than a missed one; see threshold-selection notes in pipeline/cluster.py
 
 curate:
   max_candidates: 40  # shortlist size sent to the LLM for top-10 picking, keeps the prompt inside the 8,192-token context
@@ -64,6 +74,7 @@ predictions:
   max_candidate_articles: 15  # archive search results shown to the LLM when proposing a verdict, keeps the prompt inside context
   context_window_days: 14  # how far back pipeline.resolve looks for same-country/topic coverage to give the LLM background context, beyond the direct outcome-candidate search
   context_articles_limit: 8  # cap on how many background-context articles are added to the resolve prompt, keeps it inside context
+  dedup_cosine_threshold: 0.85  # pipeline.dedup_predictions: claim-embedding similarity above this, for two predictions from articles in the same cluster, collapses the newer one into the older as a duplicate. Higher than cluster.embedding_cosine_threshold because claims are short and specific (who/what/direction/horizon) -- a near-miss here is more likely two genuinely different predictions than two clusters loosely on the same topic
 
 site:
   title: Economic News Aggregator

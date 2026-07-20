@@ -1,25 +1,43 @@
 """Story clustering, adapted for the carousel UI (brief feature #1).
 
-Ported from aggregator.py:568-676 (cluster_articles, _sig_words): two
-articles are linked when their titles share >= `cluster.title_shared_words`
-significant words, OR their summaries have TF-IDF cosine similarity above
-`cluster.tfidf_cosine_threshold` (requires scikit-learn; degrades gracefully
-to title-word matching only if it isn't installed, same as v1).
+Two articles are linked when the cosine similarity of their summary
+embeddings (pipeline.embed, sentence-transformers/all-MiniLM-L6-v2 via
+fastembed) exceeds `cluster.embedding_cosine_threshold`. Embeddings handle
+paraphrased headlines and translated sources (which by this point in the
+pipeline have an English summary -- see pipeline.summarize) far better than
+the original title-word/TF-IDF approach, which is why it replaced TF-IDF
+outright rather than running alongside it. Title-word overlap
+(`cluster.title_shared_words`) is kept only as a degraded fallback for the
+rare case where an article reaches this stage without an embedding yet
+(e.g. pipeline.embed hasn't run this cycle) -- same spirit as the old
+sklearn-unavailable fallback it replaces.
 
-Differences from v1's one-shot batch clustering, needed because this
-pipeline runs incrementally through the day rather than once:
-  - Only articles fetched within `cluster.window_days` are eligible to join
-    or form a cluster, so union-find can't link unrelated stories that
-    happen to reuse the same recurring headline words months apart.
-  - A new article is first checked against *existing* recent clusters (so a
-    story that breaks in one run and gets follow-up coverage in a later run
-    the same day still lands in the same cluster) before forming new
-    clusters via union-find among the remaining unmatched candidates.
-  - v1 built one eagerly-truncated "also" list per cluster at clustering
-    time. Here every cluster member stays in the db (the archive is meant
-    to be a complete, searchable corpus -- brief feature #7) and the 5-cap
-    for the carousel is applied at read time by `carousel_members()`, which
-    Phase 4's site templates will call.
+Threshold-selection notes (2026-07-20): this DB had zero real multi-article
+clusters to sample precision/recall from -- 28 clusters, 2408 articles, and
+every existing cluster had exactly one member, because the TF-IDF/title
+matcher it's replacing had essentially never fired. There was nothing to
+grade a threshold against. Instead: embedded the 28 real summarised
+articles in the DB and looked at all pairwise cosine similarities -- the
+highest similarity between any two genuinely DIFFERENT stories was 0.583
+(two UK-economy-adjacent but distinct articles). Then hand-wrote 5
+paraphrases of real summaries (same facts, different wording, simulating a
+second outlet's or a translated take on the same story) and confirmed each
+correctly best-matched its real source at 0.70-0.83 similarity, well clear
+of every real negative pair. 0.62 sits in that gap with margin on both
+sides. This is a small sample (real duplicate-story pairs may look
+different from synthetic paraphrases), so treat 0.62 as a reasonable
+starting point to revisit once genuine multi-outlet coverage of the same
+story shows up in the archive, not a final answer.
+
+Cross-window continuity ("developing story" chains, brief feature #2): after
+same-day clustering, each newly-formed cluster's centroid (mean member
+embedding) is compared against the centroids of clusters created between
+`cluster.window_days` and `cluster.chain_window_days` ago. The best match
+above `cluster.chain_cosine_threshold` (deliberately stricter than same-day
+clustering -- a false chain is worse than a missed one) is recorded as
+`clusters.parent_cluster_id`, a link rather than a merge, so each day's
+cluster stays a distinct carousel entry while the thread stays traceable by
+walking parent_cluster_id back through time.
 
 Usage: python -m pipeline.cluster
 """
@@ -28,17 +46,14 @@ from __future__ import annotations
 
 import re
 import sys
+from collections import defaultdict
 from datetime import datetime, timedelta, timezone
+
+import numpy as np
 
 from pipeline.config import get_config
 from pipeline.db import get_connection, init_db
-
-try:
-    from sklearn.feature_extraction.text import TfidfVectorizer
-    from sklearn.metrics.pairwise import cosine_similarity as cos_sim
-    SKLEARN_AVAILABLE = True
-except ImportError:
-    SKLEARN_AVAILABLE = False
+from pipeline.embed import unpack_vector
 
 # Ported from aggregator.py:138-145.
 _STOPWORDS = {
@@ -57,24 +72,45 @@ def _sig_words(title: str) -> set[str]:
     return {w for w in words if w not in _STOPWORDS and len(w) > 2}
 
 
-def _cluster_text(row: dict) -> str:
-    return row.get("summary") or row.get("title") or ""
+def _cosine(a: np.ndarray, b: np.ndarray) -> float:
+    denom = float(np.linalg.norm(a) * np.linalg.norm(b))
+    if denom == 0.0:
+        return 0.0
+    return float(np.dot(a, b) / denom)
+
+
+def _fetch_embeddings(conn, url_hashes: list[str], model: str) -> dict[str, np.ndarray]:
+    if not url_hashes:
+        return {}
+    placeholders = ",".join("?" * len(url_hashes))
+    return {
+        row["url_hash"]: unpack_vector(row["vector"])
+        for row in conn.execute(
+            f"SELECT url_hash, vector FROM article_embeddings "
+            f"WHERE model = ? AND url_hash IN ({placeholders})",
+            (model, *url_hashes),
+        )
+    }
 
 
 def process_all() -> dict:
     cfg = get_config()["cluster"]
+    embed_model = get_config()["embed"]["model"]
     window_days = cfg.get("window_days", 3)
     min_shared_words = cfg.get("title_shared_words", 3)
-    cosine_threshold = cfg.get("tfidf_cosine_threshold", 0.65)
+    embedding_threshold = cfg.get("embedding_cosine_threshold", 0.62)
+    chain_window_days = cfg.get("chain_window_days", 14)
+    chain_threshold = cfg.get("chain_cosine_threshold", 0.78)
 
-    window_start = (datetime.now(timezone.utc) - timedelta(days=window_days)).isoformat()
+    now = datetime.now(timezone.utc)
+    window_start = (now - timedelta(days=window_days)).isoformat()
 
     with get_connection() as conn:
         leads = [
             dict(row)
             for row in conn.execute(
                 """
-                SELECT clusters.id AS cluster_id, articles.title, articles.summary
+                SELECT clusters.id AS cluster_id, articles.url_hash, articles.title
                 FROM clusters
                 JOIN articles ON articles.url_hash = clusters.representative_article
                 WHERE articles.fetched >= ?
@@ -86,7 +122,7 @@ def process_all() -> dict:
             dict(row)
             for row in conn.execute(
                 """
-                SELECT url_hash, title, summary, score
+                SELECT url_hash, title, score
                 FROM articles
                 WHERE cluster_id IS NULL AND topics IS NOT NULL AND fetched >= ?
                 ORDER BY fetched
@@ -95,26 +131,24 @@ def process_all() -> dict:
             )
         ]
 
-    stats = {"joined_existing": 0, "new_clusters": 0, "new_cluster_members": 0}
+    stats = {"joined_existing": 0, "new_clusters": 0, "new_cluster_members": 0, "chained": 0}
     if not candidates:
         return stats
 
-    texts = [_cluster_text(r) for r in leads] + [_cluster_text(r) for r in candidates]
+    hashes = [r["url_hash"] for r in leads] + [r["url_hash"] for r in candidates]
     sig = [_sig_words(r["title"]) for r in leads] + [_sig_words(r["title"]) for r in candidates]
 
-    sim_matrix = None
-    if SKLEARN_AVAILABLE and len(texts) >= 2:
-        try:
-            vec = TfidfVectorizer(stop_words="english", max_features=5000)
-            tfidf = vec.fit_transform(texts)
-            sim_matrix = cos_sim(tfidf)
-        except ValueError:
-            pass  # e.g. all-stopword corpus -- fall back to title-word matching only
+    with get_connection() as conn:
+        embeddings = _fetch_embeddings(conn, hashes, embed_model)
 
     def is_match(i: int, j: int) -> bool:
-        title_match = len(sig[i] & sig[j]) >= min_shared_words
-        cos_match = sim_matrix is not None and float(sim_matrix[i, j]) > cosine_threshold
-        return title_match or cos_match
+        vi, vj = embeddings.get(hashes[i]), embeddings.get(hashes[j])
+        if vi is not None and vj is not None:
+            return _cosine(vi, vj) > embedding_threshold
+        # Degraded fallback: one or both articles have no embedding yet
+        # (pipeline.embed hasn't caught up this cycle) -- title-word overlap
+        # only, same as the old sklearn-unavailable fallback it replaces.
+        return len(sig[i] & sig[j]) >= min_shared_words
 
     n_leads = len(leads)
     n_cand = len(candidates)
@@ -155,8 +189,9 @@ def process_all() -> dict:
     for ci in remaining:
         groups.setdefault(find(ci), []).append(ci)
 
+    new_cluster_vectors: dict[int, list[np.ndarray]] = {}
     with get_connection() as conn:
-        created_at = datetime.now(timezone.utc).isoformat()
+        created_at = now.isoformat()
         for members in groups.values():
             # Highest-scored member (score may be NULL pre-tagging edge case -> 0) leads.
             members.sort(key=lambda ci: -(candidates[ci]["score"] or 0))
@@ -170,13 +205,57 @@ def process_all() -> dict:
                 (created_at, label, lead_hash),
             )
             cluster_id = cur.lastrowid
+            member_vectors = []
             for ci in members:
                 conn.execute(
                     "UPDATE articles SET cluster_id = ? WHERE url_hash = ?",
                     (cluster_id, candidates[ci]["url_hash"]),
                 )
+                v = embeddings.get(candidates[ci]["url_hash"])
+                if v is not None:
+                    member_vectors.append(v)
+            new_cluster_vectors[cluster_id] = member_vectors
             stats["new_clusters"] += 1
             stats["new_cluster_members"] += len(members)
+
+        # Cross-window continuity: link each new cluster to the closest
+        # older cluster (window_days..chain_window_days ago), if any clears
+        # the stricter chain threshold. A link, not a merge -- see module
+        # docstring.
+        chain_start = (now - timedelta(days=chain_window_days)).isoformat()
+        prior_vectors: dict[int, list[np.ndarray]] = defaultdict(list)
+        for row in conn.execute(
+            """
+            SELECT clusters.id AS cluster_id, article_embeddings.vector
+            FROM clusters
+            JOIN articles ON articles.cluster_id = clusters.id
+            JOIN article_embeddings
+                ON article_embeddings.url_hash = articles.url_hash
+                AND article_embeddings.model = ?
+            WHERE clusters.created >= ? AND clusters.created < ?
+            """,
+            (embed_model, chain_start, window_start),
+        ):
+            prior_vectors[row["cluster_id"]].append(unpack_vector(row["vector"]))
+        prior_centroids = {
+            cid: np.mean(vecs, axis=0) for cid, vecs in prior_vectors.items() if vecs
+        }
+
+        for new_cluster_id, member_vectors in new_cluster_vectors.items():
+            if not member_vectors or not prior_centroids:
+                continue
+            centroid = np.mean(member_vectors, axis=0)
+            best_cid, best_sim = None, 0.0
+            for cid, prior_centroid in prior_centroids.items():
+                sim = _cosine(centroid, prior_centroid)
+                if sim > best_sim:
+                    best_sim, best_cid = sim, cid
+            if best_cid is not None and best_sim > chain_threshold:
+                conn.execute(
+                    "UPDATE clusters SET parent_cluster_id = ? WHERE id = ?",
+                    (best_cid, new_cluster_id),
+                )
+                stats["chained"] += 1
 
     return stats
 
@@ -228,7 +307,8 @@ def main() -> dict:
     print(
         f"Done: {stats['joined_existing']} joined an existing cluster, "
         f"{stats['new_clusters']} new cluster(s) formed from "
-        f"{stats['new_cluster_members']} article(s)."
+        f"{stats['new_cluster_members']} article(s), "
+        f"{stats['chained']} linked to an earlier developing story."
     )
     sys.stdout.flush()
     return stats

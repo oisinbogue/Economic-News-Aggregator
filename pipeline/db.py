@@ -71,12 +71,35 @@ CREATE TABLE IF NOT EXISTS articles (
 );
 
 -- Groups of articles covering the same story, assigned during a later
--- clustering phase (title-word/TF-IDF similarity -- see brief Phase 3).
+-- clustering phase (embedding cosine similarity -- see brief Phase 3).
 CREATE TABLE IF NOT EXISTS clusters (
     id                      INTEGER PRIMARY KEY AUTOINCREMENT,
     created                 TEXT NOT NULL,   -- ISO8601
     label                   TEXT,            -- short human-readable topic label
-    representative_article  TEXT REFERENCES articles(url_hash)
+    representative_article  TEXT REFERENCES articles(url_hash),
+    parent_cluster_id       INTEGER REFERENCES clusters(id)  -- "developing story" chain: an earlier (up to cluster.chain_window_days ago) cluster this one's centroid closely matches, or NULL. Linked, not merged, so each day's cluster stays a distinct carousel entry.
+);
+
+-- Sentence embedding of each article's (English) summary, computed once by
+-- pipeline.embed and reused by pipeline.cluster every run. Keyed by
+-- url_hash rather than a BLOB column on articles so re-embedding under a
+-- new model name doesn't require a migration -- just a new row per article.
+CREATE TABLE IF NOT EXISTS article_embeddings (
+    url_hash    TEXT NOT NULL REFERENCES articles(url_hash),
+    model       TEXT NOT NULL,   -- e.g. "sentence-transformers/all-MiniLM-L6-v2" -- lets a future model change coexist with old vectors instead of silently mixing them
+    vector      BLOB NOT NULL,   -- float32 array, struct-packed (see pipeline.embed.pack_vector)
+    created     TEXT NOT NULL,   -- ISO8601
+    PRIMARY KEY (url_hash, model)
+);
+
+-- Embedding of each prediction's claim text, used only to detect
+-- near-duplicate predictions within a merged cluster (pipeline.dedup_predictions).
+CREATE TABLE IF NOT EXISTS prediction_embeddings (
+    prediction_id   INTEGER NOT NULL REFERENCES predictions(id),
+    model           TEXT NOT NULL,
+    vector          BLOB NOT NULL,
+    created         TEXT NOT NULL,
+    PRIMARY KEY (prediction_id, model)
 );
 
 -- Forecast/claim tracking: a prediction made by some source about an
@@ -100,7 +123,8 @@ CREATE TABLE IF NOT EXISTS predictions (
     --   the grace period (predictions.resolution_grace_days) -- no verdict.
     status          TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open','pending_review','resolved','expired')),
     verdict         TEXT,            -- e.g. "correct", "incorrect", "unresolvable" -- set by the resolve pass, kept as-is on human confirmation
-    verdict_evidence TEXT            -- JSON: [{title, url, source}, ...] articles the LLM cited, plus its one-sentence reasoning
+    verdict_evidence TEXT,           -- JSON: [{title, url, source}, ...] articles the LLM cited, plus its one-sentence reasoning
+    canonical_id    INTEGER REFERENCES predictions(id)  -- set by pipeline.dedup_predictions when this row is a near-duplicate of another prediction from an article in the same cluster; NULL means this row IS canonical (or hasn't been checked yet)
 );
 
 -- LLM-curated daily top 10 (brief feature #3 -- replaces v1's keyword-count
@@ -139,6 +163,12 @@ CREATE INDEX IF NOT EXISTS idx_articles_cluster ON articles(cluster_id);
 CREATE INDEX IF NOT EXISTS idx_feeds_active ON feeds(active);
 CREATE INDEX IF NOT EXISTS idx_resolution_audit_prediction ON resolution_audit(prediction_id);
 """
+# idx_clusters_parent / idx_predictions_canonical are created in init_db()
+# below, after the ALTER TABLE calls that add those columns to a
+# pre-existing db -- CREATE TABLE IF NOT EXISTS above is a no-op against an
+# existing clusters/predictions table, so an index on those columns can't
+# run as part of this script or it'd fail with "no such column" on any db
+# created before this migration.
 
 
 def get_db_path() -> Path:
@@ -204,6 +234,14 @@ def init_db() -> None:
             conn.execute("ALTER TABLE articles ADD COLUMN prediction_checked INTEGER NOT NULL DEFAULT 0")
         if "image" not in existing_article_cols:
             conn.execute("ALTER TABLE articles ADD COLUMN image TEXT")
+        existing_cluster_cols = {row["name"] for row in conn.execute("PRAGMA table_info(clusters)")}
+        if "parent_cluster_id" not in existing_cluster_cols:
+            conn.execute("ALTER TABLE clusters ADD COLUMN parent_cluster_id INTEGER REFERENCES clusters(id)")
+        existing_prediction_cols = {row["name"] for row in conn.execute("PRAGMA table_info(predictions)")}
+        if "canonical_id" not in existing_prediction_cols:
+            conn.execute("ALTER TABLE predictions ADD COLUMN canonical_id INTEGER REFERENCES predictions(id)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_clusters_parent ON clusters(parent_cluster_id)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_predictions_canonical ON predictions(canonical_id)")
 
 
 if __name__ == "__main__":

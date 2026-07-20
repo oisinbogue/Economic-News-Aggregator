@@ -242,7 +242,7 @@ def process_all(limit: int | None = None) -> dict:
             for row in conn.execute(
                 """
                 SELECT * FROM predictions
-                WHERE status = 'open' AND horizon_date <= ?
+                WHERE status = 'open' AND canonical_id IS NULL AND horizon_date <= ?
                 ORDER BY horizon_date ASC
                 LIMIT ?
                 """,

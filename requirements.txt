@@ -2,6 +2,7 @@ feedparser
 httpx
 trafilatura
 PyYAML
-scikit-learn
 Jinja2
 pydantic
+fastembed
+numpy

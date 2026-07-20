@@ -25,7 +25,8 @@ def _load_queue(conn) -> list[dict]:
     return [
         dict(row)
         for row in conn.execute(
-            "SELECT * FROM predictions WHERE status = 'pending_review' ORDER BY horizon_date ASC"
+            "SELECT * FROM predictions WHERE status = 'pending_review' AND canonical_id IS NULL "
+            "ORDER BY horizon_date ASC"
         )
     ]
 
