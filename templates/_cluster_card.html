@@ -2,11 +2,14 @@
 <article class="cluster-card"
          data-countries="{{ cluster.countries|join(',') }}"
          data-topics="{{ cluster.topic_list|join(',') }}">
-  {% if rank %}<div class="rank-badge">#{{ rank }}</div>{% endif %}
+  {% if rank %}<div class="rank-badge" data-rank="{{ rank }}"></div>{% endif %}
   <div class="carousel">
     <div class="carousel-track">
       {% for m in cluster.members %}
       <div class="carousel-slide{% if loop.first %} active{% endif %}">
+        {% if m.image %}
+        <div class="thumb-wrap"><a href="{{ m.url }}" target="_blank" rel="noopener"><div class="thumb" style="background-image:url('{{ m.image }}')"></div></a></div>
+        {% endif %}
         <h3><a href="{{ m.url }}" target="_blank" rel="noopener">{{ m.title }}</a></h3>
         <div class="meta">
           <span class="source">{{ m.source_name }}</span>

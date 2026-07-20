@@ -63,6 +63,7 @@ CREATE TABLE IF NOT EXISTS articles (
     country         TEXT,
     topics          TEXT,           -- comma-separated theme names matched from config/taxonomy.yaml; '' if tagged with no match, NULL if not yet tagged
     score           INTEGER,        -- count of matched taxonomy keywords (aggregator.py:489-522 score_entry); used to rank cluster members, NOT the daily top 10 (that's LLM-curated, see daily_top10)
+    image           TEXT,           -- thumbnail URL (feed media/enclosure, or og:image scraped from the article page); NULL if none was found
     cluster_id      INTEGER REFERENCES clusters(id),
     processed_status TEXT NOT NULL DEFAULT 'fetched'
                     CHECK (processed_status IN ('fetched','extracted','summarised','done','error')),
@@ -184,6 +185,8 @@ def init_db() -> None:
             conn.execute("ALTER TABLE articles ADD COLUMN score INTEGER")
         if "prediction_checked" not in existing_article_cols:
             conn.execute("ALTER TABLE articles ADD COLUMN prediction_checked INTEGER NOT NULL DEFAULT 0")
+        if "image" not in existing_article_cols:
+            conn.execute("ALTER TABLE articles ADD COLUMN image TEXT")
 
 
 if __name__ == "__main__":

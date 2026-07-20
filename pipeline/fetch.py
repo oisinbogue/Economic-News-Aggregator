@@ -13,7 +13,11 @@ For each active feed:
      article page and extracting with trafilatura. Extraction failures still
      keep the article (title-only) rather than dropping it -- a thin article
      is more useful than a missing one, and process/summarise can cope with a
-     short raw_text.
+     short raw_text. A thumbnail (media:thumbnail/content, an image
+     enclosure, or a plain <img> in the feed HTML) is pulled from the entry
+     itself where possible; otherwise the og:image found during that same
+     page fetch is used, so a thin-summary feed doesn't cost an extra request
+     just for an image.
   4. Feed health (last_success/consecutive_failures/active) is updated for
      every feed on every run, and every article insert commits immediately, so
      a crash or Ctrl-C mid-run loses at most the one in-flight item -- nothing
@@ -36,6 +40,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import re
 import ssl
 import sys
 from dataclasses import dataclass
@@ -47,6 +52,11 @@ from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
 import feedparser
 import httpx
 import trafilatura
+from trafilatura.metadata import extract_metadata
+
+# First <img src="..."> in a feed entry's HTML summary/content -- last-resort
+# thumbnail source when the feed exposes no structured media field.
+_IMG_SRC_RE = re.compile(r'<img[^>]+src=["\']([^"\']+)["\']', re.IGNORECASE)
 
 from pipeline.config import get_config
 from pipeline.db import get_connection, init_db
@@ -124,6 +134,37 @@ def parse_published(entry: dict) -> str | None:
     return None
 
 
+def extract_entry_image(entry: dict) -> str | None:
+    """Best-effort thumbnail URL straight from feed metadata -- checked before
+    ever falling back to a page fetch, since most feeds already carry one of
+    these (media:thumbnail, media:content, an image enclosure, or a plain
+    <img> in the summary HTML)."""
+    thumbs = entry.get("media_thumbnail")
+    if thumbs and thumbs[0].get("url"):
+        return thumbs[0]["url"]
+
+    for content in entry.get("media_content") or []:
+        medium = (content.get("medium") or "").lower()
+        ctype = (content.get("type") or "").lower()
+        if content.get("url") and (medium == "image" or ctype.startswith("image")):
+            return content["url"]
+
+    for enc in entry.get("enclosures") or []:
+        if enc.get("href") and (enc.get("type") or "").lower().startswith("image"):
+            return enc["href"]
+
+    for link in entry.get("links") or []:
+        if link.get("rel") == "enclosure" and (link.get("type") or "").lower().startswith("image") and link.get("href"):
+            return link["href"]
+
+    html = ""
+    if entry.get("content"):
+        html = entry["content"][0].get("value", "")
+    html = html or entry.get("summary", "") or ""
+    match = _IMG_SRC_RE.search(html)
+    return match.group(1) if match else None
+
+
 def entry_body_text(entry: dict) -> str:
     """Best-effort plain-ish text from whatever body the feed entry supplies."""
     if entry.get("content"):
@@ -159,21 +200,30 @@ async def fetch_feed(client: httpx.AsyncClient, feed: dict, timeout: float) -> t
     return True, parsed, new_headers
 
 
-async def extract_article_text(client: httpx.AsyncClient, url: str, timeout: float) -> str | None:
-    """Fetches `url` and pulls out article body text with trafilatura.
+async def extract_article_page(client: httpx.AsyncClient, url: str, timeout: float) -> tuple[str | None, str | None]:
+    """Fetches `url` and pulls out (body_text, og:image) with trafilatura.
 
-    Returns None (never raises) if the fetch or extraction fails -- callers
-    keep the article title-only rather than dropping it.
+    Returns (None, None) (never raises) if the fetch fails -- callers keep
+    the article title-only rather than dropping it. The image comes from the
+    same page fetch as the body text, so a thin-summary feed doesn't cost a
+    second request just to find a thumbnail.
     """
     try:
         resp = await client.get(url, timeout=timeout, follow_redirects=True)
         resp.raise_for_status()
     except (httpx.HTTPError, httpx.TimeoutException):
-        return None
+        return None, None
     try:
-        return trafilatura.extract(resp.text)
+        body = trafilatura.extract(resp.text)
     except Exception:
-        return None
+        body = None
+    image = None
+    try:
+        meta = extract_metadata(resp.text, default_url=url)
+        image = meta.image if meta else None
+    except Exception:
+        image = None
+    return body, image
 
 
 def article_exists(conn, url_hash: str) -> bool:
@@ -278,11 +328,14 @@ async def process_feed(
             published = parse_published(entry)
             body = entry_body_text(entry)
             raw_text = body
+            image = extract_entry_image(entry)
 
             if len(body) < MIN_USABLE_BODY_CHARS:
-                extracted = await extract_article_text(client, url, fetch_timeout)
+                extracted, page_image = await extract_article_page(client, url, fetch_timeout)
                 if extracted:
                     raw_text = extracted
+                if not image and page_image:
+                    image = page_image
 
             raw_text = (raw_text or "")[:MAX_RAW_TEXT_CHARS] or None
             fetched_at = datetime.now(timezone.utc).isoformat()
@@ -291,11 +344,11 @@ async def process_feed(
                 conn.execute(
                     """
                     INSERT INTO articles
-                        (url_hash, feed_id, title, url, published, fetched, raw_text, processed_status)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, 'fetched')
+                        (url_hash, feed_id, title, url, published, fetched, raw_text, image, processed_status)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'fetched')
                     ON CONFLICT(url_hash) DO NOTHING
                     """,
-                    (url_hash, feed["id"], title, url, published, fetched_at, raw_text),
+                    (url_hash, feed["id"], title, url, published, fetched_at, raw_text, image),
                 )
 
             async with stats_lock:

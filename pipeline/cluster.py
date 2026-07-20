@@ -197,7 +197,7 @@ def carousel_members(conn, cluster_id: int, cap: int | None = None) -> list[dict
         dict(row)
         for row in conn.execute(
             """
-            SELECT url_hash, feed_id, title, url, summary, country, topics, score, fetched
+            SELECT url_hash, feed_id, title, url, summary, country, topics, score, fetched, image
             FROM articles
             WHERE cluster_id = ?
             ORDER BY (score IS NULL), score DESC, fetched ASC

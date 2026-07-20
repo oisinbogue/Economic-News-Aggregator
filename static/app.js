@@ -1,5 +1,6 @@
-// Carousel nav, country/topic filter chips, and client-side search against
-// search-index.json (brief Phase 4: carousel arrow nav, filters, search).
+// Carousel nav, country/topic filter chips, client-side search against
+// search-index.json, dark-mode toggle, and the topbar search expand/collapse
+// (brief Phase 4: carousel arrow nav, filters, search).
 // No build step / framework -- the whole site is static files, so this
 // stays plain DOM + fetch.
 (function () {
@@ -77,6 +78,52 @@
     });
   }
 
+  function initTheme() {
+    var btn = document.getElementById("theme-toggle");
+    if (!btn) return;
+    var KEY = "econ-theme";
+
+    function apply(mode) {
+      document.body.classList.toggle("dark", mode === "dark");
+      btn.textContent = mode === "dark" ? "☀" : "☽";
+    }
+
+    var saved = null;
+    try { saved = localStorage.getItem(KEY); } catch (e) {}
+    apply(saved === "dark" ? "dark" : "light");
+
+    btn.addEventListener("click", function () {
+      var mode = document.body.classList.contains("dark") ? "light" : "dark";
+      apply(mode);
+      try { localStorage.setItem(KEY, mode); } catch (e) {}
+    });
+  }
+
+  function initSearchToggle() {
+    var wrap = document.getElementById("search-wrap");
+    var toggle = document.getElementById("search-toggle");
+    var box = document.getElementById("search-box");
+    var results = document.getElementById("search-results");
+    if (!wrap || !toggle || !box) return;
+
+    toggle.addEventListener("click", function () {
+      var opening = !wrap.classList.contains("open");
+      wrap.classList.toggle("open", opening);
+      if (opening) {
+        box.focus();
+      } else {
+        box.value = "";
+        if (results) results.hidden = true;
+      }
+    });
+
+    document.addEventListener("click", function (e) {
+      if (!wrap.contains(e.target) && wrap.classList.contains("open") && !box.value) {
+        wrap.classList.remove("open");
+      }
+    });
+  }
+
   function initSearch() {
     var box = document.getElementById("search-box");
     var results = document.getElementById("search-results");
@@ -145,6 +192,8 @@
   document.addEventListener("DOMContentLoaded", function () {
     initCarousels();
     initFilters();
+    initTheme();
+    initSearchToggle();
     initSearch();
   });
 })();

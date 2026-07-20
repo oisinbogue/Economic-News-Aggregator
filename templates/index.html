@@ -5,11 +5,26 @@
 {% if top10 %}
 <section class="section" id="top10">
   <h1 class="section-title">Today's Top 10 <span class="section-sub">curated for significance, {{ today }}</span></h1>
+  {% set hero_stories = top10[:3] %}
+  {% set rest_stories = top10[3:] %}
+  {% if hero_stories %}
+  <div class="hero">
+    {% if hero_stories|length > 1 %}
+    <div class="hero-flank">{{ cards.cluster_card(hero_stories[1], rank=hero_stories[1].rank) }}</div>
+    {% endif %}
+    <div class="hero-center">{{ cards.cluster_card(hero_stories[0], rank=hero_stories[0].rank) }}</div>
+    {% if hero_stories|length > 2 %}
+    <div class="hero-flank">{{ cards.cluster_card(hero_stories[2], rank=hero_stories[2].rank) }}</div>
+    {% endif %}
+  </div>
+  {% endif %}
+  {% if rest_stories %}
   <div class="card-grid">
-    {% for cluster in top10 %}
+    {% for cluster in rest_stories %}
       {{ cards.cluster_card(cluster, rank=cluster.rank) }}
     {% endfor %}
   </div>
+  {% endif %}
 </section>
 {% else %}
 <p class="empty-note">No curated top 10 yet today -- check back after the next pipeline run, or see the <a href="archive/index.html">archive</a>.</p>

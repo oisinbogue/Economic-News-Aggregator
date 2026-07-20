@@ -4,58 +4,78 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{{ site.title }}{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700;8..60,800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ asset_prefix }}static/style.css">
   <link rel="alternate" type="application/rss+xml" title="{{ site.title }}" href="{{ asset_prefix }}feed.xml">
 </head>
 <body>
-  <header class="site-header">
-    <div class="header-row">
-      <a class="brand" href="{{ asset_prefix }}index.html">{{ site.title }}</a>
-      <nav class="site-nav">
-        <a href="{{ asset_prefix }}index.html">Home</a>
-        <a href="{{ asset_prefix }}archive/index.html">Archive</a>
-        <a href="{{ asset_prefix }}health.html">Source health</a>
-        <a href="{{ asset_prefix }}predictions.html">Predictions</a>
-      </nav>
+<script>try{if(localStorage.getItem('econ-theme')==='dark')document.body.classList.add('dark');}catch(e){}</script>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="topbar-left">
+      <span class="live-pill"><span class="live-dot"></span><span>Updated {{ site.generated }}</span></span>
     </div>
-    <div class="search-row">
-      <input type="search" id="search-box" placeholder="Search articles..." autocomplete="off">
-      <div id="search-results" class="search-results" hidden></div>
-    </div>
-    <div class="filter-row" id="filter-row">
-      {% if site.all_topics %}
-      <div class="filter-group" data-facet="topic">
-        <span class="filter-label">Topic:</span>
-        {% for t in site.all_topics %}
-        <button type="button" class="chip" data-facet="topic" data-value="{{ t }}">{{ t }}</button>
-        {% endfor %}
+    <a class="wordmark" href="{{ asset_prefix }}index.html"><span class="ed">{{ site.title }}</span></a>
+    <div class="topbar-right">
+      <button type="button" class="icon-btn" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">&#9789;</button>
+      <div class="search-wrap" id="search-wrap">
+        <button type="button" class="icon-btn" id="search-toggle" aria-label="Search" title="Search">&#128269;</button>
+        <input type="search" id="search-box" placeholder="Search articles..." autocomplete="off">
+        <div id="search-results" class="search-results" hidden></div>
       </div>
-      {% endif %}
-      {% if site.all_countries %}
-      <div class="filter-group" data-facet="country">
-        <span class="filter-label">Country:</span>
-        {% for c in site.all_countries %}
-        <button type="button" class="chip" data-facet="country" data-value="{{ c }}">{{ c }}</button>
-        {% endfor %}
-      </div>
-      {% endif %}
-      <button type="button" id="clear-filters" class="chip chip-clear" hidden>Clear filters</button>
     </div>
-  </header>
+  </div>
+</div>
 
-  <main class="site-main">
-    {% block content %}{% endblock %}
-  </main>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a class="nav-tab{% if active_nav == 'home' %} active{% endif %}" href="{{ asset_prefix }}index.html">Home</a>
+    <a class="nav-tab{% if active_nav == 'archive' %} active{% endif %}" href="{{ asset_prefix }}archive/index.html">Archive</a>
+    <a class="nav-tab{% if active_nav == 'health' %} active{% endif %}" href="{{ asset_prefix }}health.html">Source Health</a>
+    <a class="nav-tab{% if active_nav == 'predictions' %} active{% endif %}" href="{{ asset_prefix }}predictions.html">Predictions</a>
+  </div>
+</nav>
 
-  <footer class="site-footer">
-    <p>
-      Generated {{ site.generated }} &middot; <a href="{{ asset_prefix }}archive/index.html">Full archive</a>
-      &middot; <a href="{{ asset_prefix }}feed.xml">RSS</a>
-      &middot; <a href="{{ asset_prefix }}latest.json">latest.json</a>
-      &middot; <a href="{{ asset_prefix }}exports/master.csv">Master CSV</a>
-    </p>
-  </footer>
+{% if site.all_topics or site.all_countries %}
+<div class="filter-row">
+  <div id="filter-row">
+    {% if site.all_topics %}
+    <div class="filter-group" data-facet="topic">
+      <span class="filter-label">Topic</span>
+      {% for t in site.all_topics %}
+      <button type="button" class="chip" data-facet="topic" data-value="{{ t }}">{{ t }}</button>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% if site.all_countries %}
+    <div class="filter-group" data-facet="country">
+      <span class="filter-label">Country</span>
+      {% for c in site.all_countries %}
+      <button type="button" class="chip" data-facet="country" data-value="{{ c }}">{{ c }}</button>
+      {% endfor %}
+    </div>
+    {% endif %}
+    <button type="button" id="clear-filters" class="chip chip-clear" hidden>Clear filters</button>
+  </div>
+</div>
+{% endif %}
 
-  <script src="{{ asset_prefix }}static/app.js" data-search-index="{{ asset_prefix }}search-index.json" defer></script>
+<main class="site-main">
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    Generated {{ site.generated }} &middot; <a href="{{ asset_prefix }}archive/index.html">Full archive</a>
+    &middot; <a href="{{ asset_prefix }}feed.xml">RSS</a>
+    &middot; <a href="{{ asset_prefix }}latest.json">latest.json</a>
+    &middot; <a href="{{ asset_prefix }}exports/master.csv">Master CSV</a>
+  </div>
+</footer>
+
+<script src="{{ asset_prefix }}static/app.js" data-search-index="{{ asset_prefix }}search-index.json" defer></script>
 </body>
 </html>

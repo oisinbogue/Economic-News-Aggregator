@@ -391,7 +391,10 @@ def render_site() -> dict:
     # ---- homepage ----
     index_tmpl = env.get_template("index.html")
     (output_dir / "index.html").write_text(
-        index_tmpl.render(site=site_meta, top10=top10, groups=recent_groups, today=today, asset_prefix=""),
+        index_tmpl.render(
+            site=site_meta, top10=top10, groups=recent_groups, today=today,
+            asset_prefix="", active_nav="home",
+        ),
         encoding="utf-8",
     )
 
@@ -419,12 +422,16 @@ def render_site() -> dict:
             lead["rationale"] = top10_by_date.get(day, {}).get(lead["cluster_id"])
         groups = _group_by_theme(leads_for_day, category_display_order)
         (output_dir / "archive" / f"{day}.html").write_text(
-            archive_day_tmpl.render(site=site_meta, day=day, groups=groups, asset_prefix="../"),
+            archive_day_tmpl.render(
+                site=site_meta, day=day, groups=groups, asset_prefix="../", active_nav="archive",
+            ),
             encoding="utf-8",
         )
 
     (output_dir / "archive" / "index.html").write_text(
-        archive_index_tmpl.render(site=site_meta, days=day_summaries, asset_prefix="../"),
+        archive_index_tmpl.render(
+            site=site_meta, days=day_summaries, asset_prefix="../", active_nav="archive",
+        ),
         encoding="utf-8",
     )
 
@@ -433,7 +440,7 @@ def render_site() -> dict:
     (output_dir / "health.html").write_text(
         health_tmpl.render(
             site=site_meta, feeds=feed_health,
-            recovery_interval_hours=recovery_interval_hours, asset_prefix="",
+            recovery_interval_hours=recovery_interval_hours, asset_prefix="", active_nav="health",
         ),
         encoding="utf-8",
     )
@@ -441,7 +448,9 @@ def render_site() -> dict:
     # ---- prediction-accuracy tracker (brief feature #8) ----
     predictions_tmpl = env.get_template("predictions.html")
     (output_dir / "predictions.html").write_text(
-        predictions_tmpl.render(site=site_meta, predictions=prediction_data, asset_prefix=""),
+        predictions_tmpl.render(
+            site=site_meta, predictions=prediction_data, asset_prefix="", active_nav="predictions",
+        ),
         encoding="utf-8",
     )
 
