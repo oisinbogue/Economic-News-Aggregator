@@ -4,3 +4,4 @@ trafilatura
 PyYAML
 scikit-learn
 Jinja2
+pydantic

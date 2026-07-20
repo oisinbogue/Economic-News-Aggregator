@@ -41,6 +41,10 @@ cluster:
 
 curate:
   max_candidates: 40  # shortlist size sent to the LLM for top-10 picking, keeps the prompt inside the 8,192-token context
+  oversample_count: 20  # ask the LLM to rank this many (not just 10) so the diversity re-pick loop has room to skip over cap-violating picks
+  max_per_country: 3   # diversity cap: at most this many of the day's top 10 may share a country tag
+  max_per_topic: 3     # diversity cap: at most this many of the day's top 10 may share a dominant topic tag
+  repeat_lookback_days: 3  # how many prior days' top 10s to check for already-featured stories (soft dedup signal in the prompt, not a hard exclusion)
 
 llm:
   provider: cerebras
