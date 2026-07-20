@@ -58,6 +58,8 @@ predictions:
   # it 'expired' with no verdict, rather than checking forever.
   resolution_grace_days: 21
   max_candidate_articles: 15  # archive search results shown to the LLM when proposing a verdict, keeps the prompt inside context
+  context_window_days: 14  # how far back pipeline.resolve looks for same-country/topic coverage to give the LLM background context, beyond the direct outcome-candidate search
+  context_articles_limit: 8  # cap on how many background-context articles are added to the resolve prompt, keeps it inside context
 
 site:
   title: Economic News Aggregator

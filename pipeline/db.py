@@ -116,11 +116,28 @@ CREATE TABLE IF NOT EXISTS daily_top10 (
     PRIMARY KEY (date, rank)
 );
 
+-- Audit trail for the GitHub Issues approval workflow (brief feature #8
+-- extension): one row per human decision on a proposed verdict, kept even
+-- though the current flow never auto-approves anything -- this is the data
+-- needed later to measure LLM/human agreement rates and decide which
+-- prediction categories might be safe to auto-approve.
+CREATE TABLE IF NOT EXISTS resolution_audit (
+    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+    prediction_id       INTEGER NOT NULL REFERENCES predictions(id),
+    proposed_verdict    TEXT NOT NULL,   -- what pipeline.resolve proposed
+    proposed_reasoning  TEXT,
+    issue_number        INTEGER,         -- GitHub Issue the proposal was reviewed through, if any
+    human_decision      TEXT NOT NULL CHECK (human_decision IN ('approved', 'rejected', 'corrected')),
+    final_verdict       TEXT,            -- what was actually written to predictions.verdict; NULL if rejected
+    decided_at          TEXT NOT NULL    -- ISO8601
+);
+
 -- Lookup indexes for the queries each stage runs repeatedly.
 CREATE INDEX IF NOT EXISTS idx_articles_status ON articles(processed_status);
 CREATE INDEX IF NOT EXISTS idx_articles_feed ON articles(feed_id);
 CREATE INDEX IF NOT EXISTS idx_articles_cluster ON articles(cluster_id);
 CREATE INDEX IF NOT EXISTS idx_feeds_active ON feeds(active);
+CREATE INDEX IF NOT EXISTS idx_resolution_audit_prediction ON resolution_audit(prediction_id);
 """
 
 

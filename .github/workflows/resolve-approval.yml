@@ -1,0 +1,137 @@
+name: Resolution approval
+
+# Lets a proposed prediction verdict (opened as an Issue by pipeline.resolve,
+# see pipeline/gh_issues.py) be approved or rejected from anywhere -- adding
+# the `approve` or `reject` label is the "keypress" that used to require
+# running pipeline.review on a laptop.
+on:
+  issues:
+    types: [labeled]
+
+# Same group as the main pipeline workflow: both touch data/aggregator.db,
+# and only one write should ever be in flight at a time.
+concurrency:
+  group: pipeline-db
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  apply:
+    if: github.event.label.name == 'approve' || github.event.label.name == 'reject'
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Restore article archive from cache
+        uses: actions/cache/restore@v4
+        with:
+          path: data/aggregator.db
+          key: aggregator-db-${{ github.run_id }}
+          restore-keys: |
+            aggregator-db-
+
+      # Same durable fallback as pipeline.yml -- see that file for the full
+      # rationale. Duplicated here rather than factored into a composite
+      # action so this workflow can't accidentally destabilize the main
+      # pipeline's (already fragile-by-nature) backup mechanism.
+      - name: Restore article archive from durable backup (cache miss only)
+        if: ${{ !hashFiles('data/aggregator.db') }}
+        run: |
+          echo "No cached db found -- trying durable backup from the db-latest release"
+          repo="${{ github.repository }}"
+          latest=$(gh api "repos/$repo/releases/tags/db-latest" --jq \
+            '[.assets[] | select(.name | startswith("aggregator.db."))] | sort_by(.created_at) | last | .name' \
+            2>/dev/null || echo null)
+          if [ -n "$latest" ] && [ "$latest" != "null" ]; then
+            gh release download db-latest --repo "$repo" --pattern "$latest" --output data/aggregator.db.gz --clobber
+            gunzip -f data/aggregator.db.gz
+            echo "Restored data/aggregator.db from GitHub Release asset $latest"
+          else
+            echo "No durable backup found either -- nothing to apply this decision to"
+            exit 1
+          fi
+
+      - name: Initialise schema
+        run: python -m pipeline.db
+
+      - name: Apply decision
+        id: apply
+        run: |
+          set +e
+          result=$(python -m pipeline.apply_resolution --issue-number "${{ github.event.issue.number }}" --action "${{ github.event.label.name }}")
+          status=$?
+          echo "$result"
+          echo "result=$result" >> "$GITHUB_OUTPUT"
+          exit $status
+
+      - name: Update issue on success
+        if: success()
+        run: |
+          decision=$(echo '${{ steps.apply.outputs.result }}' | jq -r '.human_decision')
+          verdict=$(echo '${{ steps.apply.outputs.result }}' | jq -r '.final_verdict // "none"')
+          issue="${{ github.event.issue.number }}"
+
+          gh issue edit "$issue" --remove-label pending-resolution --remove-label approve --remove-label reject
+
+          if [ "$decision" = "rejected" ]; then
+            gh issue edit "$issue" --add-label rejected
+            gh issue close "$issue" --comment "Rejected -- prediction reopened (status=open) for a later recheck. No verdict was written."
+          else
+            gh issue edit "$issue" --add-label resolved
+            gh issue close "$issue" --comment "Applied: verdict=$verdict (${decision})."
+          fi
+
+      - name: Report failure on the issue
+        if: failure()
+        run: |
+          error=$(echo '${{ steps.apply.outputs.result }}' | jq -r '.error // "unknown error"')
+          gh issue comment "${{ github.event.issue.number }}" --body "Could not apply this decision: $error. The \`${{ github.event.label.name }}\` label has been left in place -- remove and re-add it to retry once fixed." || true
+
+      - name: Save article archive to cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: data/aggregator.db
+          key: aggregator-db-${{ github.run_id }}
+
+      - name: Back up article archive to GitHub Releases
+        if: always()
+        run: |
+          if [ ! -f data/aggregator.db ]; then
+            echo "No db present -- nothing to back up"
+            exit 0
+          fi
+          gzip -kf data/aggregator.db
+
+          repo="${{ github.repository }}"
+          asset_name="aggregator.db.${{ github.run_id }}.gz"
+          cp data/aggregator.db.gz "data/$asset_name"
+
+          if ! gh release view db-latest --repo "$repo" >/dev/null 2>&1; then
+            gh release create db-latest \
+              --repo "$repo" \
+              --title "Article archive (automated rolling backup)" \
+              --notes "Durable backup of data/aggregator.db -- one gzip snapshot per run, older ones pruned. Not a project release -- see PROJECT_BRIEF.md." \
+              --prerelease
+          fi
+
+          gh release upload db-latest "data/$asset_name" --repo "$repo" --clobber
+
+          (
+            gh api "repos/$repo/releases/tags/db-latest" --jq \
+              '[.assets[] | select(.name | startswith("aggregator.db."))] | sort_by(.created_at) | reverse | .[3:] | .[].id' \
+              | while read -r id; do gh api -X DELETE "repos/$repo/releases/assets/$id" || true; done
+          ) || echo "Prune of old backup snapshots failed -- ignoring, not fatal"
