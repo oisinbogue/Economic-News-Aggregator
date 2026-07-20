@@ -128,11 +128,30 @@ jobs:
             exit 0
           fi
           gzip -kf data/aggregator.db
-          if gh release view db-latest --repo "${{ github.repository }}" >/dev/null 2>&1; then
-            gh release upload db-latest data/aggregator.db.gz --repo "${{ github.repository }}" --clobber
+
+          repo="${{ github.repository }}"
+          if gh release view db-latest --repo "$repo" >/dev/null 2>&1; then
+            # Upload under a temp name first. `gh release upload --clobber`
+            # straight onto aggregator.db.gz deletes the existing asset
+            # before uploading the replacement, so a failed/interrupted
+            # upload leaves zero backups (this is what happened in run #8:
+            # the release ended up with no assets at all). Only delete the
+            # old asset once the new one is confirmed present.
+            cp data/aggregator.db.gz data/aggregator.db.gz.new
+            gh release upload db-latest data/aggregator.db.gz.new --repo "$repo" --clobber
+
+            old_id=$(gh release view db-latest --repo "$repo" --json assets \
+              --jq '.assets[] | select(.name=="aggregator.db.gz") | .id')
+            new_id=$(gh release view db-latest --repo "$repo" --json assets \
+              --jq '.assets[] | select(.name=="aggregator.db.gz.new") | .id')
+
+            if [ -n "$old_id" ]; then
+              gh api -X DELETE "repos/$repo/releases/assets/$old_id"
+            fi
+            gh api -X PATCH "repos/$repo/releases/assets/$new_id" -f name=aggregator.db.gz
           else
             gh release create db-latest data/aggregator.db.gz \
-              --repo "${{ github.repository }}" \
+              --repo "$repo" \
               --title "Article archive (automated rolling backup)" \
               --notes "Durable backup of data/aggregator.db, overwritten every pipeline run. Not a project release -- see PROJECT_BRIEF.md." \
               --prerelease
