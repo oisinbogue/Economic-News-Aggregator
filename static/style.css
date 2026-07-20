@@ -334,6 +334,8 @@ h2.section-title {
   flex-direction: column;
 }
 .cluster-card.filtered-out { display: none; }
+.hero-flank.filtered-out, .hero-center.filtered-out { display: none; }
+.section.filtered-out { display: none; }
 
 .rank-badge {
   display: inline-block;
@@ -448,10 +450,13 @@ body.dark .thumb { background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%)
   font-family: var(--sans);
   font-size: 10.5px;
   color: var(--muted);
+  background: none;
   border: 1px solid var(--rule-soft);
   border-radius: 999px;
   padding: 2px 9px;
+  cursor: pointer;
 }
+.tag:hover { border-color: var(--ink); color: var(--ink); }
 
 .empty-note {
   color: var(--muted);

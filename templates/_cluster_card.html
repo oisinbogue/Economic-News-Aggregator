@@ -36,7 +36,7 @@
   </div>
   {% if cluster.rationale %}<p class="rationale">Why it matters: {{ cluster.rationale }}</p>{% endif %}
   {% if cluster.topic_list %}
-  <div class="tag-row">{% for t in cluster.topic_list %}<span class="tag">{{ t }}</span>{% endfor %}</div>
+  <div class="tag-row">{% for t in cluster.topic_list %}<button type="button" class="tag" data-topic="{{ t }}">{{ t }}</button>{% endfor %}</div>
   {% endif %}
 </article>
 {% endmacro %}

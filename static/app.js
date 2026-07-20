@@ -34,6 +34,7 @@
     var chips = document.querySelectorAll(".chip[data-facet]");
     var clearBtn = document.getElementById("clear-filters");
     var cards = document.querySelectorAll(".cluster-card");
+    var sections = document.querySelectorAll(".section");
     if (!chips.length || !cards.length) return;
 
     var active = { topic: new Set(), country: new Set() };
@@ -51,7 +52,15 @@
         var countryOk = active.country.size === 0 ||
           cardCountries.some(function (c) { return active.country.has(c); });
 
-        card.classList.toggle("filtered-out", !(topicOk && countryOk));
+        var hide = !(topicOk && countryOk);
+        card.classList.toggle("filtered-out", hide);
+        var flank = card.closest(".hero-flank, .hero-center");
+        if (flank) flank.classList.toggle("filtered-out", hide);
+      });
+
+      sections.forEach(function (section) {
+        var hasVisible = !!section.querySelector(".cluster-card:not(.filtered-out)");
+        section.classList.toggle("filtered-out", !hasVisible);
       });
     }
 
@@ -75,6 +84,18 @@
       active.country.clear();
       chips.forEach(function (chip) { chip.classList.remove("active"); });
       applyFilters();
+    });
+
+    document.querySelectorAll(".cluster-card .tag[data-topic]").forEach(function (tag) {
+      tag.addEventListener("click", function () {
+        var value = tag.dataset.topic;
+        var target = Array.prototype.find.call(chips, function (c) {
+          return c.dataset.facet === "topic" && c.dataset.value === value;
+        });
+        if (!target) return;
+        if (!active.topic.has(value)) target.click();
+        target.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
     });
   }
 
