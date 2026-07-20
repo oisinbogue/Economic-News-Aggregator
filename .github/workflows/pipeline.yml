@@ -68,6 +68,9 @@ jobs:
       - name: Initialise schema
         run: python -m pipeline.db
 
+      - name: Purge previously-fetched live-blog articles
+        run: python -m pipeline.cleanup_live_blogs
+
       - name: Check whether the feeds table needs seeding
         id: feeds_check
         run: |

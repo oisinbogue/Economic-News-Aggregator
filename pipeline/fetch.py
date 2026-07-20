@@ -5,9 +5,12 @@ For each active feed:
      If-None-Match / If-Modified-Since from the feed's stored etag/last_modified
      so unchanged feeds cost the remote server (and us) almost nothing.
   2. Parse with feedparser. For each entry, normalise its URL (strip tracking
-     params) and sha256-hash it as the article's primary key -- if that hash
-     is already in the db the entry is skipped without even hitting the network
-     again.
+     params). Rolling "as it happened" live-blog URLs are skipped outright
+     (see LIVE_BLOG_URL_RE) -- they bundle many unrelated story updates under
+     one URL, which breaks single-article full-text extraction and mistags
+     downstream. Otherwise the URL is sha256-hashed as the article's primary
+     key -- if that hash is already in the db the entry is skipped without
+     even hitting the network again.
   3. New entries get title/url/published/feed_id/summary from the feed itself.
      If the feed didn't supply enough body text, fall back to fetching the
      article page and extracting with trafilatura. Extraction failures still
@@ -83,6 +86,20 @@ TRACKING_PARAM_NAMES = {
     "spref", "share", "source", "smid", "ocid", "wt_mc", "cmp", "utm",
 }
 
+# Rolling "as it happened" live-blog URLs (Guardian /live/, and the common
+# -live-updates/liveblog/rolling-coverage variants other outlets use) get
+# skipped entirely rather than fetched: one URL covers many unrelated story
+# updates through the day, so trafilatura's single-article extraction can
+# latch onto a different update block than the one the RSS title refers to,
+# and downstream tagging then attaches the RSS title to whatever unrelated
+# content got extracted. Confirmed 2026-07-20 with a Guardian Lords-peerages
+# live-blog whose extracted body was entirely a wedding-law story from
+# elsewhere on the same page.
+LIVE_BLOG_URL_RE = re.compile(
+    r"/live/|/live-updates/|/liveblog/|/live-blog/|-live-updates|-liveblog|/rolling-coverage/",
+    re.IGNORECASE,
+)
+
 
 @dataclass
 class RunStats:
@@ -91,6 +108,7 @@ class RunStats:
     feeds_failed: int = 0
     feeds_recovered: int = 0
     new_articles: int = 0
+    live_blogs_skipped: int = 0
 
 
 def normalise_url(url: str) -> str:
@@ -313,6 +331,12 @@ async def process_feed(
             if not link:
                 continue
             url = normalise_url(link)
+
+            if LIVE_BLOG_URL_RE.search(url):
+                async with stats_lock:
+                    stats.live_blogs_skipped += 1
+                continue
+
             url_hash = hash_url(url)
 
             with get_connection() as conn:
@@ -422,7 +446,8 @@ def main() -> RunStats:
     print(
         f"Done in {duration:.1f}s: "
         f"{stats.feeds_tried} feeds tried, {stats.feeds_ok} ok ({stats.feeds_recovered} recovered), "
-        f"{stats.feeds_failed} failed, {stats.new_articles} new articles."
+        f"{stats.feeds_failed} failed, {stats.new_articles} new articles "
+        f"({stats.live_blogs_skipped} live-blog URL(s) skipped)."
     )
     sys.stdout.flush()
     return stats
