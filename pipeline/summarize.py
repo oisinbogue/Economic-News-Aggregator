@@ -114,6 +114,10 @@ def process_all(limit: int | None = None) -> dict:
         limit = cfg["run"].get("max_summaries_per_run", 60)
 
     with get_connection() as conn:
+        # Newest-fetched-first (not FIFO): a normal cycle's new arrivals are
+        # small enough to always fit under `limit`, so today's articles never
+        # wait behind an older backlog -- any leftover budget still drains
+        # the backlog, just from most- to least-recently-stuck.
         rows = [
             dict(row)
             for row in conn.execute(
@@ -123,7 +127,7 @@ def process_all(limit: int | None = None) -> dict:
                 FROM articles
                 JOIN feeds ON feeds.id = articles.feed_id
                 WHERE articles.processed_status = 'fetched'
-                ORDER BY articles.fetched
+                ORDER BY articles.fetched DESC
                 LIMIT ?
                 """,
                 (limit,),
