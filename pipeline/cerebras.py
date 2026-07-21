@@ -60,6 +60,14 @@ def _throttle() -> None:
     _last_call_at = time.monotonic()
 
 
+# 429s happen even with in-process throttling -- e.g. a prior stage in the
+# same workflow run (or a separate manual run earlier that day) can exhaust
+# the per-minute or daily budget right before this call. Retry a few times
+# with backoff instead of failing the whole pipeline step outright.
+MAX_429_RETRIES = 3
+RETRY_BACKOFF_SECONDS = 20.0
+
+
 def call(client: httpx.Client, api_key: str, model: str, prompt: str, max_tokens: int, temperature: float = 0.3) -> str:
     """Raises RuntimeError (not KeyError) if the model produced no content.
 
@@ -71,18 +79,25 @@ def call(client: httpx.Client, api_key: str, model: str, prompt: str, max_tokens
     need generous max_tokens headroom for this model, not just enough for
     the expected answer length.
     """
-    _throttle()
-    resp = client.post(
-        CEREBRAS_URL,
-        headers={"Authorization": f"Bearer {api_key}"},
-        json={
-            "model": model,
-            "messages": [{"role": "user", "content": prompt}],
-            "max_tokens": max_tokens,
-            "temperature": temperature,
-        },
-        timeout=30,
-    )
+    resp = None
+    for attempt in range(MAX_429_RETRIES + 1):
+        _throttle()
+        resp = client.post(
+            CEREBRAS_URL,
+            headers={"Authorization": f"Bearer {api_key}"},
+            json={
+                "model": model,
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": max_tokens,
+                "temperature": temperature,
+            },
+            timeout=30,
+        )
+        if resp.status_code != 429 or attempt == MAX_429_RETRIES:
+            break
+        retry_after = resp.headers.get("Retry-After")
+        delay = float(retry_after) if retry_after else RETRY_BACKOFF_SECONDS * (attempt + 1)
+        time.sleep(delay)
     resp.raise_for_status()
     choice = resp.json()["choices"][0]
     content = choice.get("message", {}).get("content")
