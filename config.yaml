@@ -29,7 +29,14 @@ run:
   # 13s/call Cerebras throttle in pipeline/cerebras.py) still leaves the
   # free-tier 1M-tokens/day budget with plenty of headroom -- see that
   # module's rate-limit comment.
-  max_summaries_per_run: 80
+  # Bumped to 400 on 2026-07-21 for a single one-off manual run to push
+  # hard into the backlog -- revert to 80 after that run completes. At
+  # 13s/call this is ~87 min for the summarize step alone, and stays a
+  # conservative fraction of the 1M-tokens/day budget even stacked on top
+  # of the runs already completed today (exact remaining daily budget
+  # isn't observable from here -- Cerebras usage isn't exposed to this
+  # pipeline or visible outside their own dashboard).
+  max_summaries_per_run: 400
   max_predictions_per_run: 10  # pipeline.predictions (extraction) and pipeline.resolve (resolution) both read this
   recovery_check_interval_hours: 24  # brief feature #5: how often an auto-deactivated feed gets one probe retry rather than being permanently dead
   recovery_probes_per_run: 15  # cap on how many inactive feeds get probed in a single run, alongside the active-feed fetch
