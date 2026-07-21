@@ -94,3 +94,18 @@ site:
   base_url: "https://oisinbogue.github.io/Economic-News-Aggregator/"
   output_dir: site        # pipeline.build writes the static site here
   archive_window_days: 3  # clusters within this window (of "today") show on the homepage; older ones only appear in the archive
+
+backup:
+  # pipeline.backup_verify: fail (and don't upload) if any tracked table's
+  # row count drops by more than this fraction vs. the previous release
+  # snapshot. 0.5 is deliberately loose -- this is a corruption/bad-restore
+  # tripwire, not a data-quality check, and legitimate churn (e.g.
+  # cleanup_live_blogs purging a backlog) shouldn't false-positive.
+  max_row_count_drop_fraction: 0.5
+
+maintenance:
+  # pipeline.db_maintenance: articles older than this lose raw_text/
+  # original_raw_text (summary/tags/cluster/predictions kept) to keep
+  # aggregator.db from growing without bound. See that module's docstring
+  # for why this is safe against the prediction-resolution workflow.
+  prune_text_after_days: 90

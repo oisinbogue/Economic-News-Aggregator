@@ -88,6 +88,13 @@ jobs:
       - name: Purge previously-fetched live-blog articles
         run: python -m pipeline.cleanup_live_blogs
 
+      # Prunes full article text on old articles (keeps summaries/tags/
+      # clusters/predictions) and VACUUMs once a week -- see
+      # pipeline/db_maintenance.py for why this is safe and why VACUUM is
+      # gated rather than run every invocation.
+      - name: DB maintenance (prune old text, weekly VACUUM)
+        run: python -m pipeline.db_maintenance
+
       - name: Check whether the feeds table needs seeding
         id: feeds_check
         run: |
@@ -153,11 +160,31 @@ jobs:
           path: data/aggregator.db
           key: aggregator-db-${{ github.run_id }}
 
-      # Durable copy of record -- see the restore step above. Runs even if
-      # an earlier step failed, so a mid-run crash still banks whatever
-      # progress was made rather than losing it until the next success.
-      - name: Back up article archive to GitHub Releases
+      # Gates the backup upload below on PRAGMA integrity_check + a row-count
+      # sanity check against the previous snapshot (pipeline/backup_verify.py)
+      # -- runs even if an earlier step failed (always(), matching the
+      # backup step it guards) so a mid-run crash still gets checked before
+      # anything is banked. A failed check fails this step loudly (job
+      # summary + a GitHub Issue) instead of silently skipping the backup,
+      # and the upload step below never runs against a db that failed here.
+      - name: Verify database integrity before backup
+        id: verify
         if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ ! -f data/aggregator.db ]; then
+            echo "No db present -- nothing to verify or back up"
+            exit 0
+          fi
+          python -m pipeline.backup_verify --repo "${{ github.repository }}" \
+            --write-counts data/backup_counts.json
+
+      # Durable copy of record -- see the restore step above. Only runs if
+      # verification above passed (or there was no db to verify), so a
+      # corrupt db is never uploaded as this run's "latest" backup.
+      - name: Back up article archive to GitHub Releases
+        if: always() && steps.verify.outcome == 'success'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -169,7 +196,9 @@ jobs:
 
           repo="${{ github.repository }}"
           asset_name="aggregator.db.${{ github.run_id }}.gz"
+          counts_asset_name="aggregator.counts.${{ github.run_id }}.json"
           cp data/aggregator.db.gz "data/$asset_name"
+          cp data/backup_counts.json "data/$counts_asset_name"
 
           if ! gh release view db-latest --repo "$repo" >/dev/null 2>&1; then
             gh release create db-latest \
@@ -185,16 +214,33 @@ jobs:
           # upload-then-rename) can leave the release with zero usable
           # backups if any step in the sequence fails partway through.
           # A uniquely-named upload can only ever add a backup, never
-          # destroy an existing good one.
-          gh release upload db-latest "data/$asset_name" --repo "$repo" --clobber
+          # destroy an existing good one. The counts json rides alongside
+          # under the same scheme so the next run's verify step has a
+          # baseline to compare against.
+          gh release upload db-latest "data/$asset_name" "data/$counts_asset_name" --repo "$repo" --clobber
 
-          # Best-effort prune: keep only the newest 3 snapshots. Failures
-          # here are non-fatal -- a good backup already exists by this point.
+          # Best-effort prune: keep only the newest 3 db snapshots (and
+          # their matching counts files). Failures here are non-fatal -- a
+          # good backup already exists by this point.
           (
             gh api "repos/$repo/releases/tags/db-latest" --jq \
               '[.assets[] | select(.name | startswith("aggregator.db."))] | sort_by(.created_at) | reverse | .[3:] | .[].id' \
               | while read -r id; do gh api -X DELETE "repos/$repo/releases/assets/$id" || true; done
+            gh api "repos/$repo/releases/tags/db-latest" --jq \
+              '[.assets[] | select(.name | startswith("aggregator.counts."))] | sort_by(.created_at) | reverse | .[3:] | .[].id' \
+              | while read -r id; do gh api -X DELETE "repos/$repo/releases/assets/$id" || true; done
           ) || echo "Prune of old backup snapshots failed -- ignoring, not fatal"
+
+      # Small status surface for the site's source-health dashboard (db
+      # size, table row counts, last-successful-snapshot time) -- written
+      # after the backup step so "last snapshot" reflects what actually
+      # made it to the Release, not just this run's attempt.
+      - name: Write status snapshot
+        if: always() && steps.verify.outcome == 'success'
+        run: |
+          python -m pipeline.backup_verify --write-status-json site/status.json \
+            --last-snapshot-run-id "${{ github.run_id }}" \
+            --last-snapshot-at "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
