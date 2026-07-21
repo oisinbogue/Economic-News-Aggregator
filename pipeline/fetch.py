@@ -20,7 +20,13 @@ For each active feed:
      enclosure, or a plain <img> in the feed HTML) is pulled from the entry
      itself where possible; otherwise the og:image found during that same
      page fetch is used, so a thin-summary feed doesn't cost an extra request
-     just for an image.
+     just for an image. That same page fetch also surfaces the page's
+     <link rel="canonical">, if any: when present (and different from the
+     feed's own link) it's normalised and re-hashed, a second dedup check
+     runs against that hash, and -- if it doesn't already exist -- the
+     canonical URL/hash replace the feed-derived ones for storage. This
+     catches the same article reached via two different feed links (e.g. a
+     syndicated copy and the original) that the feed-URL hash alone can't.
   4. Feed health (last_success/consecutive_failures/active) is updated for
      every feed on every run, and every article insert commits immediately, so
      a crash or Ctrl-C mid-run loses at most the one in-flight item -- nothing
@@ -218,30 +224,37 @@ async def fetch_feed(client: httpx.AsyncClient, feed: dict, timeout: float) -> t
     return True, parsed, new_headers
 
 
-async def extract_article_page(client: httpx.AsyncClient, url: str, timeout: float) -> tuple[str | None, str | None]:
-    """Fetches `url` and pulls out (body_text, og:image) with trafilatura.
+async def extract_article_page(client: httpx.AsyncClient, url: str, timeout: float) -> tuple[str | None, str | None, str | None]:
+    """Fetches `url` and pulls out (body_text, og:image, canonical_url) with trafilatura.
 
-    Returns (None, None) (never raises) if the fetch fails -- callers keep
-    the article title-only rather than dropping it. The image comes from the
-    same page fetch as the body text, so a thin-summary feed doesn't cost a
-    second request just to find a thumbnail.
+    Returns (None, None, None) (never raises) if the fetch fails -- callers
+    keep the article title-only rather than dropping it. The image comes from
+    the same page fetch as the body text, so a thin-summary feed doesn't cost
+    a second request just to find a thumbnail. canonical_url is the page's
+    <link rel="canonical"> href (trafilatura falls back to `url` itself when
+    no canonical tag is present, so it's None here whenever it wouldn't add
+    new information).
     """
     try:
         resp = await client.get(url, timeout=timeout, follow_redirects=True)
         resp.raise_for_status()
     except (httpx.HTTPError, httpx.TimeoutException):
-        return None, None
+        return None, None, None
     try:
         body = trafilatura.extract(resp.text)
     except Exception:
         body = None
     image = None
+    canonical_url = None
     try:
         meta = extract_metadata(resp.text, default_url=url)
-        image = meta.image if meta else None
+        if meta:
+            image = meta.image
+            if meta.url and meta.url != url:
+                canonical_url = meta.url
     except Exception:
         image = None
-    return body, image
+    return body, image, canonical_url
 
 
 def article_exists(conn, url_hash: str) -> bool:
@@ -355,11 +368,20 @@ async def process_feed(
             image = extract_entry_image(entry)
 
             if len(body) < MIN_USABLE_BODY_CHARS:
-                extracted, page_image = await extract_article_page(client, url, fetch_timeout)
+                extracted, page_image, canonical_url = await extract_article_page(client, url, fetch_timeout)
                 if extracted:
                     raw_text = extracted
                 if not image and page_image:
                     image = page_image
+                if canonical_url:
+                    canonical_url = normalise_url(canonical_url)
+                    if canonical_url != url:
+                        canonical_hash = hash_url(canonical_url)
+                        with get_connection() as conn:
+                            already_have = article_exists(conn, canonical_hash)
+                        if already_have:
+                            continue
+                        url, url_hash = canonical_url, canonical_hash
 
             raw_text = (raw_text or "")[:MAX_RAW_TEXT_CHARS] or None
             fetched_at = datetime.now(timezone.utc).isoformat()
