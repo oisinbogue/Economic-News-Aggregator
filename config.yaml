@@ -21,7 +21,15 @@ run:
   # rather than maximising throughput per run; the workflow runs 6x/day
   # (.github/workflows/pipeline.yml) so a smaller per-run cap still clears
   # the backlog within a few hours.
-  max_summaries_per_run: 20
+  #
+  # Raised 20 -> 80 on 2026-07-21: a one-off ~2,400-article backfill on
+  # 18 Jul outpaced 20/run (120/day) so badly that nothing cleared
+  # summarize/tag/cluster for 3+ days and the homepage looked frozen even
+  # though every scheduled run was succeeding. 80/run (~17 min at the
+  # 13s/call Cerebras throttle in pipeline/cerebras.py) still leaves the
+  # free-tier 1M-tokens/day budget with plenty of headroom -- see that
+  # module's rate-limit comment.
+  max_summaries_per_run: 80
   max_predictions_per_run: 10  # pipeline.predictions (extraction) and pipeline.resolve (resolution) both read this
   recovery_check_interval_hours: 24  # brief feature #5: how often an auto-deactivated feed gets one probe retry rather than being permanently dead
   recovery_probes_per_run: 15  # cap on how many inactive feeds get probed in a single run, alongside the active-feed fetch
