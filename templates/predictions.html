@@ -12,9 +12,38 @@
 
 {% if predictions.pending %}
 <div class="review-hint">
-  {{ predictions.pending|length }} prediction(s) awaiting human confirmation. This page is read-only --
-  GitHub Pages can't accept a write from the browser. Run <code>python -m pipeline.review</code> locally to confirm or reject them.
+  <span class="review-hint-text">{{ predictions.pending|length }} prediction(s) awaiting human confirmation. Click help for more information.</span>
+  <button type="button" id="review-help-btn" class="review-hint-help" aria-haspopup="dialog" aria-controls="review-help-dialog">Help</button>
 </div>
+
+<dialog id="review-help-dialog" class="help-dialog">
+  <h2>Confirming or rejecting predictions</h2>
+  <p>
+    GitHub Pages serves static files only -- there's no server on the other end of this page to
+    accept a write, so a "Confirm" click here has nowhere to go. Confirmation happens locally instead,
+    with <code>python -m pipeline.review</code>.
+  </p>
+  <ol>
+    <li>
+      In your local checkout, make sure <code>data/aggregator.db</code> is the current archive --
+      it isn't committed to git, so if you don't already have a synced copy, grab the latest backup:<br>
+      <code>gh release download db-latest --repo oisinbogue/Economic-News-Aggregator --pattern "aggregator.db.*.gz" --output data/aggregator.db.gz &amp;&amp; gunzip data/aggregator.db.gz</code>
+    </li>
+    <li>Run <code>python -m pipeline.review</code>.</li>
+    <li>
+      For each pending prediction you'll see the claim, the proposed verdict, the LLM's reasoning, and
+      any cited articles, then choose:
+      <code>y</code> confirm, <code>n</code> reject (rechecked later), <code>x</code> give up (expires,
+      no verdict), <code>s</code> skip, <code>q</code> quit.
+    </li>
+    <li>
+      Confirmed verdicts show up here (and count toward the leaderboards below) after the next site
+      rebuild -- automatic within a few hours on the scheduled pipeline, or trigger it immediately from
+      the repo's Actions tab.
+    </li>
+  </ol>
+  <button type="button" id="review-help-close" class="review-hint-help">Close</button>
+</dialog>
 {% endif %}
 
 <div class="section">

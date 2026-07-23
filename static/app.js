@@ -114,6 +114,20 @@
     });
   }
 
+  function initReviewHelp() {
+    var btn = document.getElementById("review-help-btn");
+    var dialog = document.getElementById("review-help-dialog");
+    var closeBtn = document.getElementById("review-help-close");
+    if (!btn || !dialog) return;
+
+    btn.addEventListener("click", function () { dialog.showModal(); });
+    if (closeBtn) closeBtn.addEventListener("click", function () { dialog.close(); });
+    // Clicking the backdrop (outside the dialog's own box) closes it too.
+    dialog.addEventListener("click", function (e) {
+      if (e.target === dialog) dialog.close();
+    });
+  }
+
   function initTheme() {
     var btn = document.getElementById("theme-toggle");
     if (!btn) return;
@@ -257,6 +271,7 @@
   document.addEventListener("DOMContentLoaded", function () {
     initCarousels();
     initFilters();
+    initReviewHelp();
     initTheme();
     initSearchToggle();
     initSearch();
