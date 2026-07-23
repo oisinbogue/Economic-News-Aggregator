@@ -73,10 +73,11 @@ def _load_candidates(conn, window_days: int, max_candidates: int) -> list[dict]:
             FROM clusters
             JOIN articles ON articles.url_hash = clusters.representative_article
             WHERE articles.fetched >= ?
+              AND (articles.published IS NULL OR articles.published >= ?)
             ORDER BY articles.fetched DESC
             LIMIT ?
             """,
-            (window_start, max_candidates),
+            (window_start, window_start, max_candidates),
         )
     ]
 

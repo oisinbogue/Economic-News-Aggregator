@@ -353,7 +353,15 @@ def render_site() -> dict:
     window_start = (datetime.now(timezone.utc) - timedelta(days=window_days)).isoformat()
     recent_leads = [
         lead for lead in all_leads
-        if lead["cluster_id"] not in top10_ids and (lead.get("fetched") or "") >= window_start
+        if lead["cluster_id"] not in top10_ids
+        # Gate on the same date actually shown on the card (published if the
+        # feed supplied one, else fetched) rather than fetched alone -- a
+        # feed can hand us a genuinely old article (real published date, not
+        # a metadata glitch) on today's fetch, and fetched-only filtering let
+        # that display as "recent" on the homepage even though it's from
+        # months or years ago. Archive grouping is unaffected: that's meant
+        # to be a complete historical record indexed by when we found it.
+        and (lead.get("published") or lead.get("fetched") or "") >= window_start
     ]
     recent_groups = _group_by_theme(recent_leads, category_display_order)
 
