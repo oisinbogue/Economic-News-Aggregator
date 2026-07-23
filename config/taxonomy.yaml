@@ -177,7 +177,8 @@ region_slug_map:
   UNITED KINGDOM: uk
   EUROPE — WESTERN: europe
   EUROPE — EASTERN & CENTRAL: europe
-  RUSSIA & FORMER SOVIET STATES: europe
+  RUSSIA: europe
+  CENTRAL ASIA: asia-pacific
   UNITED STATES: us
   CANADA: canada
   LATIN AMERICA: latam

@@ -108,7 +108,17 @@ def _load_feed_health(conn, recovery_interval_hours: float) -> list[dict]:
     abandoned for good the way v1's mark_dead_feeds.py left it.
     """
     rows = [dict(row) for row in conn.execute("SELECT * FROM feeds ORDER BY name")]
+    article_stats = {
+        row["feed_id"]: dict(row)
+        for row in conn.execute(
+            "SELECT feed_id, COUNT(*) AS article_count, MAX(fetched) AS last_article "
+            "FROM articles GROUP BY feed_id"
+        )
+    }
     for row in rows:
+        stats = article_stats.get(row["id"], {})
+        row["article_count"] = stats.get("article_count", 0)
+        row["last_article_display"] = _fmt_date(stats.get("last_article"))
         if not row["active"]:
             row["status"] = "inactive"
             if row.get("last_attempt"):

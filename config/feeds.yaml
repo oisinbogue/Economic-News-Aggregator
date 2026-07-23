@@ -722,6 +722,22 @@ regions:
     previously_disabled: false
     validation_status: redirected
     active: true
+  - name: Latvian Public Broadcasting Economy
+    url: https://eng.lsm.lv/rss/?category=economy
+    country: Europe (Eastern/Central)
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Estonian Postimees (English)
+    url: https://news.postimees.ee/rss
+    country: Europe (Eastern/Central)
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
   UNITED STATES:
   - name: New York Times - Business
     url: https://rss.nytimes.com/services/xml/rss/nyt/Business.xml
@@ -1790,10 +1806,10 @@ regions:
     validation_notes: 'Client error ''403 Forbidden'' for url ''https://www.rbnz.govt.nz/hub/rss/publications.xml''
 
       For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403'
-  RUSSIA & FORMER SOVIET STATES:
+  RUSSIA:
   - name: Moscow Times - Business
     url: https://www.themoscowtimes.com/rss/news
-    country: Russia/Former Soviet States
+    country: Russia
     language: en
     topic_hint: news
     previously_disabled: false
@@ -1801,31 +1817,16 @@ regions:
     active: true
   - name: Meduza (English)
     url: https://meduza.io/rss/en/all
-    country: Russia/Former Soviet States
+    country: Russia
     language: en
     topic_hint: news
     previously_disabled: false
     validation_status: ok
     active: true
+  CENTRAL ASIA:
   - name: Eurasianet
     url: https://eurasianet.org/rss
-    country: Russia/Former Soviet States
-    language: en
-    topic_hint: news
-    previously_disabled: false
-    validation_status: ok
-    active: true
-  - name: Latvian Public Broadcasting Economy
-    url: https://eng.lsm.lv/rss/?category=economy
-    country: Russia/Former Soviet States
-    language: en
-    topic_hint: news
-    previously_disabled: false
-    validation_status: ok
-    active: true
-  - name: Estonian Postimees (English)
-    url: https://news.postimees.ee/rss
-    country: Russia/Former Soviet States
+    country: Central Asia
     language: en
     topic_hint: news
     previously_disabled: false

@@ -75,10 +75,18 @@
       chip.addEventListener("click", function () {
         var facet = chip.dataset.facet;
         var value = chip.dataset.value;
-        if (active[facet].has(value)) {
-          active[facet].delete(value);
-          chip.classList.remove("active");
-        } else {
+        var wasActive = active[facet].has(value);
+
+        // Each facet (topic, country) is single-select: picking a chip
+        // clears any other selection in the same facet first, so e.g.
+        // Housing & Property and Macroeconomics can't both be active, but
+        // a topic and a country can still combine.
+        active[facet].clear();
+        chips.forEach(function (c) {
+          if (c.dataset.facet === facet) c.classList.remove("active");
+        });
+
+        if (!wasActive) {
           active[facet].add(value);
           chip.classList.add("active");
         }

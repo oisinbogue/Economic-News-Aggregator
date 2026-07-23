@@ -17,6 +17,8 @@
         <th>Status</th>
         <th>Feed</th>
         <th>Country</th>
+        <th>Articles</th>
+        <th>Last article</th>
         <th>Failure streak</th>
         <th>Last success</th>
         <th>Last attempt</th>
@@ -26,10 +28,12 @@
     </thead>
     <tbody>
       {% for f in feeds %}
-      <tr>
+      <tr{% if f.status == "healthy" and f.article_count == 0 %} class="health-row-silent"{% endif %}>
         <td><span class="health-badge health-{{ f.status }}">{{ f.status }}</span></td>
         <td>{{ f.name }}</td>
         <td>{{ f.country or "" }}</td>
+        <td>{{ f.article_count }}</td>
+        <td>{{ f.last_article_display or "never" }}</td>
         <td>{{ f.consecutive_failures }}</td>
         <td>{{ f.last_success_display or "never" }}</td>
         <td>{{ f.last_attempt_display or "never" }}</td>

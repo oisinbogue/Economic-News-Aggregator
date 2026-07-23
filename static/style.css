@@ -509,6 +509,10 @@ body.dark .thumb { background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%)
 .health-healthy, .verdict-correct { background: var(--good-bg); color: var(--good); }
 .health-degraded { background: var(--warn-bg); color: var(--warn); }
 .health-inactive, .verdict-incorrect { background: var(--bad-bg); color: var(--bad); }
+
+/* Fetching fine but yielding no articles -- worth a second look even though
+   status alone reads "healthy". */
+.health-row-silent td { background: var(--warn-bg); }
 .verdict-unresolvable, .verdict-pending_review { background: var(--tag-bg); color: var(--muted); }
 
 .prediction-card {
