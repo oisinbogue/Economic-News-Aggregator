@@ -1,9 +1,15 @@
 """Country + topic tagging via config/taxonomy.yaml (brief feature #2).
 
 For each article with processed_status='summarised' and topics IS NULL:
-  - country: inherited directly from the source feed's declared country
-    (config/feeds.yaml -> feeds.country) -- the feed already tells us where
-    it's from, no NLP needed.
+  - country: which country/region the article is actually ABOUT, detected
+    from its text via pipeline.geo.detect_countries (spaCy NER + a
+    places/institutions gazetteer, config/countries.yaml) -- not inherited
+    from the source feed's own country the way this used to work, since a
+    US outlet writing about the Irish housing market should tag
+    country=Ireland, not country=United States. Comma-separated, an article
+    can span several countries; "International" if detection found nothing
+    specific to tag (a genuinely global-economy piece, or one this pass
+    just missed) rather than falling back to feed location.
   - topics: matched against config/taxonomy.yaml's active keyword lists,
     using the same word-boundary/substring matching as v1's score_entry
     (aggregator.py:489-522). Every theme whose keywords appear in the
@@ -26,6 +32,7 @@ import yaml
 
 from pipeline.config import get_config, resolve_path
 from pipeline.db import get_connection, init_db
+from pipeline.geo import detect_countries
 
 
 @lru_cache(maxsize=1)
@@ -63,30 +70,32 @@ def score_and_tag(blob: str, keywords: list[dict]) -> tuple[int, list[str]]:
 
 def process_all() -> dict:
     keywords = load_keywords()
+    # spaCy NER is meaningfully heavier per-article than the pure regex/
+    # substring matching this stage used to do -- bounded like every other
+    # per-run-costed stage (max_summaries_per_run, max_embeddings_per_run) so
+    # a large backlog can't blow the Actions job time budget in one run.
+    limit = get_config().get("tag", {}).get("max_articles_per_run")
 
+    query = (
+        "SELECT url_hash, title, summary, raw_text FROM articles "
+        "WHERE processed_status = 'summarised' AND topics IS NULL "
+        "ORDER BY fetched DESC"
+    )
     with get_connection() as conn:
-        rows = [
-            dict(row)
-            for row in conn.execute(
-                """
-                SELECT articles.url_hash, articles.title, articles.summary,
-                       articles.raw_text, feeds.country AS feed_country
-                FROM articles
-                JOIN feeds ON feeds.id = articles.feed_id
-                WHERE articles.processed_status = 'summarised'
-                  AND articles.topics IS NULL
-                """
-            )
-        ]
+        if limit:
+            rows = [dict(row) for row in conn.execute(query + " LIMIT ?", (limit,))]
+        else:
+            rows = [dict(row) for row in conn.execute(query)]
 
     stats = {"tagged": 0}
     with get_connection() as conn:
         for row in rows:
             blob = " ".join(filter(None, [row["title"], row["summary"], row["raw_text"]]))
             score, themes = score_and_tag(blob, keywords)
+            countries = detect_countries(blob) or ["International"]
             conn.execute(
                 "UPDATE articles SET country = ?, topics = ?, score = ? WHERE url_hash = ?",
-                (row["feed_country"], ",".join(themes), score, row["url_hash"]),
+                (",".join(countries), ",".join(themes), score, row["url_hash"]),
             )
             stats["tagged"] += 1
 

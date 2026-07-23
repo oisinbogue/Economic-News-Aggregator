@@ -8,6 +8,7 @@ paths:
   feeds_validated_csv: data/feeds_validated.csv
   feeds_yaml: config/feeds.yaml
   taxonomy_yaml: config/taxonomy.yaml
+  countries_yaml: config/countries.yaml
 
 run:
   fetch_concurrency: 30
@@ -50,6 +51,13 @@ embed:
   # pipeline.cluster and pipeline.dedup_predictions.
   model: sentence-transformers/all-MiniLM-L6-v2
   max_embeddings_per_run: 200
+
+tag:
+  # pipeline.tag now runs spaCy NER (config/countries.yaml) per article to
+  # detect the country it's actually about, not just copy the source feed's
+  # country -- meaningfully heavier than the plain keyword matching this
+  # replaced, so bounded per run like every other costed stage here.
+  max_articles_per_run: 300
 
 cluster:
   # Only articles fetched within this window are eligible to join/form a

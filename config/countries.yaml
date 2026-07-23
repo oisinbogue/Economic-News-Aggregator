@@ -1,0 +1,118 @@
+# Subject-country gazetteer, used by pipeline.geo.detect_countries to tag
+# each article with the country/region it's actually ABOUT -- as opposed to
+# feeds.country (config/feeds.yaml), which is where the source outlet is
+# based. A Bloomberg (US) piece about the Irish housing market should tag
+# country=Ireland, not country=United States; this file is what makes that
+# possible.
+#
+# Bucket names are the exact strings shown as country filter chips on the
+# site, so they intentionally match feeds.yaml/feeds.csv's country values --
+# one shared vocabulary, even though the two are now derived independently.
+#
+# Per bucket:
+#   places      - country/city/capital names. Matched against spaCy NER
+#                 entities (GPE/LOC/ORG), exact match after lowercasing --
+#                 NER (not blind substring search) is what lets "US" the
+#                 country resolve correctly without also matching the
+#                 pronoun "us", and lets multi-word names (e.g. "South
+#                 Korea") match as a whole.
+#   demonyms    - nationality/adjectival forms (Irish, British, Chinese...).
+#                 spaCy tags these NORP; matched the same way as places.
+#   institutions - central banks, ministries, and other bodies articles
+#                 reference instead of naming the country outright (e.g. "the
+#                 Fed" for US, "the Dail" for Ireland). Matched by direct
+#                 substring/word-boundary search over the full article text
+#                 (pipeline.tag's existing word-boundary-for-single-words,
+#                 substring-for-phrases convention) rather than requiring
+#                 spaCy to have tagged them as an entity, since acronyms and
+#                 less-common institution names are exactly what a small NER
+#                 model is prone to miss.
+#
+# An article that matches nothing in here gets country=International rather
+# than falling back to the source feed's country (see pipeline.tag).
+
+countries:
+  Ireland:
+    places: [ireland, dublin, cork, galway, limerick, waterford, dail eireann, dail, oireachtas]
+    demonyms: [irish]
+    institutions: [central bank of ireland, esri, revenue commissioners, department of finance, national treasury management agency, ida ireland]
+
+  United Kingdom:
+    places: [united kingdom, uk, u.k., britain, great britain, england, scotland, wales, northern ireland, london, manchester, birmingham, edinburgh, glasgow, belfast, liverpool]
+    demonyms: [british, english, scottish, welsh]
+    institutions: [bank of england, office for budget responsibility, hm treasury, downing street, westminster, ofgem, financial conduct authority, boe]
+
+  Europe (Western):
+    places: [germany, france, italy, spain, netherlands, belgium, austria, portugal, switzerland, sweden, norway, denmark, finland, luxembourg, iceland, berlin, paris, rome, madrid, amsterdam, brussels, vienna, lisbon, zurich, stockholm, oslo, copenhagen, helsinki, frankfurt, milan, munich]
+    demonyms: [german, french, italian, spanish, dutch, belgian, austrian, portuguese, swiss, swedish, norwegian, danish, finnish, european]
+    institutions: [european central bank, european commission, european parliament, european union, eurozone, ecb]
+
+  Europe (Eastern/Central):
+    places: [poland, czech republic, czechia, hungary, romania, bulgaria, slovakia, slovenia, croatia, serbia, ukraine, latvia, lithuania, estonia, warsaw, prague, budapest, bucharest, sofia, bratislava, ljubljana, zagreb, belgrade, kyiv, kiev, riga, vilnius, tallinn]
+    demonyms: [polish, czech, hungarian, romanian, bulgarian, slovak, slovenian, croatian, serbian, ukrainian, latvian, lithuanian, estonian, baltic]
+    institutions: [national bank of poland, czech national bank]
+
+  Russia:
+    places: [russia, moscow, saint petersburg, st petersburg]
+    demonyms: [russian]
+    institutions: [kremlin, rosstat, bank of russia]
+
+  Central Asia:
+    places: [kazakhstan, kyrgyzstan, tajikistan, turkmenistan, uzbekistan, almaty, astana, bishkek, dushanbe, ashgabat, tashkent]
+    demonyms: [kazakh, kyrgyz, tajik, turkmen, uzbek]
+    institutions: []
+
+  United States:
+    places: [united states, us, u.s., usa, america, washington, new york, california, texas, wall street, silicon valley, capitol hill]
+    demonyms: [american]
+    institutions: [federal reserve, white house, treasury department, bureau of labor statistics, bureau of economic analysis, the fed]
+
+  Canada:
+    places: [canada, ottawa, toronto, vancouver, montreal, alberta, ontario, quebec]
+    demonyms: [canadian]
+    institutions: [bank of canada, statistics canada]
+
+  Latin America:
+    places: [brazil, mexico, argentina, chile, colombia, peru, venezuela, ecuador, uruguay, bolivia, paraguay, sao paulo, rio de janeiro, mexico city, buenos aires, santiago, bogota, lima, caracas]
+    demonyms: [brazilian, mexican, argentine, argentinian, chilean, colombian, peruvian, venezuelan]
+    institutions: [banco central do brasil, banco de mexico]
+
+  Africa:
+    places: [nigeria, south africa, kenya, egypt, ghana, ethiopia, morocco, algeria, tunisia, uganda, tanzania, zimbabwe, lagos, johannesburg, cape town, nairobi, cairo, accra, addis ababa]
+    demonyms: [nigerian, south african, kenyan, egyptian, ghanaian, ethiopian, moroccan, algerian]
+    institutions: [african union, african development bank]
+
+  Middle East:
+    places: [saudi arabia, uae, united arab emirates, israel, iran, iraq, qatar, kuwait, jordan, lebanon, turkey, syria, yemen, riyadh, dubai, abu dhabi, tel aviv, tehran, baghdad, doha, istanbul, ankara]
+    demonyms: [saudi, emirati, israeli, iranian, iraqi, qatari, kuwaiti, jordanian, lebanese, turkish, syrian, yemeni]
+    institutions: [opec, gulf cooperation council]
+
+  China/Greater China:
+    places: [china, hong kong, taiwan, beijing, shanghai, shenzhen, guangzhou, taipei]
+    demonyms: [chinese, taiwanese]
+    institutions: [people's bank of china, pboc]
+
+  India:
+    places: [india, mumbai, delhi, new delhi, bangalore, bengaluru, kolkata, chennai]
+    demonyms: [indian]
+    institutions: [reserve bank of india, niti aayog, rbi]
+
+  Japan/South Korea:
+    places: [japan, south korea, tokyo, osaka, seoul, busan]
+    demonyms: [japanese, korean, south korean]
+    institutions: [bank of japan, bank of korea, boj]
+
+  Southeast Asia:
+    places: [thailand, vietnam, indonesia, philippines, singapore, malaysia, myanmar, cambodia, laos, bangkok, hanoi, jakarta, manila, kuala lumpur, ho chi minh city]
+    demonyms: [thai, vietnamese, indonesian, filipino, singaporean, malaysian]
+    institutions: [asean]
+
+  Australia/New Zealand:
+    places: [australia, new zealand, sydney, melbourne, canberra, auckland, wellington, brisbane, perth]
+    demonyms: [australian, kiwi]
+    institutions: [reserve bank of australia, reserve bank of new zealand, rba, rbnz]
+
+  International:
+    places: []
+    demonyms: []
+    institutions: [international monetary fund, world bank, united nations, world trade organization, davos, world economic forum, imf, wto, oecd]

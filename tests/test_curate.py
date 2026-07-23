@@ -9,6 +9,7 @@ from pipeline.curate import (
     CuratorPick,
     _recent_top10_cluster_ids,
     _select_diverse,
+    dominant_country,
     dominant_topic,
 )
 
@@ -18,8 +19,8 @@ def _pick(rank, cluster_id, rationale="because"):
 
 
 def _candidates(specs):
-    """specs: {cluster_id: (country, topic_tag)}"""
-    return {cid: {"country": country, "topic_tag": topic} for cid, (country, topic) in specs.items()}
+    """specs: {cluster_id: (country_tag, topic_tag)}"""
+    return {cid: {"country_tag": country, "topic_tag": topic} for cid, (country, topic) in specs.items()}
 
 
 class TestSelectDiverse:
@@ -124,6 +125,18 @@ class TestDominantTopic:
 
     def test_falls_back_to_alphabetical_when_no_priority_match(self):
         assert dominant_topic("Zeta,Alpha", ["Housing", "Trade"]) == "Alpha"
+
+
+class TestDominantCountry:
+    def test_no_countries_returns_none(self):
+        assert dominant_country(None) is None
+        assert dominant_country("") is None
+
+    def test_single_country_passthrough(self):
+        assert dominant_country("Ireland") == "Ireland"
+
+    def test_multi_country_picks_alphabetically_first(self):
+        assert dominant_country("United States,China/Greater China") == "China/Greater China"
 
 
 class TestRecentTop10ClusterIds:

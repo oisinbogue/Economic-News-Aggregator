@@ -293,7 +293,9 @@ def carousel_members(conn, cluster_id: int, cap: int | None = None) -> list[dict
         seen_feeds.add(row["feed_id"])
         diverse.append(row)
 
-    distinct_countries = {r["country"] for r in rows if r["country"]}
+    distinct_countries = {
+        c for r in rows for c in (r["country"] or "").split(",") if c
+    }
     for row in diverse:
         row["perspectives"] = len(distinct_countries) >= 3
 

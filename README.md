@@ -38,7 +38,10 @@ The free tier is also 5 req/min (not 30 as stated in the brief).
 - `pipeline/` — Python modules (`config`, `db`, `fetch`, `validate_feeds`, ...)
 - `config.yaml` — paths and run parameters
 - `config/feeds.yaml` — all 240 sources, grouped by region, with validation status
-- `config/taxonomy.yaml` — keyword/theme taxonomy for tagging
+- `config/taxonomy.yaml` — keyword/theme taxonomy for topic tagging
+- `config/countries.yaml` — place/institution gazetteer `pipeline.geo` uses to detect
+  which country/region an article is actually about (spaCy NER + keyword matching,
+  independent of the source feed's own country in `config/feeds.yaml`)
 - `data/` — `feeds.csv` (raw source list), `feeds_validated.csv` (validation
   results), `aggregator.db` (SQLite archive, gitignored)
 - `templates/`, `static/` — Jinja2 templates and CSS/JS for the static site

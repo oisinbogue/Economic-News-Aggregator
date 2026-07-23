@@ -164,15 +164,16 @@ def _attach_carousel(conn, lead: dict, feed_names: dict[int, str], theme_priorit
         m["source_name"] = feed_names.get(m["feed_id"], "Unknown source")
         m["fetched_display"] = _fmt_date(m.get("published") or m.get("fetched"))
 
-    countries = sorted({m["country"] for m in members if m.get("country")})
+    countries: set[str] = set()
     topics: set[str] = set()
     for m in members:
+        countries.update(c for c in (m.get("country") or "").split(",") if c)
         topics.update(t for t in (m.get("topics") or "").split(",") if t)
 
     lead["members"] = members
     lead["is_perspectives"] = bool(members) and members[0].get("perspectives", False)
     lead["theme"] = dominant_theme(lead.get("topics"), theme_priority)
-    lead["countries"] = countries
+    lead["countries"] = sorted(countries)
     lead["topic_list"] = sorted(topics)
     lead["fetched_display"] = _fmt_date(lead.get("published") or lead.get("fetched"))
     return lead

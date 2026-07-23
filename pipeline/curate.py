@@ -120,6 +120,17 @@ def dominant_topic(topics_csv: str | None, theme_priority: list[str]) -> str | N
     return sorted(topics)[0]
 
 
+def dominant_country(countries_csv: str | None) -> str | None:
+    """Single country tag used for the diversity cap. articles.country is now
+    multi-valued (an article can be about several countries -- see
+    pipeline.geo), so this picks one for capping purposes the same way
+    dominant_topic collapses multi-topic down to one; no natural priority
+    order for countries the way theme_priority exists for topics, so this
+    just takes the alphabetically-first one."""
+    countries = [c for c in (countries_csv or "").split(",") if c]
+    return sorted(countries)[0] if countries else None
+
+
 def build_prompt(candidates: list[dict], pick_count: int, recent_ids: set[int]) -> str:
     listing = "\n".join(
         f"[{c['cluster_id']}] {c['title']} -- {(c['summary'] or '')[:200]}"
@@ -215,7 +226,7 @@ def _select_diverse(
         cand = candidates_by_id.get(pick.cluster_id)
         if cand is None:
             continue
-        country = cand.get("country")
+        country = cand.get("country_tag")
         topic = cand.get("topic_tag")
         country_ok = not country or country_counts.get(country, 0) < max_per_country
         topic_ok = not topic or topic_counts.get(topic, 0) < max_per_topic
@@ -259,6 +270,7 @@ def process_all() -> dict:
 
     for c in candidates:
         c["topic_tag"] = dominant_topic(c.get("topics"), theme_priority)
+        c["country_tag"] = dominant_country(c.get("country"))
     candidates_by_id = {c["cluster_id"]: c for c in candidates}
 
     pick_count = min(oversample_count, len(candidates))
