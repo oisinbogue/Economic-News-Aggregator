@@ -45,17 +45,23 @@
     {% if site.all_topics %}
     <div class="filter-group" data-facet="topic">
       <span class="filter-label">Topic</span>
-      {% for t in site.all_topics %}
-      <button type="button" class="chip" data-facet="topic" data-value="{{ t }}">{{ t }}</button>
-      {% endfor %}
+      <select class="filter-select" data-facet="topic">
+        <option value="">All Topics</option>
+        {% for t in site.all_topics %}
+        <option value="{{ t }}">{{ t }}</option>
+        {% endfor %}
+      </select>
     </div>
     {% endif %}
     {% if site.all_countries %}
     <div class="filter-group" data-facet="country">
       <span class="filter-label">Country</span>
-      {% for c in site.all_countries %}
-      <button type="button" class="chip" data-facet="country" data-value="{{ c }}">{{ c }}</button>
-      {% endfor %}
+      <select class="filter-select" data-facet="country">
+        <option value="">All Countries</option>
+        {% for c in site.all_countries %}
+        <option value="{{ c }}">{{ c }}</option>
+        {% endfor %}
+      </select>
     </div>
     {% endif %}
     <button type="button" id="clear-filters" class="chip chip-clear" hidden>Clear filters</button>

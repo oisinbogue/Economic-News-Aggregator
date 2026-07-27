@@ -36,11 +36,11 @@
   }
 
   function initFilters() {
-    var chips = document.querySelectorAll(".chip[data-facet]");
+    var selects = document.querySelectorAll(".filter-select[data-facet]");
     var clearBtn = document.getElementById("clear-filters");
     var cards = document.querySelectorAll(".cluster-card");
     var sections = document.querySelectorAll(".section");
-    if (!chips.length || !cards.length) return;
+    if (!selects.length || !cards.length) return;
 
     var active = activeFilters;
 
@@ -71,25 +71,14 @@
       if (searchRefresh) searchRefresh();
     }
 
-    chips.forEach(function (chip) {
-      chip.addEventListener("click", function () {
-        var facet = chip.dataset.facet;
-        var value = chip.dataset.value;
-        var wasActive = active[facet].has(value);
-
-        // Each facet (topic, country) is single-select: picking a chip
-        // clears any other selection in the same facet first, so e.g.
-        // Housing & Property and Macroeconomics can't both be active, but
-        // a topic and a country can still combine.
+    selects.forEach(function (select) {
+      select.addEventListener("change", function () {
+        var facet = select.dataset.facet;
+        // Each facet (topic, country) is single-select via its dropdown, so
+        // e.g. Housing & Property and Macroeconomics can't both be active,
+        // but a topic and a country can still combine.
         active[facet].clear();
-        chips.forEach(function (c) {
-          if (c.dataset.facet === facet) c.classList.remove("active");
-        });
-
-        if (!wasActive) {
-          active[facet].add(value);
-          chip.classList.add("active");
-        }
+        if (select.value) active[facet].add(select.value);
         applyFilters();
       });
     });
@@ -97,18 +86,21 @@
     clearBtn.addEventListener("click", function () {
       active.topic.clear();
       active.country.clear();
-      chips.forEach(function (chip) { chip.classList.remove("active"); });
+      selects.forEach(function (select) { select.value = ""; });
       applyFilters();
     });
 
     document.querySelectorAll(".cluster-card .tag[data-topic]").forEach(function (tag) {
       tag.addEventListener("click", function () {
         var value = tag.dataset.topic;
-        var target = Array.prototype.find.call(chips, function (c) {
-          return c.dataset.facet === "topic" && c.dataset.value === value;
+        var target = Array.prototype.find.call(selects, function (s) {
+          return s.dataset.facet === "topic";
         });
         if (!target) return;
-        if (!active.topic.has(value)) target.click();
+        if (!active.topic.has(value)) {
+          target.value = value;
+          target.dispatchEvent(new Event("change"));
+        }
         target.scrollIntoView({ behavior: "smooth", block: "center" });
       });
     });
