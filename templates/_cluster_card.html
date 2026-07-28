@@ -10,7 +10,7 @@
       {% for m in cluster.members %}
       <div class="carousel-slide{% if loop.first %} active{% endif %}">
         {% if m.image %}
-        <div class="thumb-wrap"><a href="{{ m.url }}" target="_blank" rel="noopener"><div class="thumb" style="background-image:url('{{ m.image }}')"></div></a></div>
+        <div class="thumb-wrap"><a href="{{ m.url }}" target="_blank" rel="noopener"><img class="thumb" src="{{ m.image }}" alt="{{ m.title }}" loading="lazy" decoding="async" referrerpolicy="no-referrer" width="400" height="200" onerror="this.closest('.thumb-wrap').style.display='none'"></a></div>
         {% endif %}
         <h3{% if loop.first %} id="c-{{ cluster.cluster_id }}"{% endif %}><a href="{{ m.url }}" target="_blank" rel="noopener">{{ m.title }}</a></h3>
         <div class="meta">
