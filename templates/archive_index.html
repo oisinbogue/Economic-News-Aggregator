@@ -5,12 +5,33 @@
 {% block content %}
 <p class="breadcrumb"><a href="../index.html">&#8592; Home</a></p>
 <h1 class="section-title">Archive</h1>
-{% if days %}
-<ul class="archive-list">
-  {% for d in days %}
-  <li><a href="{{ d.date }}.html">{{ d.date }}</a><span class="archive-count">{{ d.count }} stor{{ 'y' if d.count == 1 else 'ies' }}</span></li>
+{% if years %}
+{% if years|length > 1 %}
+<nav class="archive-year-jump" aria-label="Jump to year">
+  {% for y in years %}
+  <a href="#y-{{ y.year }}">{{ y.year }}</a>
   {% endfor %}
-</ul>
+</nav>
+{% endif %}
+{% for y in years %}
+<section class="archive-year" id="y-{{ y.year }}">
+  <h2 class="archive-year-title">{{ y.year }}<span class="archive-count">{{ y.count }} stor{{ 'y' if y.count == 1 else 'ies' }}</span></h2>
+  {% set is_first_year = loop.first %}
+  {% for m in y.months %}
+  <details class="archive-month"{% if is_first_year and loop.first %} open{% endif %}>
+    <summary class="archive-month-summary">
+      <span>{{ m.label }}</span>
+      <span class="archive-count">{{ m.count }} stor{{ 'y' if m.count == 1 else 'ies' }}</span>
+    </summary>
+    <ul class="archive-list">
+      {% for d in m.days %}
+      <li><a href="{{ d.date }}.html">{{ d.date }}</a><span class="archive-count">{{ d.count }} stor{{ 'y' if d.count == 1 else 'ies' }}</span></li>
+      {% endfor %}
+    </ul>
+  </details>
+  {% endfor %}
+</section>
+{% endfor %}
 {% else %}
 <p class="empty-note">No archived days yet.</p>
 {% endif %}

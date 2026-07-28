@@ -93,6 +93,39 @@ def _fmt_date(dt_str: str | None) -> str:
         return dt_str
 
 
+def _group_archive_days(day_summaries: list[dict]) -> list[dict]:
+    """Reshape the flat, most-recent-first list of {date, count} into
+    year -> month groups so the archive index can render collapsible
+    sections instead of one ever-growing flat list (the archive gains a
+    day every run, forever). Input order (descending by date) is preserved
+    within each month."""
+    years: dict[str, dict] = {}
+    for d in day_summaries:
+        date = d["date"]
+        if len(date) >= 7 and date[:4].isdigit():
+            year_key, month_key = date[:4], date[:7]
+            try:
+                month_label = datetime.strptime(month_key, "%Y-%m").strftime("%B %Y")
+            except ValueError:
+                month_label = month_key
+        else:
+            year_key, month_key, month_label = "Unknown", "unknown", "Unknown"
+        year = years.setdefault(year_key, {"year": year_key, "count": 0, "months": {}})
+        year["count"] += d["count"]
+        month = year["months"].setdefault(
+            month_key, {"key": month_key, "label": month_label, "count": 0, "days": []}
+        )
+        month["count"] += d["count"]
+        month["days"].append(d)
+
+    result = []
+    for year_key in sorted(years, reverse=True):
+        year = years[year_key]
+        year["months"] = [year["months"][k] for k in sorted(year["months"], reverse=True)]
+        result.append(year)
+    return result
+
+
 def _feed_names(conn) -> dict[int, str]:
     return {row["id"]: row["name"] for row in conn.execute("SELECT id, name FROM feeds")}
 
@@ -114,14 +147,24 @@ def _load_feed_health(conn, recovery_interval_hours: float) -> list[dict]:
     article_stats = {
         row["feed_id"]: dict(row)
         for row in conn.execute(
-            "SELECT feed_id, COUNT(*) AS article_count, MAX(fetched) AS last_article "
+            "SELECT feed_id, COUNT(*) AS article_count, "
+            "MAX(published) AS last_published, MAX(fetched) AS last_fetched "
             "FROM articles GROUP BY feed_id"
         )
     }
     for row in rows:
         stats = article_stats.get(row["id"], {})
         row["article_count"] = stats.get("article_count", 0)
-        row["last_article_display"] = _fmt_date(stats.get("last_article"))
+        # Shown as two separate columns rather than one "last article" figure
+        # -- last_published matches what the story cards actually display
+        # (see _finalize_lead), while last_fetched is what this dashboard used
+        # to report alone. A feed handing back a stale article today should
+        # show a recent fetch date next to an old published date, not read as
+        # freshly active.
+        row["last_published"] = stats.get("last_published")
+        row["last_fetched"] = stats.get("last_fetched")
+        row["last_published_display"] = _fmt_date(row["last_published"])
+        row["last_fetched_display"] = _fmt_date(row["last_fetched"])
         if not row["active"] and row.get("deactivated_reason") == "manual":
             row["status"] = "muted"
             row["next_recovery_check"] = "muted -- not probed"
@@ -467,8 +510,8 @@ def render_site() -> dict:
 
     (output_dir / "archive" / "index.html").write_text(
         archive_index_tmpl.render(
-            site=site_meta, days=day_summaries, asset_prefix="../", active_nav="archive",
-            pagefind_index=False,
+            site=site_meta, years=_group_archive_days(day_summaries), asset_prefix="../",
+            active_nav="archive", pagefind_index=False,
         ),
         encoding="utf-8",
     )
