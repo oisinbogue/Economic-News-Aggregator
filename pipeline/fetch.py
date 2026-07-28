@@ -473,7 +473,21 @@ async def fetch_all(
         datetime.now(timezone.utc) - timedelta(hours=recovery_interval_hours)
     ).isoformat()
     with get_connection() as conn:
-        feeds = [dict(row) for row in conn.execute("SELECT * FROM feeds WHERE active = 1")]
+        # ORDER BY RANDOM() is load-bearing, not cosmetic. Without it sqlite
+        # returns feeds in rowid order, which is config/feeds.yaml order, so
+        # the semaphore admits the lowest-id feeds first every single run and
+        # they drain the shared run.max_articles_per_run budget before any
+        # later region is even parsed. Observed 2026-07-28: the first 37 feeds
+        # by id (Ireland, UK, Europe-Western) took all 300 of 300 in 7s and
+        # the other 18 regions -- including the United States' 23 feeds --
+        # contributed literally nothing. That skew was deterministic, so the
+        # same feeds would have won on every subsequent run too. Randomising
+        # the order doesn't raise the budget, but it makes which feeds lose
+        # it rotate, so across the 6 runs/day every region gets sampled.
+        feeds = [
+            dict(row)
+            for row in conn.execute("SELECT * FROM feeds WHERE active = 1 ORDER BY RANDOM()")
+        ]
         recovering = [
             dict(row)
             for row in conn.execute(

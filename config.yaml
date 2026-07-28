@@ -11,7 +11,20 @@ paths:
 run:
   fetch_concurrency: 30
   fetch_timeout_seconds: 15
-  max_articles_per_run: 300
+  # Raised 300 -> 600 on 2026-07-28, alongside the ORDER BY RANDOM() feed
+  # ordering in pipeline.fetch. At 300 the budget was exhausted 7s into a
+  # 22s run by ~37 of the 221 active feeds, so it -- not fetch failures --
+  # was the real ceiling on source diversity after the feed expansion in
+  # c3a4860. Note this costs no LLM calls: pipeline.fetch never touches
+  # Cerebras, and summarisation is gated separately by max_summaries_per_run.
+  # Deliberately NOT raised further, even though 221 feeds x
+  # max_articles_per_feed_per_run would allow ~4,400: fetch capacity already
+  # outruns summarise throughput (600 x 6 runs/day = 3,600 fetched vs 80 x 6
+  # = 480 summarised), and pipeline.summarize selects newest-first
+  # (ORDER BY articles.fetched DESC), so anything beyond that throughput
+  # isn't a backlog that drains later -- it's articles that get permanently
+  # jumped by newer ones and never summarised at all.
+  max_articles_per_run: 600
   # Applied per feed, before the shared max_articles_per_run budget above.
   # Without this, a handful of fast-responding high-volume wire feeds can
   # exhaust the whole run's budget before slower feeds are even parsed --
