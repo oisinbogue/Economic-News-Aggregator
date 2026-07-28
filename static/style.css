@@ -366,7 +366,15 @@ h2.section-title {
   color: var(--accent);
   margin-bottom: 6px;
 }
-.rank-badge::before { content: "Top story #" attr(data-rank); }
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 
 .carousel { position: relative; }
 .carousel-track { position: relative; }
@@ -442,6 +450,8 @@ body.dark .thumb { background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%)
 .carousel-nav.prev { right: 34px; }
 .carousel-nav.next { right: 0; }
 
+.carousel:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+
 .carousel-footer {
   display: flex;
   align-items: center;
@@ -449,8 +459,18 @@ body.dark .thumb { background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%)
   margin-top: 10px;
 }
 .carousel-dots { display: flex; gap: 5px; }
-.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--rule-soft); }
-.dot.active { background: var(--accent); }
+.dot {
+  width: 20px; height: 20px;
+  padding: 7px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--rule-soft);
+  background-clip: content-box;
+  cursor: pointer;
+  margin: -7px;
+}
+.dot.active { background: var(--accent); background-clip: content-box; }
+.dot:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .carousel-count { font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
 
 .rationale {
@@ -496,6 +516,35 @@ body.dark .thumb { background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%)
 .archive-list a:hover { color: var(--accent); }
 .archive-count { color: var(--muted); font-size: 12.5px; font-family: var(--sans); }
 
+/* ─── Backup/DB status panel (Source Health) ────────────────── */
+.status-panel {
+  border: 1px solid var(--rule-soft);
+  background: var(--paper);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+}
+.status-panel-inner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px 40px;
+}
+.status-stat { display: flex; flex-direction: column; gap: 4px; }
+.status-stat-label {
+  color: var(--muted);
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-family: var(--sans);
+}
+.status-stat-value {
+  font-family: var(--mono);
+  font-size: 15px;
+  color: var(--ink);
+}
+.status-stat-stale { color: var(--warn); font-weight: 700; }
+
 /* ─── Tables (health / predictions) ─────────────────────────── */
 .health-table-wrap, .leaderboard-table-wrap { overflow-x: auto; }
 .health-table, .leaderboard-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
@@ -528,6 +577,7 @@ body.dark .thumb { background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%)
 .health-healthy, .verdict-correct { background: var(--good-bg); color: var(--good); }
 .health-degraded { background: var(--warn-bg); color: var(--warn); }
 .health-inactive, .verdict-incorrect { background: var(--bad-bg); color: var(--bad); }
+.health-muted { background: var(--tag-bg); color: var(--muted); }
 
 /* Fetching fine but yielding no articles -- worth a second look even though
    status alone reads "healthy". */

@@ -4,10 +4,38 @@
 
 {% block content %}
 <h1 class="section-title">Source health</h1>
+
+<div id="backup-status-panel" class="status-panel" hidden>
+  <div class="status-panel-inner">
+    <div class="status-stat">
+      <span class="status-stat-label">DB size</span>
+      <span class="status-stat-value" data-status="db-size">&mdash;</span>
+    </div>
+    <div class="status-stat">
+      <span class="status-stat-label">Articles</span>
+      <span class="status-stat-value" data-status="articles">&mdash;</span>
+    </div>
+    <div class="status-stat">
+      <span class="status-stat-label">Clusters</span>
+      <span class="status-stat-value" data-status="clusters">&mdash;</span>
+    </div>
+    <div class="status-stat">
+      <span class="status-stat-label">Predictions</span>
+      <span class="status-stat-value" data-status="predictions">&mdash;</span>
+    </div>
+    <div class="status-stat">
+      <span class="status-stat-label">Last backup snapshot</span>
+      <span class="status-stat-value" data-status="last-snapshot">&mdash;</span>
+    </div>
+  </div>
+</div>
+
 <p class="section-note">
   Feeds are auto-deactivated after repeated consecutive failures, but never abandoned:
   an inactive feed is retried automatically about once every {{ recovery_interval_hours }} hours,
-  and a single successful probe reactivates it. Nothing here is a permanent kill switch.
+  and a single successful probe reactivates it. A <strong>muted</strong> feed is different --
+  a human turned it off deliberately (config/feeds.yaml <code>active: false</code>) and it's
+  excluded from auto-recovery entirely, so it stays off until someone flips that flag back.
 </p>
 {% if feeds %}
 <div class="health-table-wrap">

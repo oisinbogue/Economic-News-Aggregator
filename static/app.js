@@ -17,21 +17,61 @@
       if (slides.length < 2) return;
       var dots = carousel.querySelectorAll(".dot");
       var posEl = carousel.querySelector(".carousel-pos");
+      var statusEl = carousel.querySelector(".carousel-status");
       var index = 0;
 
-      function show(newIndex) {
+      function show(newIndex, opts) {
+        var announce = !opts || opts.announce !== false;
         slides[index].classList.remove("active");
-        if (dots[index]) dots[index].classList.remove("active");
+        if (dots[index]) {
+          dots[index].classList.remove("active");
+          dots[index].removeAttribute("aria-current");
+        }
         index = (newIndex + slides.length) % slides.length;
         slides[index].classList.add("active");
-        if (dots[index]) dots[index].classList.add("active");
+        if (dots[index]) {
+          dots[index].classList.add("active");
+          dots[index].setAttribute("aria-current", "true");
+        }
         if (posEl) posEl.textContent = String(index + 1);
+        if (statusEl && announce) {
+          var heading = slides[index].querySelector("h3");
+          var title = heading ? heading.textContent.trim() : "";
+          statusEl.textContent = "Take " + (index + 1) + " of " + slides.length + (title ? ": " + title : "");
+        }
       }
 
       var prev = carousel.querySelector(".carousel-nav.prev");
       var next = carousel.querySelector(".carousel-nav.next");
       if (prev) prev.addEventListener("click", function () { show(index - 1); });
       if (next) next.addEventListener("click", function () { show(index + 1); });
+
+      dots.forEach(function (dot, dotIndex) {
+        dot.addEventListener("click", function () { show(dotIndex); });
+      });
+
+      carousel.addEventListener("keydown", function (e) {
+        if (e.key === "ArrowRight") { e.preventDefault(); show(index + 1); }
+        else if (e.key === "ArrowLeft") { e.preventDefault(); show(index - 1); }
+      });
+
+      var touchStartX = null;
+      var touchStartY = null;
+      carousel.addEventListener("touchstart", function (e) {
+        var t = e.changedTouches[0];
+        touchStartX = t.clientX;
+        touchStartY = t.clientY;
+      }, { passive: true });
+      carousel.addEventListener("touchend", function (e) {
+        if (touchStartX === null) return;
+        var t = e.changedTouches[0];
+        var dx = t.clientX - touchStartX;
+        var dy = t.clientY - touchStartY;
+        touchStartX = null;
+        touchStartY = null;
+        if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
+        show(dx < 0 ? index + 1 : index - 1);
+      }, { passive: true });
     });
   }
 
@@ -118,6 +158,64 @@
     dialog.addEventListener("click", function (e) {
       if (e.target === dialog) dialog.close();
     });
+  }
+
+  // Backup/DB status panel on the Source Health page. Fetched client-side
+  // (rather than baked into the template at build time) so it stays fresh
+  // between site rebuilds -- status.json is rewritten every pipeline run,
+  // the HTML isn't. Missing/unreachable file just leaves the panel hidden.
+  var SNAPSHOT_STALE_HOURS = 24;
+
+  function initBackupStatus() {
+    var panel = document.getElementById("backup-status-panel");
+    if (!panel) return;
+
+    fetch("status.json", { cache: "no-store" }).then(function (res) {
+      if (!res.ok) throw new Error("status.json " + res.status);
+      return res.json();
+    }).then(function (status) {
+      var counts = status.counts || {};
+      setStat(panel, "db-size", formatBytes(status.db_size_bytes));
+      setStat(panel, "articles", formatCount(counts.articles));
+      setStat(panel, "clusters", formatCount(counts.clusters));
+      setStat(panel, "predictions", formatCount(counts.predictions));
+
+      var snapshotEl = panel.querySelector('[data-status="last-snapshot"]');
+      if (snapshotEl) {
+        var at = status.last_snapshot_at ? new Date(status.last_snapshot_at) : null;
+        if (at && !isNaN(at.getTime())) {
+          var ageHours = (Date.now() - at.getTime()) / 3600000;
+          snapshotEl.textContent = at.toLocaleString();
+          if (ageHours > SNAPSHOT_STALE_HOURS) {
+            snapshotEl.textContent += " (stale)";
+            snapshotEl.classList.add("status-stat-stale");
+          }
+        } else {
+          snapshotEl.textContent = "never";
+          snapshotEl.classList.add("status-stat-stale");
+        }
+      }
+
+      panel.hidden = false;
+    }).catch(function () {
+      // No status.json (older build, or first deploy before a pipeline run
+      // has written one yet) -- degrade to just not showing the panel.
+    });
+  }
+
+  function setStat(panel, key, text) {
+    var el = panel.querySelector('[data-status="' + key + '"]');
+    if (el) el.textContent = text;
+  }
+
+  function formatBytes(n) {
+    if (typeof n !== "number") return "unknown";
+    if (n < 1048576) return (n / 1024).toFixed(1) + " KiB";
+    return (n / 1048576).toFixed(1) + " MiB";
+  }
+
+  function formatCount(n) {
+    return typeof n === "number" ? n.toLocaleString() : "unknown";
   }
 
   function initTheme() {
@@ -264,6 +362,7 @@
     initCarousels();
     initFilters();
     initReviewHelp();
+    initBackupStatus();
     initTheme();
     initSearchToggle();
     initSearch();

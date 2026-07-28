@@ -15,10 +15,14 @@ CREATE TABLE articles (
     url_hash TEXT PRIMARY KEY,
     feed_id INTEGER,
     title TEXT,
+    url TEXT,
     fetched TEXT,
+    published TEXT,
     summary TEXT,
     topics TEXT,
+    country TEXT,
     score INTEGER,
+    image TEXT,
     cluster_id INTEGER
 );
 CREATE TABLE clusters (
@@ -44,6 +48,7 @@ DEFAULT_CFG = {
         "embedding_cosine_threshold": 0.62,
         "chain_window_days": 14,
         "chain_cosine_threshold": 0.78,
+        "carousel_cap": 5,
     },
     "embed": {"model": MODEL},
 }
@@ -81,12 +86,12 @@ def db(tmp_path, monkeypatch):
 
 
 def _insert_article(path, url_hash, title, fetched, topics="Economy", score=1,
-                     cluster_id=None, vector=None):
+                     cluster_id=None, vector=None, feed_id=1, country=""):
     conn = sqlite3.connect(path)
     conn.execute(
-        "INSERT INTO articles (url_hash, feed_id, title, fetched, summary, topics, score, cluster_id) "
-        "VALUES (?, 1, ?, ?, 'summary', ?, ?, ?)",
-        (url_hash, title, fetched, topics, score, cluster_id),
+        "INSERT INTO articles (url_hash, feed_id, title, fetched, summary, topics, score, cluster_id, country) "
+        "VALUES (?, ?, ?, ?, 'summary', ?, ?, ?, ?)",
+        (url_hash, feed_id, title, fetched, topics, score, cluster_id, country),
     )
     if vector is not None:
         conn.execute(
@@ -244,3 +249,97 @@ class TestChainLinking:
         stats = cluster_mod.process_all()
 
         assert stats["chained"] == 0
+
+
+class TestCarouselMembers:
+    """carousel_members_batch must apply the exact same per-cluster ranking
+    rule as the original per-cluster carousel_members -- highest-scored
+    article per distinct feed, score desc then fetched asc, capped, plus the
+    >=3-countries `perspectives` flag -- just across many clusters in one
+    query instead of one query each."""
+
+    def _conn(self, path):
+        conn = sqlite3.connect(path)
+        conn.row_factory = sqlite3.Row
+        return conn
+
+    def test_caps_and_dedupes_by_feed_keeping_highest_score(self, db):
+        now = _now()
+        # Two articles from feed 1: only the higher-scored one should survive.
+        _insert_article(db, "f1-low", "t", _iso(now), cluster_id=1, feed_id=1, score=1)
+        _insert_article(db, "f1-high", "t", _iso(now), cluster_id=1, feed_id=1, score=5)
+        _insert_article(db, "f2", "t", _iso(now), cluster_id=1, feed_id=2, score=3)
+
+        conn = self._conn(db)
+        members = cluster_mod.carousel_members(conn, 1)
+        conn.close()
+
+        assert [m["url_hash"] for m in members] == ["f1-high", "f2"]
+
+    def test_orders_by_score_desc_then_fetched_asc(self, db):
+        t0 = _now()
+        _insert_article(db, "later", "t", _iso(t0 + timedelta(minutes=5)), cluster_id=1, feed_id=1, score=3)
+        _insert_article(db, "earlier", "t", _iso(t0), cluster_id=1, feed_id=2, score=3)
+        _insert_article(db, "highest", "t", _iso(t0), cluster_id=1, feed_id=3, score=9)
+
+        conn = self._conn(db)
+        members = cluster_mod.carousel_members(conn, 1)
+        conn.close()
+
+        assert [m["url_hash"] for m in members] == ["highest", "earlier", "later"]
+
+    def test_cap_limits_member_count(self, db):
+        now = _iso(_now())
+        for i in range(7):
+            _insert_article(db, f"a{i}", "t", now, cluster_id=1, feed_id=i, score=i)
+
+        conn = self._conn(db)
+        members = cluster_mod.carousel_members(conn, 1, cap=3)
+        conn.close()
+
+        assert len(members) == 3
+        assert [m["url_hash"] for m in members] == ["a6", "a5", "a4"]
+
+    def test_perspectives_flag_needs_at_least_three_countries(self, db):
+        now = _iso(_now())
+        _insert_article(db, "a1", "t", now, cluster_id=1, feed_id=1, score=1, country="IE")
+        _insert_article(db, "a2", "t", now, cluster_id=1, feed_id=2, score=1, country="GB")
+
+        conn = self._conn(db)
+        two_country_members = cluster_mod.carousel_members(conn, 1)
+        assert all(m["perspectives"] is False for m in two_country_members)
+
+        _insert_article(db, "a3", "t", now, cluster_id=1, feed_id=3, score=1, country="US")
+        three_country_members = cluster_mod.carousel_members(conn, 1)
+        conn.close()
+
+        assert all(m["perspectives"] is True for m in three_country_members)
+
+    def test_batch_matches_per_cluster_results_across_multiple_clusters(self, db):
+        now = _iso(_now())
+        _insert_article(db, "c1-a1", "t", now, cluster_id=1, feed_id=1, score=1, country="IE")
+        _insert_article(db, "c1-a2", "t", now, cluster_id=1, feed_id=2, score=2, country="GB")
+        _insert_article(db, "c1-a3", "t", now, cluster_id=1, feed_id=3, score=3, country="US")
+        _insert_article(db, "c2-a1", "t", now, cluster_id=2, feed_id=1, score=1)
+        _insert_article(db, "c2-a2", "t", now, cluster_id=2, feed_id=1, score=2)  # same feed as c2-a1
+
+        conn = self._conn(db)
+        expected = {
+            1: cluster_mod.carousel_members(conn, 1),
+            2: cluster_mod.carousel_members(conn, 2),
+            3: cluster_mod.carousel_members(conn, 3),  # empty cluster
+        }
+        batched = cluster_mod.carousel_members_batch(conn, [1, 2, 3])
+        conn.close()
+
+        assert batched.get(1) == expected[1]
+        assert batched.get(2) == expected[2]
+        assert batched.get(3, []) == expected[3]
+        assert [m["url_hash"] for m in batched[2]] == ["c2-a2"]
+
+    def test_batch_empty_cluster_ids_returns_empty_dict(self, db):
+        conn = self._conn(db)
+        result = cluster_mod.carousel_members_batch(conn, [])
+        conn.close()
+
+        assert result == {}

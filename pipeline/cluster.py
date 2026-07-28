@@ -260,6 +260,53 @@ def process_all() -> dict:
     return stats
 
 
+def carousel_members_batch(
+    conn, cluster_ids: list[int], cap: int | None = None
+) -> dict[int, list[dict]]:
+    """Batched form of `carousel_members`: one query for every cluster_id in
+    `cluster_ids` instead of one query per cluster (pipeline.build/export
+    render this for hundreds-to-thousands of clusters per run), applying the
+    exact same per-cluster ranking rule to each group of rows.
+    """
+    if cap is None:
+        cap = get_config()["cluster"].get("carousel_cap", 5)
+    if not cluster_ids:
+        return {}
+
+    placeholders = ",".join("?" * len(cluster_ids))
+    rows_by_cluster: dict[int, list[dict]] = defaultdict(list)
+    for row in conn.execute(
+        f"""
+        SELECT cluster_id, url_hash, feed_id, title, url, summary, country, topics, score, published, fetched, image
+        FROM articles
+        WHERE cluster_id IN ({placeholders})
+        ORDER BY cluster_id, (score IS NULL), score DESC, fetched ASC
+        """,
+        cluster_ids,
+    ):
+        rows_by_cluster[row["cluster_id"]].append(dict(row))
+
+    result: dict[int, list[dict]] = {}
+    for cluster_id, rows in rows_by_cluster.items():
+        seen_feeds: set = set()
+        diverse: list[dict] = []
+        for row in rows:
+            if row["feed_id"] in seen_feeds:
+                continue
+            seen_feeds.add(row["feed_id"])
+            diverse.append(row)
+
+        distinct_countries = {
+            c for r in rows for c in (r["country"] or "").split(",") if c
+        }
+        for row in diverse:
+            row["perspectives"] = len(distinct_countries) >= 3
+
+        result[cluster_id] = diverse[:cap]
+
+    return result
+
+
 def carousel_members(conn, cluster_id: int, cap: int | None = None) -> list[dict]:
     """Ranking rule for "up to 5 articles, different outlets' takes" (brief
     feature #1): highest-scored article per source feed (so near-duplicate
@@ -269,37 +316,7 @@ def carousel_members(conn, cluster_id: int, cap: int | None = None) -> list[dict
     mirroring v1's cross-region flag (aggregator.py:626-628) with `country`
     in place of the old `region_slug`.
     """
-    if cap is None:
-        cap = get_config()["cluster"].get("carousel_cap", 5)
-
-    rows = [
-        dict(row)
-        for row in conn.execute(
-            """
-            SELECT url_hash, feed_id, title, url, summary, country, topics, score, published, fetched, image
-            FROM articles
-            WHERE cluster_id = ?
-            ORDER BY (score IS NULL), score DESC, fetched ASC
-            """,
-            (cluster_id,),
-        )
-    ]
-
-    seen_feeds: set = set()
-    diverse: list[dict] = []
-    for row in rows:
-        if row["feed_id"] in seen_feeds:
-            continue
-        seen_feeds.add(row["feed_id"])
-        diverse.append(row)
-
-    distinct_countries = {
-        c for r in rows for c in (r["country"] or "").split(",") if c
-    }
-    for row in diverse:
-        row["perspectives"] = len(distinct_countries) >= 3
-
-    return diverse[:cap]
+    return carousel_members_batch(conn, [cluster_id], cap).get(cluster_id, [])
 
 
 def main() -> dict:

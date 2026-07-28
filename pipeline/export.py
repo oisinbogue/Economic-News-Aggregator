@@ -26,7 +26,7 @@ from email.utils import format_datetime
 from pathlib import Path
 from xml.sax.saxutils import escape
 
-from pipeline.build import _attach_carousel, _feed_names, _load_all_leads, load_taxonomy_meta
+from pipeline.build import _attach_carousels, _feed_names, _load_all_leads, load_taxonomy_meta
 from pipeline.config import get_config, resolve_path
 from pipeline.timeutil import utc_today
 from pipeline.db import get_connection, init_db
@@ -110,9 +110,8 @@ def _feed_items(conn, feed_names: dict[int, str], theme_priority: list[str]) -> 
     Shared by latest.json and feed.xml so both "de facto API" surfaces
     (brief feature #4) describe the same set of stories.
     """
-    leads = _load_all_leads(conn)[:FEED_ITEM_CAP]
-    for lead in leads:
-        _attach_carousel(conn, lead, feed_names, theme_priority)
+    leads = _load_all_leads(conn, limit=FEED_ITEM_CAP)
+    _attach_carousels(conn, leads, feed_names, theme_priority)
     return leads
 
 

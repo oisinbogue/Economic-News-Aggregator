@@ -39,7 +39,7 @@
   </div>
 </nav>
 
-{% if site.all_topics or site.all_countries %}
+{% if show_filters and (site.all_topics or site.all_countries) %}
 <div class="filter-row">
   <div id="filter-row">
     {% if site.all_topics %}
@@ -69,7 +69,7 @@
 </div>
 {% endif %}
 
-<main class="site-main" data-pagefind-body>
+<main class="site-main"{% if pagefind_index %} data-pagefind-body{% else %} data-pagefind-ignore{% endif %}>
   {% block content %}{% endblock %}
 </main>
 

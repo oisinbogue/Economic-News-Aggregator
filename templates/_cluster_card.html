@@ -4,8 +4,8 @@
          data-topics="{{ cluster.topic_list|join(',') }}">
   {% for t in cluster.topic_list %}<span data-pagefind-filter="topic:{{ t }}" hidden></span>{% endfor %}
   {% for c in cluster.countries %}<span data-pagefind-filter="country:{{ c }}" hidden></span>{% endfor %}
-  {% if rank %}<div class="rank-badge" data-rank="{{ rank }}"></div>{% endif %}
-  <div class="carousel">
+  {% if rank %}<div class="rank-badge" data-rank="{{ rank }}">Top story #{{ rank }}</div>{% endif %}
+  <div class="carousel"{% if cluster.members|length > 1 %} tabindex="0" role="region" aria-roledescription="carousel" aria-label="{{ cluster.members|length }} takes on this story, use left and right arrow keys to browse"{% endif %}>
     <div class="carousel-track">
       {% for m in cluster.members %}
       <div class="carousel-slide{% if loop.first %} active{% endif %}">
@@ -27,13 +27,14 @@
     <button type="button" class="carousel-nav next" aria-label="Next take">&#8594;</button>
     <div class="carousel-footer">
       <div class="carousel-dots">
-        {% for m in cluster.members %}<span class="dot{% if loop.first %} active{% endif %}"></span>{% endfor %}
+        {% for m in cluster.members %}<button type="button" class="dot{% if loop.first %} active{% endif %}" aria-label="Go to take {{ loop.index }} of {{ cluster.members|length }}"{% if loop.first %} aria-current="true"{% endif %}></button>{% endfor %}
       </div>
       <div class="carousel-count">
         <span class="carousel-pos">1</span> / {{ cluster.members|length }}
         {% if cluster.is_perspectives %}&middot; multiple perspectives{% endif %}
       </div>
     </div>
+    <div class="sr-only carousel-status" aria-live="polite" aria-atomic="true"></div>
     {% endif %}
   </div>
   {% if cluster.rationale %}<p class="rationale">Why it matters: {{ cluster.rationale }}</p>{% endif %}

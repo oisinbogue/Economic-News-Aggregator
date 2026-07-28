@@ -33,7 +33,7 @@ from pathlib import Path
 import yaml
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from pipeline.cluster import carousel_members
+from pipeline.cluster import carousel_members_batch
 from pipeline.config import get_config, resolve_path
 from pipeline.db import get_connection, init_db
 from pipeline.timeutil import utc_today
@@ -144,28 +144,29 @@ def _load_feed_health(conn, recovery_interval_hours: float) -> list[dict]:
     return rows
 
 
-def _load_all_leads(conn) -> list[dict]:
+def _load_all_leads(conn, limit: int | None = None) -> list[dict]:
     """One row per cluster: its representative (lead) article, joined with
-    feed name for display. Ordered newest-first."""
-    return [
-        dict(row)
-        for row in conn.execute(
-            """
-            SELECT clusters.id AS cluster_id, clusters.label,
-                   articles.title, articles.url, articles.summary,
-                   articles.country, articles.topics, articles.published,
-                   articles.fetched, articles.feed_id, feeds.name AS source_name
-            FROM clusters
-            JOIN articles ON articles.url_hash = clusters.representative_article
-            JOIN feeds ON feeds.id = articles.feed_id
-            ORDER BY articles.fetched DESC
-            """
-        )
-    ]
+    feed name for display. Ordered newest-first, optionally capped to the
+    `limit` most recent (callers that only need the newest N, e.g. the
+    export feed, avoid loading and holding the full cluster history)."""
+    query = """
+        SELECT clusters.id AS cluster_id, clusters.label,
+               articles.title, articles.url, articles.summary,
+               articles.country, articles.topics, articles.published,
+               articles.fetched, articles.feed_id, feeds.name AS source_name
+        FROM clusters
+        JOIN articles ON articles.url_hash = clusters.representative_article
+        JOIN feeds ON feeds.id = articles.feed_id
+        ORDER BY articles.fetched DESC
+    """
+    params: tuple = ()
+    if limit is not None:
+        query += " LIMIT ?"
+        params = (limit,)
+    return [dict(row) for row in conn.execute(query, params)]
 
 
-def _attach_carousel(conn, lead: dict, feed_names: dict[int, str], theme_priority: list[str]) -> dict:
-    members = carousel_members(conn, lead["cluster_id"])
+def _finalize_lead(lead: dict, members: list[dict], feed_names: dict[int, str], theme_priority: list[str]) -> dict:
     for m in members:
         m["source_name"] = feed_names.get(m["feed_id"], "Unknown source")
         m["fetched_display"] = _fmt_date(m.get("published") or m.get("fetched"))
@@ -183,6 +184,18 @@ def _attach_carousel(conn, lead: dict, feed_names: dict[int, str], theme_priorit
     lead["topic_list"] = sorted(topics)
     lead["fetched_display"] = _fmt_date(lead.get("published") or lead.get("fetched"))
     return lead
+
+
+def _attach_carousels(
+    conn, leads: list[dict], feed_names: dict[int, str], theme_priority: list[str]
+) -> list[dict]:
+    """Attaches carousel members to every lead in `leads` with a single
+    grouped query (pipeline.cluster.carousel_members_batch) instead of one
+    carousel_members() query per cluster."""
+    members_by_cluster = carousel_members_batch(conn, [lead["cluster_id"] for lead in leads])
+    for lead in leads:
+        _finalize_lead(lead, members_by_cluster.get(lead["cluster_id"], []), feed_names, theme_priority)
+    return leads
 
 
 def _group_by_theme(leads: list[dict], category_display_order: list[str]) -> list[dict]:
@@ -293,12 +306,15 @@ def render_site() -> dict:
     # right after another process touches it, turning that into a flaky
     # PermissionError. Clearing file-by-file and tolerating undeletable
     # directories (they get reused, not left stale-but-wrong) avoids that.
+    # archive/ is excluded from this wipe: most archive day pages haven't
+    # changed since the last run (see the skip-if-unchanged check below), and
+    # deleting them here would force every single one to be rewritten anyway.
     if output_dir.exists():
         for child in output_dir.rglob("*"):
-            if child.is_file():
+            if child.is_file() and "archive" not in child.relative_to(output_dir).parts[:1]:
                 child.unlink(missing_ok=True)
         for child in sorted(output_dir.rglob("*"), key=lambda p: len(p.parts), reverse=True):
-            if child.is_dir():
+            if child.is_dir() and "archive" not in child.relative_to(output_dir).parts[:1]:
                 try:
                     child.rmdir()
                 except OSError:
@@ -318,8 +334,7 @@ def render_site() -> dict:
     with get_connection() as conn:
         feed_names = _feed_names(conn)
         all_leads = _load_all_leads(conn)
-        for lead in all_leads:
-            _attach_carousel(conn, lead, feed_names, theme_priority)
+        _attach_carousels(conn, all_leads, feed_names, theme_priority)
 
         feed_health = _load_feed_health(conn, recovery_interval_hours)
         prediction_data = _load_prediction_data(conn, feed_names)
@@ -404,28 +419,50 @@ def render_site() -> dict:
         by_date[day].append(lead)
 
     top10_by_date: dict[str, dict[int, str]] = defaultdict(dict)
+    prev_render_state: dict[str, str] = {}
     with get_connection() as conn:
         for row in conn.execute("SELECT date, cluster_id, rationale FROM daily_top10"):
             top10_by_date[row["date"]][row["cluster_id"]] = row["rationale"]
+        for row in conn.execute("SELECT date, last_fetched FROM archive_render_state"):
+            prev_render_state[row["date"]] = row["last_fetched"]
 
     archive_days = sorted(by_date, reverse=True)
     archive_index_tmpl = env.get_template("archive_index.html")
     archive_day_tmpl = env.get_template("archive_day.html")
 
     day_summaries = []
+    new_render_state: dict[str, str] = {}
     for day in archive_days:
         leads_for_day = by_date[day]
         day_summaries.append({"date": day, "count": len(leads_for_day)})
 
+        # A day's content is only re-rendered when its most-recently-fetched
+        # article has moved on since the last run (or the file is missing) --
+        # otherwise this day's archive page is identical to what's already on
+        # disk, and rendering it again 6x/day for the site's entire history
+        # is pure waste.
+        max_fetched = max((lead.get("fetched") or "") for lead in leads_for_day)
+        new_render_state[day] = max_fetched
+        day_path = output_dir / "archive" / f"{day}.html"
+        if prev_render_state.get(day) == max_fetched and day_path.exists():
+            continue
+
         for lead in leads_for_day:
             lead["rationale"] = top10_by_date.get(day, {}).get(lead["cluster_id"])
         groups = _group_by_theme(leads_for_day, category_display_order)
-        (output_dir / "archive" / f"{day}.html").write_text(
+        day_path.write_text(
             archive_day_tmpl.render(
                 site=site_meta, day=day, groups=groups, asset_prefix="../", active_nav="archive",
                 show_filters=True, pagefind_index=True,
             ),
             encoding="utf-8",
+        )
+
+    with get_connection() as conn:
+        conn.executemany(
+            "INSERT INTO archive_render_state (date, last_fetched) VALUES (?, ?) "
+            "ON CONFLICT(date) DO UPDATE SET last_fetched = excluded.last_fetched",
+            list(new_render_state.items()),
         )
 
     (output_dir / "archive" / "index.html").write_text(
