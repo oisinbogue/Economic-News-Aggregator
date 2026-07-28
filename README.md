@@ -35,15 +35,22 @@ The free tier is also 5 req/min (not 30 as stated in the brief).
 
 ## Layout
 
-- `pipeline/` — Python modules (`config`, `db`, `fetch`, `validate_feeds`, ...)
+- `pipeline/` — Python modules (`config`, `db`, `fetch`, `reconcile_feeds`, `validate_feeds`, ...)
 - `config.yaml` — paths and run parameters
-- `config/feeds.yaml` — all 240 sources, grouped by region, with validation status
+- `config/feeds.yaml` — all 240 sources, grouped by region, with validation status; the
+  single source of truth for the `feeds` db table, synced in on every run by
+  `pipeline.reconcile_feeds`. To permanently mute a noisy/low-quality feed (as opposed to
+  a feed auto-deactivated by repeated fetch failures), set that entry's `active: false`
+  here and rerun `pipeline.reconcile_feeds` — this is recorded as `deactivated_reason =
+  'manual'` in the db, which `pipeline.fetch`'s auto-recovery probe skips entirely, so it
+  won't quietly come back on the next successful probe the way an auto-deactivated feed
+  would. It shows as **muted** (not "inactive") on the source health page. Flip `active:
+  true` back and rerun `reconcile_feeds` to unmute it.
 - `config/taxonomy.yaml` — keyword/theme taxonomy for topic tagging
 - `config/countries.yaml` — place/institution gazetteer `pipeline.geo` uses to detect
   which country/region an article is actually about (spaCy NER + keyword matching,
   independent of the source feed's own country in `config/feeds.yaml`)
-- `data/` — `feeds.csv` (raw source list), `feeds_validated.csv` (validation
-  results), `aggregator.db` (SQLite archive, gitignored)
+- `data/` — `aggregator.db` (SQLite archive, gitignored)
 - `templates/`, `static/` — Jinja2 templates and CSS/JS for the static site
 - `site/` — generated site output (`pipeline.build` + `pipeline.export`), gitignored
 
@@ -53,7 +60,7 @@ The free tier is also 5 req/min (not 30 as stated in the brief).
 pip install -r requirements.txt
 cp .env.example .env   # fill in CEREBRAS_API_KEY once you have one
 python -m pipeline.db              # initialise the schema
-python -m pipeline.validate_feeds  # re-validate all feeds, populate the feeds table
+python -m pipeline.reconcile_feeds # sync the feeds table from config/feeds.yaml
 python -m pipeline.fetch           # fetch new articles from active feeds (also probes inactive feeds for auto-recovery)
 python -m pipeline.summarize       # summarise + translate fetched articles via Cerebras
 python -m pipeline.predictions     # extract falsifiable predictions from summarised articles

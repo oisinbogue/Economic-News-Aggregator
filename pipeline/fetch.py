@@ -28,9 +28,16 @@ For each active feed:
      catches the same article reached via two different feed links (e.g. a
      syndicated copy and the original) that the feed-URL hash alone can't.
   4. Feed health (last_success/consecutive_failures/active) is updated for
-     every feed on every run, and every article insert commits immediately, so
-     a crash or Ctrl-C mid-run loses at most the one in-flight item -- nothing
-     already written needs to be redone.
+     every feed on every run. Dedup checks (both the url_hash lookup and the
+     canonical-URL re-hash lookup) are served from an in-memory set of every
+     url_hash already in the db, loaded once before the fetch loop starts --
+     with up to `run.fetch_concurrency` feeds in flight, hitting sqlite (a
+     fresh connection + WAL/foreign_keys pragmas per check) for each one was
+     stalling the event loop. Article inserts are funnelled through a single
+     writer coroutine (db_writer) holding the one write connection for the
+     run, and it commits after every single insert -- same durability as
+     before, so a crash or Ctrl-C mid-run still loses at most the one
+     in-flight item, nothing already written needs to be redone.
   5. Auto-recovery (brief feature #5): a feed that's been auto-deactivated
      after MAX_CONSECUTIVE_FAILURES isn't fetched forever after -- it's
      deliberately NOT excluded from every future run the way v1's
@@ -42,6 +49,14 @@ For each active feed:
      a failed probe just updates last_attempt so it isn't retried again
      until the next cooldown window.
 
+     This auto-recovery is only for feeds.deactivated_reason = 'auto_failure'.
+     A feed a human deliberately muted (config/feeds.yaml active:false, see
+     pipeline.reconcile_feeds) has deactivated_reason = 'manual' and is
+     excluded from the recovery-probe query entirely -- it's never fetched
+     and a stray success elsewhere can't silently flip it back on. The only
+     way to bring it back is editing feeds.yaml (active: true) and rerunning
+     pipeline.reconcile_feeds.
+
 Usage: python -m pipeline.fetch  (or `python run.py fetch`)
 """
 
@@ -50,6 +65,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import re
+import sqlite3
 import ssl
 import sys
 from dataclasses import dataclass
@@ -68,7 +84,7 @@ from trafilatura.metadata import extract_metadata
 _IMG_SRC_RE = re.compile(r'<img[^>]+src=["\']([^"\']+)["\']', re.IGNORECASE)
 
 from pipeline.config import get_config
-from pipeline.db import get_connection, init_db
+from pipeline.db import get_connection, get_db_path, init_db
 
 USER_AGENT = "econ-news-aggregator/0.1 (+https://github.com/; RSS fetcher)"
 
@@ -257,9 +273,36 @@ async def extract_article_page(client: httpx.AsyncClient, url: str, timeout: flo
     return body, image, canonical_url
 
 
-def article_exists(conn, url_hash: str) -> bool:
-    row = conn.execute("SELECT 1 FROM articles WHERE url_hash = ?", (url_hash,)).fetchone()
-    return row is not None
+INSERT_ARTICLE_SQL = """
+    INSERT INTO articles
+        (url_hash, feed_id, title, url, published, fetched, raw_text, image, processed_status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'fetched')
+    ON CONFLICT(url_hash) DO NOTHING
+"""
+
+
+async def db_writer(queue: "asyncio.Queue[tuple | None]", db_path) -> None:
+    """Owns the single sqlite3 connection used for article inserts during a
+    fetch run, consuming insert params off `queue` until it receives a
+    `None` sentinel. Commits after every item (not batched) so the "a crash
+    loses at most one in-flight item" durability guarantee holds exactly as
+    it did when each insert opened its own connection.
+    """
+    conn = sqlite3.connect(db_path, timeout=30)
+    conn.execute("PRAGMA journal_mode = WAL")
+    conn.execute("PRAGMA foreign_keys = ON")
+    try:
+        while True:
+            item = await queue.get()
+            try:
+                if item is None:
+                    return
+                conn.execute(INSERT_ARTICLE_SQL, item)
+                conn.commit()
+            finally:
+                queue.task_done()
+    finally:
+        conn.close()
 
 
 def classify_fetch_error(exc: Exception) -> str:
@@ -290,6 +333,9 @@ async def process_feed(
     stats_lock: asyncio.Lock,
     articles_remaining: list[int],
     articles_remaining_lock: asyncio.Lock,
+    max_articles_per_feed: int,
+    existing_hashes: set[str],
+    write_queue: "asyncio.Queue[tuple | None]",
 ) -> None:
     async with semaphore:
         now = datetime.now(timezone.utc).isoformat()
@@ -303,11 +349,12 @@ async def process_feed(
                     UPDATE feeds
                     SET consecutive_failures = consecutive_failures + 1,
                         active = CASE WHEN consecutive_failures + 1 >= ? THEN 0 ELSE active END,
+                        deactivated_reason = CASE WHEN consecutive_failures + 1 >= ? THEN 'auto_failure' ELSE deactivated_reason END,
                         last_error_type = ?,
                         last_attempt = ?
                     WHERE id = ?
                     """,
-                    (MAX_CONSECUTIVE_FAILURES, error_type, now, feed["id"]),
+                    (MAX_CONSECUTIVE_FAILURES, MAX_CONSECUTIVE_FAILURES, error_type, now, feed["id"]),
                 )
             async with stats_lock:
                 stats.feeds_failed += 1
@@ -322,6 +369,7 @@ async def process_feed(
                 "consecutive_failures": 0,
                 "last_error_type": None,
                 "active": 1,
+                "deactivated_reason": None,
             }
             if changed:
                 update_fields["etag"] = new_headers.get("etag")
@@ -339,7 +387,11 @@ async def process_feed(
         if not changed or parsed is None:
             return
 
+        articles_from_this_feed = 0
         for entry in parsed.entries:
+            if articles_from_this_feed >= max_articles_per_feed:
+                break
+
             link = entry.get("link")
             if not link:
                 continue
@@ -352,14 +404,14 @@ async def process_feed(
 
             url_hash = hash_url(url)
 
-            with get_connection() as conn:
-                if article_exists(conn, url_hash):
-                    continue
+            if url_hash in existing_hashes:
+                continue
 
             async with articles_remaining_lock:
                 if articles_remaining[0] <= 0:
                     return
                 articles_remaining[0] -= 1
+            articles_from_this_feed += 1
 
             title = entry.get("title", "") or ""
             published = parse_published(entry)
@@ -377,25 +429,27 @@ async def process_feed(
                     canonical_url = normalise_url(canonical_url)
                     if canonical_url != url:
                         canonical_hash = hash_url(canonical_url)
-                        with get_connection() as conn:
-                            already_have = article_exists(conn, canonical_hash)
-                        if already_have:
+                        if canonical_hash in existing_hashes:
                             continue
                         url, url_hash = canonical_url, canonical_hash
+
+            # Re-check immediately before handing off to the writer: the
+            # extract_article_page() await above is a window where another
+            # task could have reserved this same url_hash (e.g. two feeds
+            # carrying the same story, or a feed-URL/canonical-URL collision
+            # across entries). No await happens between this check and the
+            # reservation below, so it's race-free despite existing_hashes
+            # having no lock.
+            if url_hash in existing_hashes:
+                continue
+            existing_hashes.add(url_hash)
 
             raw_text = (raw_text or "")[:MAX_RAW_TEXT_CHARS] or None
             fetched_at = datetime.now(timezone.utc).isoformat()
 
-            with get_connection() as conn:
-                conn.execute(
-                    """
-                    INSERT INTO articles
-                        (url_hash, feed_id, title, url, published, fetched, raw_text, image, processed_status)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'fetched')
-                    ON CONFLICT(url_hash) DO NOTHING
-                    """,
-                    (url_hash, feed["id"], title, url, published, fetched_at, raw_text, image),
-                )
+            await write_queue.put(
+                (url_hash, feed["id"], title, url, published, fetched_at, raw_text, image)
+            )
 
             async with stats_lock:
                 stats.new_articles += 1
@@ -404,6 +458,7 @@ async def process_feed(
 async def fetch_all(
     concurrency: int, timeout: float, max_articles: int,
     recovery_interval_hours: float, recovery_probes_per_run: int,
+    max_articles_per_feed: int,
 ) -> RunStats:
     cooldown_cutoff = (
         datetime.now(timezone.utc) - timedelta(hours=recovery_interval_hours)
@@ -415,13 +470,18 @@ async def fetch_all(
             for row in conn.execute(
                 """
                 SELECT * FROM feeds
-                WHERE active = 0 AND (last_attempt IS NULL OR last_attempt <= ?)
+                WHERE active = 0 AND deactivated_reason IS NOT 'manual'
+                      AND (last_attempt IS NULL OR last_attempt <= ?)
                 ORDER BY last_attempt IS NOT NULL, last_attempt ASC
                 LIMIT ?
                 """,
                 (cooldown_cutoff, recovery_probes_per_run),
             )
         ]
+        # Preloaded once so every per-article dedup check during the run is
+        # an in-memory set lookup instead of a sqlite round trip -- see the
+        # module docstring, point 4.
+        existing_hashes = {row["url_hash"] for row in conn.execute("SELECT url_hash FROM articles")}
     feeds += recovering
 
     stats = RunStats(feeds_tried=len(feeds))
@@ -433,15 +493,23 @@ async def fetch_all(
     articles_remaining = [max_articles]
     articles_remaining_lock = asyncio.Lock()
 
+    write_queue: "asyncio.Queue[tuple | None]" = asyncio.Queue()
+    writer_task = asyncio.create_task(db_writer(write_queue, get_db_path()))
+
     async with httpx.AsyncClient(headers={"User-Agent": USER_AGENT}) as client:
         tasks = [
             process_feed(
                 client, semaphore, feed, timeout, stats, stats_lock,
                 articles_remaining, articles_remaining_lock,
+                max_articles_per_feed,
+                existing_hashes, write_queue,
             )
             for feed in feeds
         ]
         await asyncio.gather(*tasks)
+
+    await write_queue.put(None)
+    await writer_task
 
     return stats
 
@@ -454,14 +522,19 @@ def main() -> RunStats:
     max_articles = cfg["run"].get("max_articles_per_run", 300)
     recovery_interval_hours = cfg["run"].get("recovery_check_interval_hours", 24)
     recovery_probes_per_run = cfg["run"].get("recovery_probes_per_run", 15)
+    max_articles_per_feed = cfg["run"].get("max_articles_per_feed_per_run", 20)
 
     print(
-        f"Fetching active feeds ({concurrency} at a time, {timeout}s timeout, max {max_articles} new articles), "
+        f"Fetching active feeds ({concurrency} at a time, {timeout}s timeout, max {max_articles} new articles, "
+        f"max {max_articles_per_feed} per feed), "
         f"probing up to {recovery_probes_per_run} inactive feed(s) for recovery..."
     )
     started = datetime.now(timezone.utc)
     stats = asyncio.run(
-        fetch_all(concurrency, timeout, max_articles, recovery_interval_hours, recovery_probes_per_run)
+        fetch_all(
+            concurrency, timeout, max_articles, recovery_interval_hours, recovery_probes_per_run,
+            max_articles_per_feed,
+        )
     )
     duration = (datetime.now(timezone.utc) - started).total_seconds()
 

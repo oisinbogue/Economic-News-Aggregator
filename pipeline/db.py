@@ -42,7 +42,8 @@ CREATE TABLE IF NOT EXISTS feeds (
     etag                TEXT,                         -- ETag from the last fetch response, for conditional GETs
     last_modified       TEXT,                         -- Last-Modified from the last fetch response, for conditional GETs
     last_error_type     TEXT,                         -- classification of the most recent failure (http_404, timeout, dns, ssl, connection, other); NULL after a success
-    last_attempt        TEXT                          -- ISO8601 timestamp of the most recent fetch attempt, success or failure; drives the auto-recovery cooldown for inactive feeds (see pipeline.fetch)
+    last_attempt        TEXT,                         -- ISO8601 timestamp of the most recent fetch attempt, success or failure; drives the auto-recovery cooldown for inactive feeds (see pipeline.fetch)
+    deactivated_reason  TEXT                          -- NULL while active; 'auto_failure' (pipeline.fetch, MAX_CONSECUTIVE_FAILURES) or 'manual' (config/feeds.yaml active:false, see pipeline.reconcile_feeds) once active=0. Recovery probes and successful fetches never clear/override 'manual' -- only reconcile_feeds flipping the YAML back to active:true does
 );
 
 -- One row per article. url_hash (sha256 of the canonical URL) is the PK so
@@ -156,6 +157,15 @@ CREATE TABLE IF NOT EXISTS resolution_audit (
     decided_at          TEXT NOT NULL    -- ISO8601
 );
 
+-- Per-day cache for pipeline.build's skip-if-unchanged archive rendering:
+-- the max(articles.fetched) among a day's clusters as of the last time
+-- archive/{date}.html was actually rewritten, so an unchanged day doesn't
+-- get re-rendered on every one of the 6 runs/day.
+CREATE TABLE IF NOT EXISTS archive_render_state (
+    date            TEXT PRIMARY KEY,  -- ISO8601 date (UTC), matches the archive/{date}.html filename
+    last_fetched    TEXT NOT NULL      -- max(articles.fetched) among that day's clusters as of the last render
+);
+
 -- Lookup indexes for the queries each stage runs repeatedly.
 CREATE INDEX IF NOT EXISTS idx_articles_status ON articles(processed_status);
 CREATE INDEX IF NOT EXISTS idx_articles_feed ON articles(feed_id);
@@ -216,7 +226,7 @@ def init_db() -> None:
         existing_feed_cols = {row["name"] for row in conn.execute("PRAGMA table_info(feeds)")}
         for col, ddl in (
             ("etag", "TEXT"), ("last_modified", "TEXT"), ("last_error_type", "TEXT"),
-            ("last_attempt", "TEXT"),
+            ("last_attempt", "TEXT"), ("deactivated_reason", "TEXT"),
         ):
             if col not in existing_feed_cols:
                 conn.execute(f"ALTER TABLE feeds ADD COLUMN {col} {ddl}")

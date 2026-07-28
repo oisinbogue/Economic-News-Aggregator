@@ -4,8 +4,6 @@
 
 paths:
   db_file: data/aggregator.db
-  feeds_csv: data/feeds.csv
-  feeds_validated_csv: data/feeds_validated.csv
   feeds_yaml: config/feeds.yaml
   taxonomy_yaml: config/taxonomy.yaml
   countries_yaml: config/countries.yaml
@@ -14,6 +12,17 @@ run:
   fetch_concurrency: 30
   fetch_timeout_seconds: 15
   max_articles_per_run: 300
+  # Applied per feed, before the shared max_articles_per_run budget above.
+  # Without this, a handful of fast-responding high-volume wire feeds can
+  # exhaust the whole run's budget before slower feeds are even parsed --
+  # process_feed's coroutines race for articles_remaining in whatever order
+  # they win the semaphore, so source diversity silently skewed toward
+  # "fastest to respond" rather than "most relevant." Downstream clustering's
+  # "multiple perspectives" carousel depends on getting takes from different
+  # outlets, so no single feed should be able to dominate one run's intake.
+  # 20 is generous relative to typical per-feed article volume between runs
+  # (6 runs/day) -- it only bites during genuine breaking-news bursts.
+  max_articles_per_feed_per_run: 20
   # Cerebras free tier is 5 req/min (pipeline.cerebras throttles to one call
   # every 13s across the whole process). A run can touch up to 4 throttled
   # stages -- summarize (up to 2 calls/article), predictions, curate (1

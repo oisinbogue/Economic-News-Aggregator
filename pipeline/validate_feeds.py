@@ -1,22 +1,28 @@
-"""Validates every feed in feeds.csv before the pipeline relies on it.
+"""Re-validates every feed in config/feeds.yaml and writes the results back
+into that file -- config/feeds.yaml is the pipeline's single source of truth
+for which feeds exist and whether they're active (see pipeline.reconcile_feeds,
+which syncs the `feeds` db table from it on every run). This script doesn't
+touch the db at all; run pipeline.reconcile_feeds afterwards to pick up any
+status changes.
 
-For each row:
+For each row (tested at its `original_url` if one is recorded -- i.e. the
+earliest known URL for that source -- else its current `url`):
   1. GET the URL (following redirects) with a short timeout.
   2. Try to parse the response body as RSS/Atom with feedparser.
   3. Classify as:
        ok         - parsed cleanly at the URL as given
        redirected - parsed cleanly, but the final URL differs from the one
-                    in feeds.csv (we record the new URL and import that
-                    instead, so future runs hit the live location directly)
+                    tested (recorded as `original_url`, so future runs keep
+                    retesting from the true original rather than drifting)
        dead       - request failed, or the body isn't a usable feed. For
                     these we make one extra attempt: fetch the site's
                     homepage and look for a <link rel="alternate" ...>
                     tag advertising a feed (RSS auto-discovery), and test
                     that URL too.
 
-Output: data/feeds_validated.csv (feeds.csv columns + status/resolved_url/
-notes), and every row classified ok/redirected/discovered is upserted into
-the feeds table as active.
+Each row's `url`, `original_url`, `validation_status`, `active`, and
+`validation_notes` are updated in place; `name`/`country`/`language`/
+`topic_hint`/`previously_disabled` are left untouched (human-curated).
 
 Usage: python -m pipeline.validate_feeds
 """
@@ -24,18 +30,17 @@ Usage: python -m pipeline.validate_feeds
 from __future__ import annotations
 
 import asyncio
-import csv
 import sys
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from html.parser import HTMLParser
 from urllib.parse import urljoin, urlparse
 
 import feedparser
 import httpx
+import yaml
 
 from pipeline.config import get_config, resolve_path
-from pipeline.db import get_connection, init_db
 
 # Feed mime-types worth treating as "this link is a feed" during autodiscovery.
 FEED_LINK_TYPES = {
@@ -70,13 +75,8 @@ class _FeedLinkFinder(HTMLParser):
 
 @dataclass
 class ValidationResult:
-    url: str
-    name: str
-    country: str
-    language: str
-    topic_hint: str
     status: str          # ok / redirected / discovered / dead
-    resolved_url: str    # URL actually used going forward (may equal url)
+    resolved_url: str    # URL actually used going forward (may equal the tested URL)
     notes: str = ""
 
 
@@ -124,10 +124,9 @@ async def _attempt_autodiscovery(client: httpx.AsyncClient, original_url: str, t
 async def validate_one(
     client: httpx.AsyncClient,
     semaphore: asyncio.Semaphore,
-    row: dict,
+    url: str,
     timeout: float,
 ) -> ValidationResult:
-    url = row["url"].strip()
     async with semaphore:
         try:
             looks_like_feed, final_url = await _try_parse_as_feed(client, url, timeout)
@@ -139,103 +138,80 @@ async def validate_one(
 
         if looks_like_feed:
             status = "ok" if final_url == url else "redirected"
-            return ValidationResult(
-                url=url, name=row["name"], country=row["country"],
-                language=row["language"], topic_hint=row["topic_hint"],
-                status=status, resolved_url=final_url,
-            )
+            return ValidationResult(status=status, resolved_url=final_url)
 
         # Not a feed (or request failed outright) -- try RSS autodiscovery.
         discovered = await _attempt_autodiscovery(client, url, timeout)
         if discovered:
             return ValidationResult(
-                url=url, name=row["name"], country=row["country"],
-                language=row["language"], topic_hint=row["topic_hint"],
                 status="discovered", resolved_url=discovered,
                 notes="found via homepage <link rel=alternate>",
             )
 
         return ValidationResult(
-            url=url, name=row["name"], country=row["country"],
-            language=row["language"], topic_hint=row["topic_hint"],
             status="dead", resolved_url=url,
             notes=fetch_error or "no entries found and no feed link discovered",
         )
 
 
-async def validate_all(rows: list[dict], concurrency: int, timeout: float) -> list[ValidationResult]:
+async def validate_all(urls: list[str], concurrency: int, timeout: float) -> list[ValidationResult]:
     semaphore = asyncio.Semaphore(concurrency)
     async with httpx.AsyncClient(headers={"User-Agent": "econ-news-aggregator/0.1 (+feed-validator)"}) as client:
-        tasks = [validate_one(client, semaphore, row, timeout) for row in rows]
+        tasks = [validate_one(client, semaphore, url, timeout) for url in urls]
         return await asyncio.gather(*tasks)
 
 
-def import_valid_feeds(results: list[ValidationResult]) -> int:
-    """Upserts every ok/redirected/discovered result into the feeds table. Returns count imported."""
-    importable = [r for r in results if r.status in ("ok", "redirected", "discovered")]
-    with get_connection() as conn:
-        for r in importable:
-            conn.execute(
-                """
-                INSERT INTO feeds (url, name, country, language, topic_hint, active)
-                VALUES (?, ?, ?, ?, ?, 1)
-                ON CONFLICT(url) DO UPDATE SET
-                    name=excluded.name,
-                    country=excluded.country,
-                    language=excluded.language,
-                    topic_hint=excluded.topic_hint,
-                    active=1
-                """,
-                (r.resolved_url, r.name, r.country, r.language, r.topic_hint),
-            )
-    return len(importable)
+def apply_result(row: dict, tested_url: str, result: ValidationResult) -> None:
+    row["validation_status"] = result.status
+    row["active"] = result.status in ("ok", "redirected", "discovered")
+    if result.notes:
+        row["validation_notes"] = result.notes
+    else:
+        row.pop("validation_notes", None)
 
-
-def write_validated_csv(results: list[ValidationResult], out_path) -> None:
-    fieldnames = list(asdict(results[0]).keys()) if results else [
-        "url", "name", "country", "language", "topic_hint", "status", "resolved_url", "notes",
-    ]
-    with open(out_path, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
-        for r in results:
-            writer.writerow(asdict(r))
+    row["url"] = result.resolved_url
+    if result.resolved_url != tested_url:
+        row["original_url"] = tested_url
+    else:
+        row.pop("original_url", None)
 
 
 def main() -> None:
     cfg = get_config()
-    feeds_csv = resolve_path(cfg["paths"]["feeds_csv"])
-    out_csv = resolve_path(cfg["paths"]["feeds_validated_csv"])
+    feeds_yaml = resolve_path(cfg["paths"]["feeds_yaml"])
     concurrency = cfg["validate_feeds"]["concurrency"]
     timeout = cfg["validate_feeds"]["timeout_seconds"]
 
-    if not feeds_csv.exists():
-        print(f"feeds.csv not found at {feeds_csv}", file=sys.stderr)
+    if not feeds_yaml.exists():
+        print(f"feeds.yaml not found at {feeds_yaml}", file=sys.stderr)
         sys.exit(1)
 
-    with open(feeds_csv, newline="", encoding="utf-8") as f:
-        rows = [r for r in csv.DictReader(f) if r.get("url", "").strip()]
+    with open(feeds_yaml, "r", encoding="utf-8") as f:
+        doc = yaml.safe_load(f) or {}
+    regions = doc.get("regions") or {}
 
+    rows = [row for region_rows in regions.values() for row in (region_rows or [])]
     if not rows:
-        print("feeds.csv has no rows to validate.")
+        print("feeds.yaml has no rows to validate.")
         return
+
+    tested_urls = [(row.get("original_url") or row["url"]).strip() for row in rows]
 
     print(f"Validating {len(rows)} feeds ({concurrency} at a time, {timeout}s timeout)...")
     started = datetime.now(timezone.utc)
-    results = asyncio.run(validate_all(rows, concurrency, timeout))
+    results = asyncio.run(validate_all(tested_urls, concurrency, timeout))
     elapsed = (datetime.now(timezone.utc) - started).total_seconds()
 
-    counts = {}
-    for r in results:
-        counts[r.status] = counts.get(r.status, 0) + 1
+    counts: dict[str, int] = {}
+    for row, tested_url, result in zip(rows, tested_urls, results):
+        apply_result(row, tested_url, result)
+        counts[result.status] = counts.get(result.status, 0) + 1
     print(f"Done in {elapsed:.1f}s: {counts}")
 
-    write_validated_csv(results, out_csv)
-    print(f"Wrote {out_csv}")
-
-    init_db()
-    imported = import_valid_feeds(results)
-    print(f"Imported/updated {imported} active feeds in the database.")
+    with open(feeds_yaml, "w", encoding="utf-8") as f:
+        yaml.safe_dump(doc, f, sort_keys=False, allow_unicode=True, default_flow_style=False)
+    print(f"Wrote {feeds_yaml}")
+    print("Run `python -m pipeline.reconcile_feeds` to sync these changes into the db.")
 
 
 if __name__ == "__main__":

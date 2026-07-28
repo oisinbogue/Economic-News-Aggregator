@@ -95,15 +95,8 @@ jobs:
       - name: DB maintenance (prune old text, weekly VACUUM)
         run: python -m pipeline.db_maintenance
 
-      - name: Check whether the feeds table needs seeding
-        id: feeds_check
-        run: |
-          count=$(sqlite3 data/aggregator.db "SELECT COUNT(*) FROM feeds;" 2>/dev/null || echo 0)
-          echo "count=$count" >> "$GITHUB_OUTPUT"
-
-      - name: Populate feeds table (first run only)
-        if: steps.feeds_check.outputs.count == '0'
-        run: python -m pipeline.validate_feeds
+      - name: Reconcile feeds table from config/feeds.yaml
+        run: python -m pipeline.reconcile_feeds
 
       - name: Fetch new articles
         run: python -m pipeline.fetch
