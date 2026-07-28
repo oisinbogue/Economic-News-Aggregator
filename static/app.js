@@ -84,6 +84,48 @@
 
     var active = activeFilters;
 
+    function selectFor(facet) {
+      return Array.prototype.find.call(selects, function (s) { return s.dataset.facet === facet; });
+    }
+
+    // Dropdown options come from the site-wide tag union (pipeline/build.py),
+    // so a facet value valid on one page may not appear in this page's own
+    // <select> (e.g. no card here carries that topic). Only honor a URL
+    // param if it matches a real option; otherwise drop it instead of
+    // leaving the select stuck on an unmatched value.
+    function hasOption(select, value) {
+      return !!select && Array.prototype.some.call(select.options, function (o) { return o.value === value; });
+    }
+
+    // Reflects the current activeFilters into ?topic=&country= via
+    // replaceState so a filtered view is bookmarkable without adding a
+    // history entry per selection change.
+    function syncUrl() {
+      var params = new URLSearchParams(window.location.search);
+      ["topic", "country"].forEach(function (facet) {
+        var values = Array.from(active[facet]);
+        if (values.length) params.set(facet, values[0]);
+        else params.delete(facet);
+      });
+      var qs = params.toString();
+      var newUrl = window.location.pathname + (qs ? "?" + qs : "") + window.location.hash;
+      history.replaceState(history.state, "", newUrl);
+    }
+
+    function readUrlIntoFilters() {
+      var params = new URLSearchParams(window.location.search);
+      ["topic", "country"].forEach(function (facet) {
+        var select = selectFor(facet);
+        var value = params.get(facet);
+        active[facet].clear();
+        if (select) select.value = "";
+        if (value && hasOption(select, value)) {
+          active[facet].add(value);
+          select.value = value;
+        }
+      });
+    }
+
     function applyFilters() {
       var anyActive = active.topic.size > 0 || active.country.size > 0;
       clearBtn.hidden = !anyActive;
@@ -120,6 +162,7 @@
         active[facet].clear();
         if (select.value) active[facet].add(select.value);
         applyFilters();
+        syncUrl();
       });
     });
 
@@ -128,14 +171,13 @@
       active.country.clear();
       selects.forEach(function (select) { select.value = ""; });
       applyFilters();
+      syncUrl();
     });
 
     document.querySelectorAll(".cluster-card .tag[data-topic]").forEach(function (tag) {
       tag.addEventListener("click", function () {
         var value = tag.dataset.topic;
-        var target = Array.prototype.find.call(selects, function (s) {
-          return s.dataset.facet === "topic";
-        });
+        var target = selectFor("topic");
         if (!target) return;
         if (!active.topic.has(value)) {
           target.value = value;
@@ -143,6 +185,23 @@
         }
         target.scrollIntoView({ behavior: "smooth", block: "center" });
       });
+    });
+
+    // Query string is the source of truth on load, and again if the user
+    // navigates with the browser's back/forward buttons (including a
+    // bfcache-restored page, which doesn't fire popstate).
+    readUrlIntoFilters();
+    applyFilters();
+
+    window.addEventListener("popstate", function () {
+      readUrlIntoFilters();
+      applyFilters();
+    });
+    window.addEventListener("pageshow", function (e) {
+      if (e.persisted) {
+        readUrlIntoFilters();
+        applyFilters();
+      }
     });
   }
 
