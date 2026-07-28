@@ -1,16 +1,5 @@
 regions:
   IRELAND:
-  - name: Irish Times - Business
-    url: https://politepaul.com/fd/1NQdUkwmwc8T.xml
-    country: Ireland
-    language: en
-    topic_hint: Irish News
-    previously_disabled: false
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 Not Found'' for url ''https://politepaul.com/fd/1NQdUkwmwc8T.xml''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
   - name: Irish Examiner - Business
     url: https://feeds.feedburner.com/iebusiness
     country: Ireland
@@ -54,15 +43,6 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
-  - name: Business Post
-    url: https://businesspost.ie/feed/
-    country: Ireland
-    language: en
-    topic_hint: Irish News
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: no entries found and no feed link discovered
   - name: The Currency
     url: https://thecurrency.news/feed/
     country: Ireland
@@ -71,17 +51,6 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
-  - name: Fora.ie
-    url: https://fora.ie/feed/
-    country: Ireland
-    language: en
-    topic_hint: Irish News
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 Not Found'' for url ''https://fora.ie/feed/''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
   - name: Silicon Republic
     url: https://www.siliconrepublic.com/feed/
     country: Ireland
@@ -100,17 +69,6 @@ regions:
     validation_status: discovered
     active: true
     validation_notes: found via homepage <link rel=alternate>
-  - name: ESRI - Research
-    url: https://www.esri.ie/publications/feed
-    country: Ireland
-    language: en
-    topic_hint: Irish Government & Institutions
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 Not Found'' for url ''https://www.esri.ie/publications/feed''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
   - name: Central Bank of Ireland – News
     url: https://www.centralbank.ie/feeds/news-media-feed
     country: Ireland
@@ -135,59 +93,23 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
-  - name: CSO Ireland - Press Releases
-    url: https://www.cso.ie/en/newsandevents/pressreleases/feed/
-    country: Ireland
-    language: en
-    topic_hint: Irish Government & Institutions
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 Not Found'' for url ''https://www.cso.ie/en/newsandevents/pressreleases/feed/''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
-  - name: TASC
-    url: https://www.tasc.ie/feed/
-    country: Ireland
-    language: en
-    topic_hint: Irish Think Tanks & Research
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 Not Found'' for url ''https://www.tasc.ie/feed/''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
-  - name: Nevin Economic Research Institute
-    url: https://www.nerinstitute.net/feed/
-    country: Ireland
-    language: en
-    topic_hint: Irish Think Tanks & Research
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 Not Found'' for url ''https://www.nerinstitute.net/feed/''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
-  - name: IBEC
-    url: https://www.ibec.ie/news-media/ibec-news/news-and-press-releases/rss
-    country: Ireland
-    language: en
-    topic_hint: Irish Think Tanks & Research
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 Not Found'' for url ''https://www.ibec.ie/news-media/ibec-news/news-and-press-releases/rss''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
   - name: Oireachtas News
-    url: https://www.oireachtas.ie/en/latest/news/feed/
+    url: https://www.oireachtas.ie/en/rss/dail-schedule.xml
+    original_url: https://www.oireachtas.ie/en/latest/news/feed/
     country: Ireland
     language: en
     topic_hint: Irish Politics
     previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: no entries found and no feed link discovered
+    validation_status: ok
+    active: true
+  - name: NERI
+    url: https://www.nerinstitute.net/rss.xml
+    country: Ireland
+    language: en
+    topic_hint: Irish Think Tanks & Research
+    previously_disabled: false
+    validation_status: ok
+    active: true
   UNITED KINGDOM:
   - name: The Guardian - Economics
     url: https://www.theguardian.com/business/economics/rss
@@ -237,28 +159,6 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
-  - name: New Statesman
-    url: https://www.newstatesman.com/feed/
-    country: United Kingdom
-    language: en
-    topic_hint: UK News
-    previously_disabled: false
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''403 Forbidden'' for url ''https://www.newstatesman.com/feed/''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403'
-  - name: The Spectator - Business
-    url: https://www.spectator.co.uk/category/business/feed/
-    country: United Kingdom
-    language: en
-    topic_hint: UK News
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 Not Found'' for url ''https://spectator.com/category/business/feed/''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
   - name: Financial Times (free)
     url: https://www.ft.com/rss/home/international
     original_url: https://www.ft.com/rss/home
@@ -292,17 +192,6 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
-  - name: ONS (Office for National Statistics)
-    url: https://www.ons.gov.uk/feed?format=atom
-    country: United Kingdom
-    language: en
-    topic_hint: UK Institutions
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 Not Found'' for url ''https://www.ons.gov.uk/feed?format=atom''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
   - name: Resolution Foundation
     url: https://www.resolutionfoundation.org/feed/
     country: United Kingdom
@@ -311,17 +200,6 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
-  - name: Institute for Fiscal Studies
-    url: https://ifs.org.uk/publications/feed
-    country: United Kingdom
-    language: en
-    topic_hint: UK Think Tanks
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''403 Forbidden'' for url ''https://ifs.org.uk/publications/feed''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403'
   - name: National Institute of Economic and Social Research
     url: https://niesr.ac.uk/feed
     original_url: https://www.niesr.ac.uk/feed
@@ -339,17 +217,6 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
-  - name: LSE CEP
-    url: https://politepaul.com/fd/Okb1cDoeXAKg.xml
-    country: United Kingdom
-    language: en
-    topic_hint: UK Think Tanks
-    previously_disabled: false
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 Not Found'' for url ''https://politepaul.com/fd/Okb1cDoeXAKg.xml''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
   - name: Fabian Society
     url: https://fabians.org.uk/feed/
     country: United Kingdom
@@ -366,6 +233,14 @@ regions:
     topic_hint: UK Think Tanks
     previously_disabled: false
     validation_status: redirected
+    active: true
+  - name: Institute for Government
+    url: https://www.instituteforgovernment.org.uk/rss.xml
+    country: United Kingdom
+    language: en
+    topic_hint: UK Think Tanks
+    previously_disabled: false
+    validation_status: ok
     active: true
   EUROPE — WESTERN:
   - name: Bruegel
@@ -409,28 +284,6 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
-  - name: EurActiv
-    url: https://www.euractiv.com/feed/
-    country: Europe (Western)
-    language: en
-    topic_hint: EU-Wide Sources
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''403 Forbidden'' for url ''https://www.euractiv.com/feed/''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403'
-  - name: The Parliament Magazine
-    url: https://www.theparliamentmagazine.eu/rss.xml
-    country: Europe (Western)
-    language: en
-    topic_hint: EU-Wide Sources
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 Page Not Found'' for url ''https://www.theparliamentmagazine.eu/rss.xml''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
   - name: European Central Bank - Press Releases
     url: https://www.ecb.europa.eu/rss/press.html
     country: Europe (Western)
@@ -447,26 +300,6 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
-  - name: European Commission - Economic News
-    url: https://ec.europa.eu/economy_finance/rss/economy_en.rss
-    country: Europe (Western)
-    language: en
-    topic_hint: EU Institutions
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 (Not Found)'' for url ''https://ec.europa.eu/economy_finance/rss/economy_en.rss''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
-  - name: Eurostat - News Releases
-    url: https://ec.europa.eu/eurostat/web/rss
-    country: Europe (Western)
-    language: en
-    topic_hint: EU Institutions
-    previously_disabled: false
-    validation_status: dead
-    active: false
-    validation_notes: no entries found and no feed link discovered
   - name: CEPR
     url: https://cepr.org/rss.xml
     country: Europe (Western)
@@ -516,17 +349,6 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
-  - name: Ifo Institute
-    url: https://www.ifo.de/en/rss/presse.xml
-    country: Europe (Western)
-    language: de
-    topic_hint: Germany
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 Not Found'' for url ''https://www.ifo.de/en/rss/presse.xml''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
   - name: Le Monde - Economie
     url: https://www.lemonde.fr/economie/rss_full.xml
     country: Europe (Western)
@@ -576,46 +398,6 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
-  - name: De Nederlandsche Bank
-    url: https://www.dnb.nl/en/rss/
-    country: Europe (Western)
-    language: nl
-    topic_hint: Netherlands
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: no entries found and no feed link discovered
-  - name: Riksbank (Sweden) - News
-    url: https://www.riksbank.se/en-gb/rss/
-    country: Europe (Western)
-    language: sv
-    topic_hint: Nordics
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: no entries found and no feed link discovered
-  - name: Norges Bank - News
-    url: https://www.norges-bank.no/en/rss/
-    country: Europe (Western)
-    language: 'no'
-    topic_hint: Nordics
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 Not Found'' for url ''https://www.norges-bank.no/en/rss/''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
-  - name: Bank of Finland
-    url: https://www.suomenpankki.fi/en/rss/
-    country: Europe (Western)
-    language: fi
-    topic_hint: Nordics
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 Not Found'' for url ''https://www.suomenpankki.fi/en/rss/''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
   - name: Copenhagen Economics
     url: https://copenhageneconomics.com/feed/
     original_url: https://www.copenhageneconomics.com/feed/
@@ -625,29 +407,23 @@ regions:
     previously_disabled: false
     validation_status: redirected
     active: true
-  - name: Swiss National Bank
-    url: https://www.snb.ch/en/rss/rssnews.xml
+  - name: El País - Economía
+    url: https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/economia/portada
     country: Europe (Western)
-    language: de
-    topic_hint: Switzerland
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 Not Found'' for url ''https://www.snb.ch/en/rss/rssnews.xml''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
-  EUROPE — EASTERN & CENTRAL:
-  - name: Warsaw Business Journal
-    url: https://wbj.pl/feed/
-    country: Europe (Eastern/Central)
-    language: en
+    language: es
     topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 Page not exists'' for url ''https://wbj.pl/feed/''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Sveriges Riksbank
+    url: https://www.riksbank.se/en-gb/rss/press-releases/
+    country: Europe (Western)
+    language: en
+    topic_hint: Central Banks
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  EUROPE — EASTERN & CENTRAL:
   - name: Prague Morning
     url: https://praguemonitor.com/feed/
     original_url: https://www.praguemonitor.com/feed/
@@ -675,17 +451,6 @@ regions:
     validation_status: discovered
     active: true
     validation_notes: found via homepage <link rel=alternate>
-  - name: Euractiv Central & Eastern Europe
-    url: https://www.euractiv.com/sections/central-europe/feed/
-    country: Europe (Eastern/Central)
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''403 Forbidden'' for url ''https://www.euractiv.com/sections/central-europe/feed/''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403'
   - name: Emerging Europe
     url: https://emerging-europe.com/feed/
     country: Europe (Eastern/Central)
@@ -704,15 +469,6 @@ regions:
     validation_status: discovered
     active: true
     validation_notes: found via homepage <link rel=alternate>
-  - name: Baltic Times
-    url: https://www.baltictimes.com/rss/news/
-    country: Europe (Eastern/Central)
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: no entries found and no feed link discovered
   - name: Romanian Insider
     url: https://www.romania-insider.com/feed
     original_url: https://www.romania-insider.com/feed/
@@ -732,6 +488,102 @@ regions:
     active: true
   - name: Estonian Postimees (English)
     url: https://news.postimees.ee/rss
+    country: Europe (Eastern/Central)
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Notes from Poland
+    url: https://notesfrompoland.com/feed/
+    country: Europe (Eastern/Central)
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Balkan Insight
+    url: https://balkaninsight.com/feed/
+    country: Europe (Eastern/Central)
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: ERR News (Estonia)
+    url: https://news.err.ee/rss
+    country: Europe (Eastern/Central)
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: LSM.lv (Latvia)
+    url: https://eng.lsm.lv/rss/
+    country: Europe (Eastern/Central)
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: The Slovak Spectator
+    url: https://spectator.sme.sk/rss
+    country: Europe (Eastern/Central)
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Visegrad Insight
+    url: https://visegradinsight.eu/feed/
+    country: Europe (Eastern/Central)
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Novinite (Bulgaria)
+    url: https://www.novinite.com/services/news_rdf.php
+    country: Europe (Eastern/Central)
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Telex English (Hungary)
+    url: https://telex.hu/rss/english
+    country: Europe (Eastern/Central)
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Portfolio.hu
+    url: https://www.portfolio.hu/rss/all.xml
+    country: Europe (Eastern/Central)
+    language: hu
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Ekonomichna Pravda (Ukraine)
+    url: https://epravda.com.ua/rss/
+    country: Europe (Eastern/Central)
+    language: uk
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: LRT (Lithuania)
+    url: https://www.lrt.lt/?rss
+    country: Europe (Eastern/Central)
+    language: lt
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Radio Prague International
+    url: https://english.radio.cz/rcz-rss/en
     country: Europe (Eastern/Central)
     language: en
     topic_hint: news
@@ -763,46 +615,6 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
-  - name: Reuters - Business
-    url: https://rss.app/feeds/9fSoShIXTLIR40J5.xml
-    country: United States
-    language: en
-    topic_hint: Major US News
-    previously_disabled: false
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''402 Payment Required'' for url ''https://rss.app/feeds/9fSoShIXTLIR40J5.xml''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/402'
-  - name: Reuters - Economy
-    url: https://rss.app/feed/X3b3gLbcmBVmxTzR
-    country: United States
-    language: en
-    topic_hint: Major US News
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: no entries found and no feed link discovered
-  - name: Reuters – Markets
-    url: https://rss.app/feed/VdzGLA9PpqxUvPoQ
-    country: United States
-    language: en
-    topic_hint: Major US News
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: no entries found and no feed link discovered
-  - name: Associated Press - Business
-    url: https://rsshub.app/apnews/topics/business
-    country: United States
-    language: en
-    topic_hint: Major US News
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''403 Forbidden'' for url ''https://rsshub.app/apnews/topics/business''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403'
   - name: Bloomberg - Economics
     url: https://www.bloomberg.com/feeds/economics/news.rss
     original_url: https://feeds.bloomberg.com/economics/news.rss
@@ -871,17 +683,6 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
-  - name: Chicago Fed - Research
-    url: https://www.chicagofed.org/utilities/rss/chicago-fed-research.ashx
-    country: United States
-    language: en
-    topic_hint: US Federal Reserve
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 Not Found'' for url ''https://www.chicagofed.org/utilities/rss/chicago-fed-research.ashx''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
   - name: San Francisco Fed - Research
     url: https://www.frbsf.org/feed/
     original_url: https://www.frbsf.org/rss/
@@ -891,26 +692,6 @@ regions:
     previously_disabled: false
     validation_status: redirected
     active: true
-  - name: Atlanta Fed - Macroblog
-    url: https://www.atlantafed.org/rss
-    country: United States
-    language: en
-    topic_hint: US Federal Reserve
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: no entries found and no feed link discovered
-  - name: Minneapolis Fed - Research
-    url: https://www.minneapolisfed.org/rss/publications-research.xml
-    country: United States
-    language: en
-    topic_hint: US Federal Reserve
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 Not Found'' for url ''https://www.minneapolisfed.org/rss/publications-research.xml''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
   - name: Dallas Fed - Research
     url: https://www.dallasfed.org/rss/releases.xml
     country: United States
@@ -919,17 +700,6 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
-  - name: Kansas City Fed
-    url: https://www.kansascityfed.org/rss/research/
-    country: United States
-    language: en
-    topic_hint: US Federal Reserve
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 Not Found'' for url ''https://www.kansascityfed.org/rss/research/''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
   - name: Bureau of Labor Statistics
     url: https://www.bls.gov/feed/bls_latest.rss
     country: United States
@@ -946,46 +716,6 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
-  - name: Congressional Budget Office
-    url: https://www.cbo.gov/about/feed/reports
-    country: United States
-    language: en
-    topic_hint: US Government
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''403 Forbidden'' for url ''https://www.cbo.gov/about/feed/reports''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403'
-  - name: US Census Bureau - Economic News
-    url: https://www.census.gov/economic-indicators/rss.xml
-    country: United States
-    language: en
-    topic_hint: US Government
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: no entries found and no feed link discovered
-  - name: Brookings Institution
-    url: https://www.brookings.edu/feed/
-    country: United States
-    language: en
-    topic_hint: US Think Tanks
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: no entries found and no feed link discovered
-  - name: Peterson Institute for International Economics
-    url: https://www.piie.com/rss.xml
-    country: United States
-    language: en
-    topic_hint: US Think Tanks
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 Not Found'' for url ''https://www.piie.com/rss.xml''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
   - name: Economic Policy Institute
     url: https://www.epi.org/feed/
     country: United States
@@ -994,28 +724,6 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
-  - name: Urban Institute
-    url: https://www.urban.org/rss.xml
-    country: United States
-    language: en
-    topic_hint: US Think Tanks
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''403 Forbidden'' for url ''https://www.urban.org/rss.xml''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403'
-  - name: Cato Institute
-    url: https://www.cato.org/rss/recent-op-eds
-    country: United States
-    language: en
-    topic_hint: US Think Tanks
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''403 Forbidden'' for url ''https://www.cato.org/rss/recent-op-eds''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403'
   - name: Roosevelt Institute
     url: https://rooseveltinstitute.org/feed/
     country: United States
@@ -1056,26 +764,22 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
-  - name: Center on Budget and Policy Priorities
-    url: https://www.cbpp.org/rss.xml
+  - name: Cato Institute
+    url: https://www.cato.org/rss/recent-opeds
     country: United States
     language: en
     topic_hint: US Think Tanks
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''403 Forbidden'' for url ''https://www.cbpp.org/rss.xml''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403'
-  - name: Pew Research Center - Economics
-    url: https://feeds.pewresearch.org/pewresearch/rss
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Congressional Budget Office
+    url: https://www.cbo.gov/publications/all/rss.xml
     country: United States
     language: en
-    topic_hint: US Think Tanks
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: '[Errno 11001] getaddrinfo failed'
+    topic_hint: US Institutions
+    previously_disabled: false
+    validation_status: ok
+    active: true
   CANADA:
   - name: Globe and Mail - Business
     url: https://www.theglobeandmail.com/arc/outboundfeeds/rss/category/business/
@@ -1095,14 +799,14 @@ regions:
     validation_status: redirected
     active: true
   - name: CBC News - Business
-    url: https://www.cbc.ca/cmlink/rss-business
+    url: https://www.cbc.ca/webfeed/rss/rss-business
+    original_url: https://www.cbc.ca/cmlink/rss-business
     country: Canada
     language: en
     topic_hint: news
     previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: no entries found and no feed link discovered
+    validation_status: ok
+    active: true
   - name: Bank of Canada
     url: https://www.bankofcanada.ca/feed/
     country: Canada
@@ -1120,51 +824,7 @@ regions:
     previously_disabled: false
     validation_status: redirected
     active: true
-  - name: Fraser Institute
-    url: https://www.fraserinstitute.org/rss
-    country: Canada
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''403 Forbidden'' for url ''https://www.fraserinstitute.org/rss''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403'
   LATIN AMERICA:
-  - name: Americas Society / Council of the Americas
-    url: https://www.as-coa.org/rss.xml
-    country: Latin America
-    language: en
-    topic_hint: news
-    previously_disabled: false
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''403 Forbidden'' for url ''https://www.as-coa.org/rss.xml''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403'
-  - name: ECLAC (UN Economic Commission for Latin America)
-    url: https://www.cepal.org/en/rss/novedades.xml
-    country: Latin America
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 Not Found'' for url ''https://www.cepal.org/en/rss/novedades.xml''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
-  - name: Inter-American Development Bank
-    url: https://blogs.iadb.org/feed/
-    country: Latin America
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''403 Forbidden'' for url ''https://www.iadb.org/en/idb-blog''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403'
   - name: El Financiero Mexico
     url: https://www.elfinanciero.com.mx/arc/outboundfeeds/rss/?outputType=xml
     original_url: https://www.elfinanciero.com.mx/rss
@@ -1183,14 +843,14 @@ regions:
     validation_status: ok
     active: true
   - name: Buenos Aires Times
-    url: https://batimes.com.ar/feed/
+    url: https://batimes.com.ar/feed
+    original_url: https://batimes.com.ar/feed/
     country: Latin America
     language: en
     topic_hint: news
     previously_disabled: false
-    validation_status: dead
-    active: false
-    validation_notes: no entries found and no feed link discovered
+    validation_status: ok
+    active: true
   - name: Colombia Reports
     url: https://colombiareports.com/feed/
     country: Latin America
@@ -1207,17 +867,6 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
-  - name: Latin Trade
-    url: https://latintrade.com/feed/
-    country: Latin America
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''403 Forbidden'' for url ''https://latintrade.com/feed/''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403'
   - name: Rio Times
     url: https://www.riotimesonline.com/feed/
     original_url: https://riotimesonline.com/feed/
@@ -1226,6 +875,78 @@ regions:
     topic_hint: news
     previously_disabled: false
     validation_status: redirected
+    active: true
+  - name: MercoPress
+    url: https://en.mercopress.com/rss/
+    country: Latin America
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Latin America Reports
+    url: https://latinamericareports.com/feed/
+    country: Latin America
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Buenos Aires Herald
+    url: https://buenosairesherald.com/feed
+    country: Latin America
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: La Nación - Economía (Argentina)
+    url: https://www.lanacion.com.ar/arc/outboundfeeds/rss/category/economia/
+    country: Latin America
+    language: es
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: El Economista (México)
+    url: https://www.eleconomista.com.mx/rss/ultimas-noticias
+    country: Latin America
+    language: es
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: La República (Colombia)
+    url: https://www.larepublica.co/rss/economia
+    country: Latin America
+    language: es
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Agência Brasil - Economia
+    url: https://agenciabrasil.ebc.com.br/rss/economia/feed.xml
+    country: Latin America
+    language: pt
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: La Tercera (Chile)
+    url: https://www.latercera.com/arc/outboundfeeds/rss/?outputType=xml
+    country: Latin America
+    language: es
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Infobae - Economía
+    url: https://www.infobae.com/arc/outboundfeeds/rss/category/economia/?outputType=xml
+    country: Latin America
+    language: es
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
     active: true
   AFRICA:
   - name: Business Day South Africa
@@ -1273,17 +994,6 @@ regions:
     previously_disabled: false
     validation_status: redirected
     active: true
-  - name: Daily Monitor Uganda
-    url: https://www.monitor.co.ug/uganda/rss/
-    country: Africa
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''403 Forbidden'' for url ''https://www.monitor.co.ug/uganda/rss/''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403'
   - name: African Business Magazine
     url: https://african.business/feed
     country: Africa
@@ -1292,17 +1002,6 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
-  - name: Quartz Africa
-    url: https://qz.com/africa/rss
-    country: Africa
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''403 Forbidden'' for url ''https://qz.com/africa/rss''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403'
   - name: How We Made It In Africa
     url: https://www.howwemadeitinafrica.com/feed/
     country: Africa
@@ -1311,28 +1010,6 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
-  - name: African Development Bank
-    url: https://www.afdb.org/en/rss/news
-    country: Africa
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''403 Forbidden'' for url ''https://www.afdb.org/en/rss/news''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403'
-  - name: Ventures Africa
-    url: https://venturesafrica.com/feed/
-    country: Africa
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Server error ''526 <none>'' for url ''https://venturesafrica.com/feed/''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/526'
   - name: The Africa Report
     url: https://www.theafricareport.com/feed/
     country: Africa
@@ -1350,6 +1027,70 @@ regions:
     previously_disabled: false
     validation_status: redirected
     active: true
+  - name: Moneyweb
+    url: https://www.moneyweb.co.za/feed/
+    country: Africa
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Nairametrics (Nigeria)
+    url: https://nairametrics.com/feed/
+    country: Africa
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Premium Times Nigeria
+    url: https://www.premiumtimesng.com/feed
+    country: Africa
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: The Punch (Nigeria)
+    url: https://rss.punchng.com/v1/category/latest_news
+    country: Africa
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: African Arguments
+    url: https://africanarguments.org/feed/
+    country: Africa
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: TechCabal
+    url: https://techcabal.com/feed/
+    country: Africa
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Ghana Business News
+    url: https://www.ghanabusinessnews.com/feed/
+    country: Africa
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Mail & Guardian
+    url: https://mg.co.za/rss/
+    country: Africa
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
   MIDDLE EAST:
   - name: Arab News - Business
     url: https://www.arabnews.com/rss.xml/business-economy
@@ -1359,28 +1100,6 @@ regions:
     previously_disabled: true
     validation_status: ok
     active: true
-  - name: The National UAE - Business
-    url: https://www.thenationalnews.com/rss/business.xml
-    country: Middle East
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 Not Found'' for url ''https://www.thenationalnews.com/rss/business.xml''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
-  - name: Gulf News - Business
-    url: https://gulfnews.com/rss/business
-    country: Middle East
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 Not Found'' for url ''https://gulfnews.com/rss/business''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
   - name: Middle East Eye - Economy
     url: https://www.middleeasteye.net/rss
     country: Middle East
@@ -1389,51 +1108,47 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
-  - name: Al-Monitor - Economy
-    url: https://www.al-monitor.com/rss/economy
+  - name: AGBI (Arabian Gulf Business Insight)
+    url: https://www.agbi.com/feed/
     country: Middle East
     language: en
     topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''403 Forbidden'' for url ''https://www.al-monitor.com/rss/economy''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403'
-  - name: Jerusalem Post - Business
-    url: https://www.jpost.com/Rss/RssFeedsBusinessAndTech.aspx
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Globes (Israel)
+    url: https://www.globes.co.il/webservice/rss/rssfeeder.asmx/FeederNode?iID=1725
     country: Middle East
     language: en
     topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 Not Found'' for url ''https://www.jpost.com/rss/rssfeedsbusinessandtech.aspx''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
-  - name: IMF MENA
-    url: https://www.imf.org/en/news/rss
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Times of Israel - Business
+    url: https://www.timesofisrael.com/feed/
     country: Middle East
     language: en
     topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''403 Forbidden'' for url ''https://www.imf.org/en/news/rss''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403'
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Mada Masr (Egypt)
+    url: https://www.madamasr.com/en/feed/
+    country: Middle East
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Gulf News
+    url: https://gulfnews.com/stories.rss
+    country: Middle East
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
   CHINA & GREATER CHINA:
-  - name: Caixin Global
-    url: https://www.caixinglobal.com/rss/
-    country: China/Greater China
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''403 Forbidden'' for url ''https://www.caixinglobal.com/rss/''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403'
   - name: Nikkei Asia - China
     url: https://asia.nikkei.com/rss/feed/nar
     country: China/Greater China
@@ -1451,17 +1166,6 @@ regions:
     previously_disabled: false
     validation_status: redirected
     active: true
-  - name: Global Times - Economy
-    url: https://www.globaltimes.cn/rss/economy.xml
-    country: China/Greater China
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 Not Found'' for url ''https://www.globaltimes.cn/rss/economy.xml''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
   - name: China Daily - Business
     url: https://www.chinadaily.com.cn/rss/bizchina_rss.xml
     country: China/Greater China
@@ -1478,28 +1182,62 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
-  - name: People's Bank of China
-    url: https://politepaul.com/fd/XxxizH84d44o.xml
+  - name: South China Morning Post - Economy
+    url: https://www.scmp.com/rss/4/feed/
     country: China/Greater China
     language: en
     topic_hint: news
     previously_disabled: false
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 Not Found'' for url ''https://politepaul.com/fd/XxxizH84d44o.xml''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
-  - name: Taipei Times - Business
-    url: https://www.taipeitimes.com/xml/biz.rss
+    validation_status: ok
+    active: true
+  - name: Hong Kong Free Press
+    url: https://hongkongfp.com/feed/
     country: China/Greater China
     language: en
     topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 Not Found'' for url ''https://www.taipeitimes.com/xml/biz.rss''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Taipei Times - Business
+    url: https://www.taipeitimes.com/xml/index.rss
+    country: China/Greater China
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: China Banking News
+    url: https://www.chinabankingnews.com/feed
+    country: China/Greater China
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Rhodium Group
+    url: https://rhg.com/feed/
+    country: China/Greater China
+    language: en
+    topic_hint: Think Tanks
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: MacroPolo
+    url: https://macropolo.org/feed/
+    country: China/Greater China
+    language: en
+    topic_hint: Think Tanks
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: China Leadership Monitor
+    url: https://www.prcleader.org/blog-feed.xml
+    country: China/Greater China
+    language: en
+    topic_hint: Think Tanks
+    previously_disabled: false
+    validation_status: ok
+    active: true
   INDIA:
   - name: Economic Times India
     url: https://economictimes.indiatimes.com/rssfeedstopstories.cms
@@ -1515,11 +1253,8 @@ regions:
     language: en
     topic_hint: news
     previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''403 Forbidden'' for url ''https://www.business-standard.com/rss/economy-policy-101.rss''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403'
+    validation_status: ok
+    active: true
   - name: Mint - Economy
     url: https://www.livemint.com/rss/economy
     country: India
@@ -1544,15 +1279,6 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
-  - name: Reserve Bank of India
-    url: https://rbidocs.rbi.org.in/rdocs/PressRelease/english/pressrelease.xml
-    country: India
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: no entries found and no feed link discovered
   - name: NITI Aayog
     url: https://niti.gov.in/rss.xml
     country: India
@@ -1561,18 +1287,39 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
-  JAPAN & SOUTH KOREA:
-  - name: Japan Times - Business
-    url: https://www.japantimes.co.jp/feed/business/
-    country: Japan/South Korea
+  - name: The Hindu BusinessLine
+    url: https://www.thehindubusinessline.com/feeder/default.rss
+    country: India
     language: en
     topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 Not Found'' for url ''https://www.japantimes.co.jp/feed/business/''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Economic Times - Economy
+    url: https://economictimes.indiatimes.com/news/economy/rssfeeds/1373380680.cms
+    country: India
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Reserve Bank of India - Press Releases
+    url: https://www.rbi.org.in/pressreleases_rss.xml
+    country: India
+    language: en
+    topic_hint: Central Banks
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Business Today India
+    url: https://www.businesstoday.in/rssfeeds?id=home
+    country: India
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  JAPAN & SOUTH KOREA:
   - name: Nikkei Asia
     url: https://asia.nikkei.com/rss/feed/nar
     country: Japan/South Korea
@@ -1581,44 +1328,63 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
-  - name: Bank of Japan - News
-    url: https://www.boj.or.jp/en/announcements/release_rss.xml
-    country: Japan/South Korea
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: no entries found and no feed link discovered
-  - name: Korea JoongAng Daily - Business
-    url: https://koreajoongangdaily.joins.com/rss/sectbiz.xml
-    country: Japan/South Korea
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: no entries found and no feed link discovered
   - name: Korea Times - Business
-    url: https://www.koreatimes.co.kr/www/rss/biz.xml
+    url: https://feed.koreatimes.co.kr/k/allnews.xml
+    original_url: https://www.koreatimes.co.kr/www/rss/biz.xml
     country: Japan/South Korea
     language: en
     topic_hint: news
     previously_disabled: false
-    validation_status: dead
-    active: false
-    validation_notes: no entries found and no feed link discovered
-  - name: Bank of Korea
-    url: https://www.bok.or.kr/eng/selectBoardRss.do?menuNaviId=1783
+    validation_status: ok
+    active: true
+  - name: NHK - Business
+    url: https://www3.nhk.or.jp/rss/news/cat5.xml
+    country: Japan/South Korea
+    language: ja
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Yonhap News - Economy
+    url: https://en.yna.co.kr/RSS/news.xml
     country: Japan/South Korea
     language: en
     topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 '' for url ''https://www.bok.or.kr/eng/selectBoardRss.do?menuNaviId=1783''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Hankyoreh - English
+    url: https://english.hani.co.kr/rss
+    country: Japan/South Korea
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Bank of Japan
+    url: https://www.boj.or.jp/en/rss/whatsnew.xml
+    country: Japan/South Korea
+    language: en
+    topic_hint: Central Banks
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Asahi Shimbun - Business
+    url: https://www.asahi.com/rss/asahi/business.rdf
+    country: Japan/South Korea
+    language: ja
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: The Korea Herald
+    url: https://www.koreaherald.com/rss/newsAll
+    country: Japan/South Korea
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
   SOUTHEAST ASIA:
   - name: Bangkok Post - Business
     url: https://www.bangkokpost.com/rss/data/business.xml
@@ -1628,28 +1394,14 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
-  - name: Jakarta Post - Business
-    url: https://www.thejakartapost.com/json/news/business.rss
-    country: Southeast Asia
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 Not Found'' for url ''https://www.thejakartapost.com/json/news/business.rss''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
   - name: Philippine Daily Inquirer - Business
     url: https://business.inquirer.net/feed
     country: Southeast Asia
     language: en
     topic_hint: news
     previously_disabled: false
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''403 Forbidden'' for url ''https://business.inquirer.net/feed''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403'
+    validation_status: ok
+    active: true
   - name: Vietnam Investment Review
     url: https://vir.com.vn/rss_feed/
     original_url: https://vir.com.vn/rss/news.rss
@@ -1660,17 +1412,6 @@ regions:
     validation_status: discovered
     active: true
     validation_notes: found via homepage <link rel=alternate>
-  - name: The Star Malaysia - Business
-    url: https://www.thestar.com.my/rss/Business/
-    country: Southeast Asia
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 Not Found'' for url ''https://www.thestar.com.my/rss/Business/''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
   - name: Straits Times - Business
     url: https://www.straitstimes.com/news/business/rss.xml
     country: Southeast Asia
@@ -1679,48 +1420,62 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
-  - name: Myanmar Times - Business
-    url: https://www.mmtimes.com/rss/business
+  - name: VnExpress International - Business
+    url: https://e.vnexpress.net/rss/business.rss
     country: Southeast Asia
     language: en
     topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: no entries found and no feed link discovered
-  - name: Khmer Times - Business
-    url: https://www.khmertimeskh.com/feed/
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Malay Mail - Money
+    url: https://www.malaymail.com/feed/rss/money
     country: Southeast Asia
     language: en
     topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''403 Forbidden'' for url ''https://www.khmertimeskh.com/feed/''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403'
-  - name: ASEAN Economic Monitor
-    url: https://aric.adb.org/feeds/news.xml
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: BusinessWorld Philippines
+    url: https://bworldonline.com/feed/
     country: Southeast Asia
     language: en
     topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 Not Found'' for url ''https://aric.adb.org/error.php''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Rappler - Business
+    url: https://www.rappler.com/business/feed/
+    country: Southeast Asia
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Fulcrum (ISEAS)
+    url: https://fulcrum.sg/feed/
+    country: Southeast Asia
+    language: en
+    topic_hint: Think Tanks
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: The Laotian Times
+    url: https://laotiantimes.com/feed/
+    country: Southeast Asia
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
   - name: Asian Development Bank
-    url: https://www.adb.org/news/rss
+    url: https://www.adb.org/rss.xml
     country: Southeast Asia
     language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''403 Forbidden'' for url ''https://www.adb.org/news/rss''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403'
+    topic_hint: Multilateral Institutions
+    previously_disabled: false
+    validation_status: ok
+    active: true
   AUSTRALIA & NEW ZEALAND:
   - name: Australian Financial Review
     url: https://www.afr.com/rss/feed.xml
@@ -1738,17 +1493,6 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
-  - name: The Australian - Business
-    url: https://www.theaustralian.com.au/feed
-    country: Australia/New Zealand
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''403 Forbidden'' for url ''https://www.theaustralian.com.au/feed''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403'
   - name: ABC News Australia - Business
     url: https://www.abc.net.au/news/feed/45910/rss.xml
     country: Australia/New Zealand
@@ -1765,17 +1509,6 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
-  - name: Grattan Institute
-    url: https://grattan.edu.au/feed/
-    country: Australia/New Zealand
-    language: en
-    topic_hint: news
-    previously_disabled: false
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''403 Forbidden'' for url ''https://grattan.edu.au/feed/''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403'
   - name: Australia Institute
     url: https://australiainstitute.org.au/feed/
     country: Australia/New Zealand
@@ -1784,28 +1517,46 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
-  - name: NZ Herald - Business
-    url: https://www.nzherald.co.nz/business/rss/
+  - name: The Age - Business
+    url: https://www.theage.com.au/rss/business.xml
     country: Australia/New Zealand
     language: en
     topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 Not Found'' for url ''https://www.nzherald.co.nz/business/rss/''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
-  - name: Reserve Bank of New Zealand
-    url: https://www.rbnz.govt.nz/hub/rss/publications.xml
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Guardian Australia - Business
+    url: https://www.theguardian.com/au/business/rss
     country: Australia/New Zealand
     language: en
     topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''403 Forbidden'' for url ''https://www.rbnz.govt.nz/hub/rss/publications.xml''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403'
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: The Conversation Australia - Business
+    url: https://theconversation.com/au/business/articles.atom
+    country: Australia/New Zealand
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Interest.co.nz
+    url: https://www.interest.co.nz/rss
+    country: Australia/New Zealand
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Crikey
+    url: https://www.crikey.com.au/feed/
+    country: Australia/New Zealand
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
   RUSSIA:
   - name: Moscow Times - Business
     url: https://www.themoscowtimes.com/rss/news
@@ -1823,6 +1574,38 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
+  - name: The Bell
+    url: https://en.thebell.io/rss/
+    country: Russia
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Novaya Gazeta Europe
+    url: https://novayagazeta.eu/feed/rss
+    country: Russia
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Riddle Russia
+    url: https://ridl.io/feed/
+    country: Russia
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Central Bank of Russia - Press
+    url: https://www.cbr.ru/rss/eventrss
+    country: Russia
+    language: en
+    topic_hint: Central Banks
+    previously_disabled: false
+    validation_status: ok
+    active: true
   CENTRAL ASIA:
   - name: Eurasianet
     url: https://eurasianet.org/rss
@@ -1832,51 +1615,63 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
+  - name: The Times of Central Asia
+    url: https://timesca.com/feed/
+    country: Central Asia
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Kursiv Media (Kazakhstan)
+    url: https://kz.kursiv.media/en/feed/
+    country: Central Asia
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: Astana Times
+    url: https://astanatimes.com/feed/
+    country: Central Asia
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: CABAR.asia
+    url: https://cabar.asia/en/feed
+    country: Central Asia
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: 24.kg (Kyrgyzstan)
+    url: https://24.kg/rss/
+    country: Central Asia
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: UzDaily (Uzbekistan)
+    url: https://www.uzdaily.uz/en/rss/
+    country: Central Asia
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: The Diplomat (Asia-Pacific)
+    url: https://thediplomat.com/feed/
+    country: Central Asia
+    language: en
+    topic_hint: news
+    previously_disabled: false
+    validation_status: ok
+    active: true
   INTERNATIONAL & MULTILATERAL:
-  - name: IMF Blog
-    url: https://www.imf.org/en/News/rss?language=eng
-    country: International
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''403 Forbidden'' for url ''https://www.imf.org/en/News/rss?language=eng''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403'
-  - name: World Bank Blog
-    url: https://blogs.worldbank.org/feed
-    country: International
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 Not Found'' for url ''https://blogs.worldbank.org/en/feed''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
-  - name: OECD News
-    url: https://www.oecd.org/newsroom/rss/newsfeed.xml
-    country: International
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''403 Forbidden'' for url ''https://www.oecd.org/newsroom/rss/newsfeed.xml''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403'
-  - name: OECD - Economic Surveys
-    url: https://www.oecd-ilibrary.org/rss/content/publication/19990588
-    country: International
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''403 Forbidden'' for url ''https://www.oecd-ilibrary.org/rss/content/publication/19990588''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403'
   - name: UN News - Economic Development
     url: https://news.un.org/feed/subscribe/en/news/topic/economic-development/feed/rss.xml
     country: International
@@ -1885,44 +1680,15 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
-  - name: WTO News
-    url: https://www.wto.org/english/news_e/rss_e/rss_news_e.xml
-    country: International
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: no entries found and no feed link discovered
-  - name: BIS (Bank for International Settlements)
-    url: https://www.bis.org/rss/index.htm
-    country: International
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: no entries found and no feed link discovered
-  - name: UNCTAD
-    url: https://unctad.org/rss.xml
-    country: International
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''403 Forbidden'' for url ''https://unctad.org/rss.xml''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403'
   - name: G20
-    url: https://www.g20.org/rss/
+    url: https://g20.org/rss/
+    original_url: https://www.g20.org/rss/
     country: International
     language: en
     topic_hint: news
     previously_disabled: false
-    validation_status: dead
-    active: false
-    validation_notes: no entries found and no feed link discovered
+    validation_status: ok
+    active: true
   - name: Project Syndicate
     url: https://www.project-syndicate.org/rss
     country: International
@@ -1931,69 +1697,32 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
+  - name: WTO - News
+    url: https://www.wto.org/library/rss/latest_news_e.xml
+    country: International
+    language: en
+    topic_hint: Multilateral Institutions
+    previously_disabled: false
+    validation_status: ok
+    active: true
+  - name: BIS - Central Bank Speeches
+    url: https://www.bis.org/doclist/cbspeeches.rss
+    country: International
+    language: en
+    topic_hint: Multilateral Institutions
+    previously_disabled: false
+    validation_status: ok
+    active: true
   INTERNATIONAL THINK TANKS:
-  - name: Chatham House
-    url: https://www.chathamhouse.org/rss.xml
-    country: International
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''403 Forbidden'' for url ''https://www.chathamhouse.org/rss.xml''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403'
-  - name: Wilson Center
-    url: https://www.wilsoncenter.org/rss.xml
-    country: International
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 Not Found'' for url ''https://www.wilsoncenter.org/rss.xml''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
-  - name: Carnegie Endowment
-    url: https://carnegieendowment.org/rss/
-    country: International
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: no entries found and no feed link discovered
-  - name: Atlantic Council
-    url: https://www.atlanticcouncil.org/feed/
-    country: International
-    language: en
-    topic_hint: news
-    previously_disabled: false
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''403 Forbidden'' for url ''https://www.atlanticcouncil.org/feed/''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403'
   - name: RAND Corporation
-    url: https://www.rand.org/news.xml
+    url: https://www.rand.org/news/press.xml
+    original_url: https://www.rand.org/news.xml
     country: International
     language: en
     topic_hint: news
     previously_disabled: false
-    validation_status: dead
-    active: false
-    validation_notes: no entries found and no feed link discovered
-  - name: McKinsey Global Institute
-    url: https://www.mckinsey.com/mgi/rss
-    country: International
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 Not Found'' for url ''https://www.mckinsey.com/mgi/rss''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
+    validation_status: ok
+    active: true
   - name: Oxford Economics
     url: https://www.oxfordeconomics.com/feed/
     country: International
@@ -2002,17 +1731,6 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
-  - name: Chatham House Research
-    url: https://www.chathamhouse.org/rss-research.xml
-    country: International
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''403 Forbidden'' for url ''https://www.chathamhouse.org/rss-research.xml''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403'
   INDEPENDENT ECONOMISTS & SUBSTACKS:
   - name: Adam Tooze - Chartbook
     url: https://adamtooze.substack.com/feed
@@ -2063,35 +1781,6 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
-  - name: Dario Perkins
-    url: https://darioperkins.substack.com/feed
-    country: International
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: no entries found and no feed link discovered
-  - name: Isabella Weber
-    url: https://isabellaweber.substack.com/feed
-    country: International
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: no entries found and no feed link discovered
-  - name: Ronan Lyons (Irish Housing)
-    url: https://ronanlyons.com/feed/
-    country: International
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 Not Found'' for url ''https://www.ronanlyons.com/feed/''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
   - name: Constantin Gurdgiev
     url: https://trueeconomics.blogspot.com/feeds/posts/default
     country: International
@@ -2108,15 +1797,6 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
-  - name: Simon Wren-Lewis - Mainly Macro
-    url: https://mainlymacro.blogspot.com/feeds/posts/default
-    country: International
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: no entries found and no feed link discovered
   - name: Paul Krugman Newsletter
     url: https://paulkrugman.substack.com/feed
     country: International
@@ -2149,15 +1829,6 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
-  - name: Wolfgang Munchau - Eurointelligence
-    url: https://www.eurointelligence.com/rss/comments.rss
-    country: International
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: no entries found and no feed link discovered
   - name: Eric Lonergan
     url: https://www.philosophyofmoney.net/feed/
     country: International
@@ -2167,28 +1838,6 @@ regions:
     validation_status: ok
     active: true
   ACADEMIC & PREPRINT:
-  - name: NBER Working Papers
-    url: https://www.nber.org/rss/new.xml
-    country: International
-    language: en
-    topic_hint: news
-    previously_disabled: false
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''403 Forbidden'' for url ''https://www.nber.org/rss/new.xml''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403'
-  - name: IZA Discussion Papers
-    url: https://www.iza.org/rss/dp.xml
-    country: International
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''404 Not Found'' for url ''https://www.iza.org/rss/dp.xml''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404'
   - name: Vox Development
     url: https://voxdev.org/rss.xml
     country: International
@@ -2197,27 +1846,7 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
-  - name: SSRN Economics (Most Downloaded)
-    url: https://papers.ssrn.com/sol3/Jeljour_results.cfm?form_name=journalbrowse&journal_id=1360956&Network=no&SortOrder=ab_approval_date&download=yes&rss=1
-    country: International
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: 'Client error ''403 Forbidden'' for url ''https://papers.ssrn.com/sol3/Jeljour_results.cfm?form_name=journalbrowse&journal_id=1360956&Network=no&SortOrder=ab_approval_date&download=yes&rss=1''
-
-      For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403'
   DATA & INDICATOR RELEASES:
-  - name: Trading Economics - Major Indicators
-    url: https://tradingeconomics.com/rss/news.aspx
-    country: International
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: no entries found and no feed link discovered
   - name: FRED Blog (St. Louis Fed)
     url: https://fredblog.stlouisfed.org/feed/
     country: International
@@ -2226,12 +1855,3 @@ regions:
     previously_disabled: false
     validation_status: ok
     active: true
-  - name: Eurostat Press Releases
-    url: https://ec.europa.eu/eurostat/web/rss
-    country: International
-    language: en
-    topic_hint: news
-    previously_disabled: true
-    validation_status: dead
-    active: false
-    validation_notes: no entries found and no feed link discovered

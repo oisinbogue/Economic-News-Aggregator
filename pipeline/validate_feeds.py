@@ -41,6 +41,7 @@ import httpx
 import yaml
 
 from pipeline.config import get_config, resolve_path
+from pipeline.fetch import USER_AGENT
 
 # Feed mime-types worth treating as "this link is a feed" during autodiscovery.
 FEED_LINK_TYPES = {
@@ -156,7 +157,11 @@ async def validate_one(
 
 async def validate_all(urls: list[str], concurrency: int, timeout: float) -> list[ValidationResult]:
     semaphore = asyncio.Semaphore(concurrency)
-    async with httpx.AsyncClient(headers={"User-Agent": "econ-news-aggregator/0.1 (+feed-validator)"}) as client:
+    # Same UA the real fetcher sends (pipeline.fetch.USER_AGENT), so a feed
+    # that validates here will also fetch there. Validating under a different
+    # agent than we fetch with is how ~100 perfectly good feeds ended up
+    # marked dead: the WAF rejected the validator, not the feed.
+    async with httpx.AsyncClient(headers={"User-Agent": USER_AGENT}) as client:
         tasks = [validate_one(client, semaphore, url, timeout) for url in urls]
         return await asyncio.gather(*tasks)
 

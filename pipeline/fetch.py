@@ -86,7 +86,16 @@ _IMG_SRC_RE = re.compile(r'<img[^>]+src=["\']([^"\']+)["\']', re.IGNORECASE)
 from pipeline.config import get_config
 from pipeline.db import get_connection, get_db_path, init_db
 
-USER_AGENT = "econ-news-aggregator/0.1 (+https://github.com/; RSS fetcher)"
+# A browser-shaped UA rather than a self-identifying one. Publishers behind
+# Cloudflare and similar WAFs routinely 403 unrecognised agents outright:
+# CBC, the G20 site and bne IntelliNews all serve their feeds fine to a
+# browser UA and reject an "econ-news-aggregator/0.1" one, which previously
+# looked like a dead feed rather than a blocked request. Kept identical to
+# pipeline.validate_feeds' UA so validation results predict fetch results.
+USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+)
 
 # Consecutive fetch failures after which a feed is auto-deactivated (kept in
 # the db, flagged, never deleted -- a human can reactivate it later).
