@@ -31,7 +31,7 @@ from __future__ import annotations
 import json
 import re
 import sys
-from datetime import date, datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 
 import httpx
 import yaml
@@ -40,6 +40,7 @@ from pydantic import BaseModel, ValidationError
 from pipeline.cerebras import call as cerebras_call, get_api_key, load_dotenv
 from pipeline.config import get_config, resolve_path
 from pipeline.db import get_connection, init_db
+from pipeline.timeutil import utc_today
 
 # Diversity cap defaults (overridable via config.yaml's curate: section) --
 # named here rather than inlined so config.yaml's comments are the single
@@ -88,7 +89,7 @@ def _recent_top10_cluster_ids(conn, lookback_days: int) -> set[int]:
     Clusters persist across days (pipeline.cluster reattaches new articles
     to an existing cluster rather than always forming a new one), so
     cluster_id is a reliable "same story" identity for this check."""
-    today = date.today().isoformat()
+    today = utc_today().isoformat()
     window_start = (datetime.now(timezone.utc) - timedelta(days=lookback_days)).date().isoformat()
     rows = conn.execute(
         "SELECT DISTINCT cluster_id FROM daily_top10 WHERE date >= ? AND date < ?",
@@ -282,7 +283,7 @@ def process_all() -> dict:
 
     selected = _select_diverse(ranked, candidates_by_id, max_per_country, max_per_topic)
 
-    today = date.today().isoformat()
+    today = utc_today().isoformat()
     with get_connection() as conn:
         conn.execute("DELETE FROM daily_top10 WHERE date = ?", (today,))
         for rank, pick in enumerate(selected, start=1):

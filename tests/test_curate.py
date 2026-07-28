@@ -1,5 +1,5 @@
 import sqlite3
-from datetime import date, timedelta
+from datetime import timedelta
 
 import pytest
 from pydantic import ValidationError
@@ -12,6 +12,7 @@ from pipeline.curate import (
     dominant_country,
     dominant_topic,
 )
+from pipeline.timeutil import utc_today
 
 
 def _pick(rank, cluster_id, rationale="because"):
@@ -151,7 +152,7 @@ class TestRecentTop10ClusterIds:
 
     def test_includes_clusters_within_lookback_window(self):
         conn = self._conn()
-        today = date.today()
+        today = utc_today()
         two_days_ago = (today - timedelta(days=2)).isoformat()
         conn.execute(
             "INSERT INTO daily_top10 VALUES (?, 1, 101, 'reason')", (two_days_ago,)
@@ -161,7 +162,7 @@ class TestRecentTop10ClusterIds:
 
     def test_excludes_clusters_outside_lookback_window(self):
         conn = self._conn()
-        today = date.today()
+        today = utc_today()
         five_days_ago = (today - timedelta(days=5)).isoformat()
         conn.execute(
             "INSERT INTO daily_top10 VALUES (?, 1, 202, 'reason')", (five_days_ago,)
@@ -171,7 +172,7 @@ class TestRecentTop10ClusterIds:
 
     def test_excludes_todays_rows(self):
         conn = self._conn()
-        today_str = date.today().isoformat()
+        today_str = utc_today().isoformat()
         conn.execute(
             "INSERT INTO daily_top10 VALUES (?, 1, 303, 'reason')", (today_str,)
         )
@@ -180,7 +181,7 @@ class TestRecentTop10ClusterIds:
 
     def test_dedupes_cluster_ids_across_days(self):
         conn = self._conn()
-        today = date.today()
+        today = utc_today()
         d1 = (today - timedelta(days=1)).isoformat()
         d2 = (today - timedelta(days=2)).isoformat()
         conn.execute("INSERT INTO daily_top10 VALUES (?, 1, 404, 'r')", (d1,))

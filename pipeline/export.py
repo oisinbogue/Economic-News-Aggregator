@@ -28,6 +28,7 @@ from xml.sax.saxutils import escape
 
 from pipeline.build import _attach_carousel, _feed_names, _load_all_leads, load_taxonomy_meta
 from pipeline.config import get_config, resolve_path
+from pipeline.timeutil import utc_today
 from pipeline.db import get_connection, init_db
 
 # How many of the most recent clusters go into latest.json/feed.xml -- both
@@ -116,7 +117,7 @@ def _feed_items(conn, feed_names: dict[int, str], theme_priority: list[str]) -> 
 
 
 def _rationales_for_today(conn) -> dict[int, tuple[int, str]]:
-    today = datetime.now(timezone.utc).date().isoformat()
+    today = utc_today().isoformat()
     rows = conn.execute(
         "SELECT rank, cluster_id, rationale FROM daily_top10 WHERE date = ?", (today,)
     ).fetchall()

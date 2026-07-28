@@ -27,7 +27,7 @@ import json
 import shutil
 import sys
 from collections import defaultdict
-from datetime import date, datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import yaml
@@ -36,6 +36,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from pipeline.cluster import carousel_members
 from pipeline.config import get_config, resolve_path
 from pipeline.db import get_connection, init_db
+from pipeline.timeutil import utc_today
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 TEMPLATES_DIR = REPO_ROOT / "templates"
@@ -103,9 +104,11 @@ def _load_feed_health(conn, recovery_interval_hours: float) -> list[dict]:
     streak/timestamp state fetch.py already maintains, which is enough to
     show what auto-recovery is actually doing: a "healthy" feed working
     fine, a "degraded" feed accumulating failures but still being fetched
-    every run, or an "inactive" feed that got auto-deactivated and is now
+    every run, an "inactive" feed that got auto-deactivated and is now
     only probed occasionally (recovery_check_interval_hours) rather than
-    abandoned for good the way v1's mark_dead_feeds.py left it.
+    abandoned for good the way v1's mark_dead_feeds.py left it, or a "muted"
+    feed a human deliberately turned off (config/feeds.yaml active:false --
+    see pipeline.reconcile_feeds) which auto-recovery never touches.
     """
     rows = [dict(row) for row in conn.execute("SELECT * FROM feeds ORDER BY name")]
     article_stats = {
@@ -119,7 +122,10 @@ def _load_feed_health(conn, recovery_interval_hours: float) -> list[dict]:
         stats = article_stats.get(row["id"], {})
         row["article_count"] = stats.get("article_count", 0)
         row["last_article_display"] = _fmt_date(stats.get("last_article"))
-        if not row["active"]:
+        if not row["active"] and row.get("deactivated_reason") == "manual":
+            row["status"] = "muted"
+            row["next_recovery_check"] = "muted -- not probed"
+        elif not row["active"]:
             row["status"] = "inactive"
             if row.get("last_attempt"):
                 next_check = datetime.fromisoformat(row["last_attempt"]) + timedelta(hours=recovery_interval_hours)
@@ -133,7 +139,7 @@ def _load_feed_health(conn, recovery_interval_hours: float) -> list[dict]:
         row["last_success_display"] = _fmt_date(row.get("last_success"))
         row["last_attempt_display"] = _fmt_date(row.get("last_attempt"))
 
-    status_order = {"inactive": 0, "degraded": 1, "healthy": 2}
+    status_order = {"inactive": 0, "degraded": 1, "muted": 2, "healthy": 3}
     rows.sort(key=lambda r: (status_order[r["status"]], -r["consecutive_failures"]))
     return rows
 
@@ -318,7 +324,7 @@ def render_site() -> dict:
         feed_health = _load_feed_health(conn, recovery_interval_hours)
         prediction_data = _load_prediction_data(conn, feed_names)
 
-        today = date.today().isoformat()
+        today = utc_today().isoformat()
         top10_rows = [
             dict(row)
             for row in conn.execute(
@@ -382,7 +388,11 @@ def render_site() -> dict:
     (output_dir / "index.html").write_text(
         index_tmpl.render(
             site=site_meta, top10=top10, groups=recent_groups, today=today,
-            asset_prefix="", active_nav="home",
+            asset_prefix="", active_nav="home", show_filters=True,
+            # Every story here also lands permanently on its archive day page,
+            # which is the canonical page Pagefind indexes -- keeps search
+            # results from showing the same story twice.
+            pagefind_index=False,
         ),
         encoding="utf-8",
     )
@@ -413,6 +423,7 @@ def render_site() -> dict:
         (output_dir / "archive" / f"{day}.html").write_text(
             archive_day_tmpl.render(
                 site=site_meta, day=day, groups=groups, asset_prefix="../", active_nav="archive",
+                show_filters=True, pagefind_index=True,
             ),
             encoding="utf-8",
         )
@@ -420,6 +431,7 @@ def render_site() -> dict:
     (output_dir / "archive" / "index.html").write_text(
         archive_index_tmpl.render(
             site=site_meta, days=day_summaries, asset_prefix="../", active_nav="archive",
+            pagefind_index=False,
         ),
         encoding="utf-8",
     )
@@ -430,6 +442,7 @@ def render_site() -> dict:
         health_tmpl.render(
             site=site_meta, feeds=feed_health,
             recovery_interval_hours=recovery_interval_hours, asset_prefix="", active_nav="health",
+            pagefind_index=False,
         ),
         encoding="utf-8",
     )
@@ -439,6 +452,7 @@ def render_site() -> dict:
     (output_dir / "predictions.html").write_text(
         predictions_tmpl.render(
             site=site_meta, predictions=prediction_data, asset_prefix="", active_nav="predictions",
+            pagefind_index=False,
         ),
         encoding="utf-8",
     )
@@ -452,6 +466,7 @@ def render_site() -> dict:
         "archive_days": len(archive_days),
         "feeds_inactive": sum(1 for f in feed_health if f["status"] == "inactive"),
         "feeds_degraded": sum(1 for f in feed_health if f["status"] == "degraded"),
+        "feeds_muted": sum(1 for f in feed_health if f["status"] == "muted"),
         "predictions_pending_review": len(prediction_data["pending"]),
         "predictions_resolved": prediction_data["resolved_count"],
     }
@@ -465,6 +480,7 @@ def main() -> dict:
         f"Done: {stats['clusters']} cluster(s) rendered, {stats['top10']} in today's top 10, "
         f"{stats['archive_days']} archive day(s), "
         f"{stats['feeds_inactive']} feed(s) inactive, {stats['feeds_degraded']} degraded, "
+        f"{stats['feeds_muted']} muted, "
         f"{stats['predictions_pending_review']} prediction(s) awaiting review, "
         f"{stats['predictions_resolved']} resolved."
     )

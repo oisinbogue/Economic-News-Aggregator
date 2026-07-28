@@ -34,6 +34,7 @@ from pipeline.cluster import _sig_words
 from pipeline.config import get_config
 from pipeline.db import get_connection, init_db
 from pipeline.gh_issues import create_issue
+from pipeline.timeutil import utc_today
 
 VERDICT_RE = re.compile(r"VERDICT:\s*(correct|incorrect|unresolvable)", re.IGNORECASE)
 EVIDENCE_RE = re.compile(r"EVIDENCE:\s*(.+)")
@@ -182,7 +183,7 @@ def resolve_one(client: httpx.Client, api_key: str, model: str, conn, prediction
     if not candidates:
         horizon = date.fromisoformat(prediction["horizon_date"])
         grace_days = get_config()["predictions"].get("resolution_grace_days", 21)
-        if (date.today() - horizon).days > grace_days:
+        if (utc_today() - horizon).days > grace_days:
             conn.execute(
                 "UPDATE predictions SET status = 'expired' WHERE id = ?", (prediction["id"],)
             )
@@ -235,7 +236,7 @@ def process_all(limit: int | None = None) -> dict:
     if limit is None:
         limit = cfg["run"].get("max_predictions_per_run", 15)
 
-    today = date.today().isoformat()
+    today = utc_today().isoformat()
     with get_connection() as conn:
         due = [
             dict(row)
