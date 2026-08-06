@@ -72,7 +72,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
 from time import mktime
-from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
+from urllib.parse import urlsplit, urlunsplit, urljoin, parse_qsl, urlencode
 
 import feedparser
 import httpx
@@ -142,10 +142,16 @@ class RunStats:
     live_blogs_skipped: int = 0
 
 
-def normalise_url(url: str) -> str:
+def normalise_url(url: str, base_url: str | None = None) -> str:
     """Strips tracking query params and the fragment so equivalent article
     links (same article, different campaign tag) normalise to the same URL.
+
+    Feeds occasionally publish relative `<link>` values (e.g. "/"); when
+    `base_url` (the feed's own URL) is given, such links are resolved
+    against it so they don't end up as bare paths that httpx can't request.
     """
+    if base_url and not urlsplit(url).scheme:
+        url = urljoin(base_url, url)
     parts = urlsplit(url)
     kept = [
         (k, v) for k, v in parse_qsl(parts.query, keep_blank_values=True)
@@ -404,7 +410,9 @@ async def process_feed(
             link = entry.get("link")
             if not link:
                 continue
-            url = normalise_url(link)
+            url = normalise_url(link, base_url=feed["url"])
+            if urlsplit(url).scheme not in ("http", "https"):
+                continue
 
             if LIVE_BLOG_URL_RE.search(url):
                 async with stats_lock:
