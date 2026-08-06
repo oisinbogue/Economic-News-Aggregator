@@ -1,4 +1,13 @@
-"""Country + topic tagging via config/taxonomy.yaml (brief feature #2).
+"""Keyword country + topic tagging via config/taxonomy.yaml (brief feature #2).
+
+**This stage is now the fallback, not the primary tagger.** Since
+TAGGING_SPEC.md Phase 2, pipeline.summarize asks the LLM for topics and a
+primary country on the same call that produces the summary, and writes them
+with tag_source='llm'. That leaves `topics` non-NULL, so the query below
+skips those rows and this module only ever sees articles whose LLM tag block
+would not parse. It is kept (rather than deleted) because `score_and_tag` is
+still the only thing producing `articles.score`, which pipeline.cluster ranks
+on until TAGGING_SPEC.md Phase 4 replaces it with centroid distance.
 
 For each article with processed_status='summarised' and topics IS NULL:
   - country: which country/region the article is actually ABOUT, detected
@@ -47,6 +56,21 @@ def load_keywords() -> list[dict]:
         for kw in groups.get("active") or []:
             keywords.append({"keyword": kw.lower(), "theme": theme})
     return keywords
+
+
+@lru_cache(maxsize=1)
+def load_themes() -> tuple[str, ...]:
+    """The closed set of theme names, in config/taxonomy.yaml order.
+
+    pipeline.summarize offers exactly these to the LLM (plus an explicit
+    "none of these") and rejects anything outside the set, so that the
+    keyword path and the LLM path can never disagree about what a valid
+    theme name is."""
+    cfg = get_config()
+    path = resolve_path(cfg["paths"]["taxonomy_yaml"])
+    with open(path, "r", encoding="utf-8") as f:
+        taxonomy = yaml.safe_load(f)
+    return tuple((taxonomy.get("keywords") or {}).keys())
 
 
 def score_and_tag(blob: str, keywords: list[dict]) -> tuple[int, list[str]]:
