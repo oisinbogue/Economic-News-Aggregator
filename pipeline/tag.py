@@ -94,7 +94,7 @@ def process_all() -> dict:
             score, themes = score_and_tag(blob, keywords)
             countries = detect_countries(blob) or ["International"]
             conn.execute(
-                "UPDATE articles SET country = ?, topics = ?, score = ? WHERE url_hash = ?",
+                "UPDATE articles SET country = ?, topics = ?, score = ?, tag_source = 'keyword' WHERE url_hash = ?",
                 (",".join(countries), ",".join(themes), score, row["url_hash"]),
             )
             stats["tagged"] += 1

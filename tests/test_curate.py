@@ -1,12 +1,15 @@
 import sqlite3
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 
 import pytest
 from pydantic import ValidationError
 
 from pipeline.curate import (
+    WIDENED_CANDIDATE_WINDOW_HOURS,
     CuratorOutput,
     CuratorPick,
+    _load_candidates,
+    _load_candidates_with_fallback,
     _recent_top10_cluster_ids,
     _select_diverse,
     dominant_country,
@@ -136,8 +139,11 @@ class TestDominantCountry:
     def test_single_country_passthrough(self):
         assert dominant_country("Ireland") == "Ireland"
 
-    def test_multi_country_picks_alphabetically_first(self):
-        assert dominant_country("United States,China/Greater China") == "China/Greater China"
+    def test_multi_country_picks_first_position_not_alphabetical(self):
+        # articles.country is ranked by evidence strength, most-relevant
+        # first (pipeline.geo.detect_countries) -- position 0 wins even
+        # when it sorts after later entries alphabetically.
+        assert dominant_country("United States,China/Greater China") == "United States"
 
 
 class TestRecentTop10ClusterIds:
@@ -188,6 +194,89 @@ class TestRecentTop10ClusterIds:
         conn.execute("INSERT INTO daily_top10 VALUES (?, 3, 404, 'r')", (d2,))
         conn.commit()
         assert _recent_top10_cluster_ids(conn, lookback_days=3) == {404}
+
+
+class TestLoadCandidatesWithFallback:
+    def _conn(self):
+        conn = sqlite3.connect(":memory:")
+        conn.row_factory = sqlite3.Row
+        conn.execute(
+            "CREATE TABLE articles (url_hash TEXT PRIMARY KEY, title TEXT, summary TEXT, "
+            "country TEXT, topics TEXT, published TEXT, fetched TEXT NOT NULL)"
+        )
+        conn.execute(
+            "CREATE TABLE clusters (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+            "representative_article TEXT REFERENCES articles(url_hash))"
+        )
+        return conn
+
+    def _insert(self, conn, url_hash, hours_ago):
+        fetched = (datetime.now(timezone.utc) - timedelta(hours=hours_ago)).isoformat()
+        conn.execute(
+            "INSERT INTO articles (url_hash, title, summary, country, topics, published, fetched) "
+            "VALUES (?, 't', 's', 'Ireland', 'Trade', NULL, ?)",
+            (url_hash, fetched),
+        )
+        conn.execute(
+            "INSERT INTO clusters (representative_article) VALUES (?)", (url_hash,)
+        )
+
+    def test_normal_path_uses_24h_window_without_widening(self):
+        conn = self._conn()
+        for i in range(30):
+            self._insert(conn, f"h{i}", hours_ago=1)
+        # Outside the 24h window -- must not be picked up without widening.
+        self._insert(conn, "stale", hours_ago=30)
+        conn.commit()
+
+        candidates = _load_candidates(conn, 24, 40)
+        assert len(candidates) == 30
+
+    def test_thin_24h_window_widens_to_48h(self):
+        conn = self._conn()
+        # Only 10 candidates within 24h -- below the default min_candidates
+        # of 25, so the fallback should kick in.
+        for i in range(10):
+            self._insert(conn, f"recent{i}", hours_ago=1)
+        # 15 more that only show up once the window widens to 48h.
+        for i in range(15):
+            self._insert(conn, f"older{i}", hours_ago=30)
+        conn.commit()
+
+
+        candidates, widened = _load_candidates_with_fallback(
+            conn, candidate_window_hours=24, min_candidates=25, max_candidates=40
+        )
+        assert widened is True
+        assert len(candidates) == 25
+
+    def test_widening_still_excludes_articles_older_than_widened_window(self):
+        conn = self._conn()
+        for i in range(5):
+            self._insert(conn, f"recent{i}", hours_ago=1)
+        # Older than even the widened 48h window.
+        self._insert(conn, "ancient", hours_ago=WIDENED_CANDIDATE_WINDOW_HOURS + 1)
+        conn.commit()
+
+
+        candidates, widened = _load_candidates_with_fallback(
+            conn, candidate_window_hours=24, min_candidates=25, max_candidates=40
+        )
+        assert widened is True
+        assert len(candidates) == 5
+
+    def test_sufficient_24h_pool_does_not_widen(self):
+        conn = self._conn()
+        for i in range(25):
+            self._insert(conn, f"h{i}", hours_ago=1)
+        conn.commit()
+
+
+        candidates, widened = _load_candidates_with_fallback(
+            conn, candidate_window_hours=24, min_candidates=25, max_candidates=40
+        )
+        assert widened is False
+        assert len(candidates) == 25
 
 
 class TestCuratorSchema:

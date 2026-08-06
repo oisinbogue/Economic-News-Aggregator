@@ -6,9 +6,13 @@ significance -- v1's TOP_N=5 (aggregator.py:100) picked the highest keyword
 
 For "today" (UTC date):
   1. Candidate clusters = every cluster whose representative article was
-     fetched within `cluster.window_days` days, most recent first, capped at
-     `curate.max_candidates` (config.yaml) so the shortlist fits comfortably
-     inside Cerebras's 8,192-token context in one call.
+     fetched within `curate.candidate_window_hours` (config.yaml), most
+     recent first, capped at `curate.max_candidates` so the shortlist fits
+     comfortably inside Cerebras's 8,192-token context in one call. This is
+     deliberately its own knob, not `cluster.window_days` (which exists to
+     stop union-find linking unrelated stories months apart) -- if the 24h
+     window returns fewer than `curate.min_candidates`, it's widened to 48h
+     so the diversity caps in step 3 have enough of a pool to work with.
   2. Ask Cerebras for a JSON-ranked list of `curate.oversample_count`
      candidates (more than 10) with a one-sentence rationale each, validated
      against a Pydantic schema with one retry on malformed output. The
@@ -49,6 +53,11 @@ DEFAULT_MAX_PER_COUNTRY = 3
 DEFAULT_MAX_PER_TOPIC = 3
 DEFAULT_OVERSAMPLE_COUNT = 20
 DEFAULT_REPEAT_LOOKBACK_DAYS = 3
+DEFAULT_CANDIDATE_WINDOW_HOURS = 24
+DEFAULT_MIN_CANDIDATES = 25
+# Fallback window used when the default window returns fewer than
+# min_candidates candidates -- see process_all's thin-day widen step.
+WIDENED_CANDIDATE_WINDOW_HOURS = 48
 
 _CODE_FENCE_RE = re.compile(r"^```(?:json)?\s*|\s*```$", re.MULTILINE)
 
@@ -63,8 +72,8 @@ class CuratorOutput(BaseModel):
     picks: list[CuratorPick]
 
 
-def _load_candidates(conn, window_days: int, max_candidates: int) -> list[dict]:
-    window_start = (datetime.now(timezone.utc) - timedelta(days=window_days)).isoformat()
+def _load_candidates(conn, window_hours: int, max_candidates: int) -> list[dict]:
+    window_start = (datetime.now(timezone.utc) - timedelta(hours=window_hours)).isoformat()
     return [
         dict(row)
         for row in conn.execute(
@@ -81,6 +90,19 @@ def _load_candidates(conn, window_days: int, max_candidates: int) -> list[dict]:
             (window_start, window_start, max_candidates),
         )
     ]
+
+
+def _load_candidates_with_fallback(
+    conn, candidate_window_hours: int, min_candidates: int, max_candidates: int
+) -> tuple[list[dict], bool]:
+    """Loads candidates at `candidate_window_hours`; if that's thinner than
+    `min_candidates`, re-queries at WIDENED_CANDIDATE_WINDOW_HOURS instead.
+    Returns (candidates, widened) so callers can log when the fallback fired.
+    See the widen-to-48h note in this module's docstring for why."""
+    candidates = _load_candidates(conn, candidate_window_hours, max_candidates)
+    if len(candidates) < min_candidates:
+        return _load_candidates(conn, WIDENED_CANDIDATE_WINDOW_HOURS, max_candidates), True
+    return candidates, False
 
 
 def _recent_top10_cluster_ids(conn, lookback_days: int) -> set[int]:
@@ -124,12 +146,13 @@ def dominant_topic(topics_csv: str | None, theme_priority: list[str]) -> str | N
 def dominant_country(countries_csv: str | None) -> str | None:
     """Single country tag used for the diversity cap. articles.country is now
     multi-valued (an article can be about several countries -- see
-    pipeline.geo), so this picks one for capping purposes the same way
-    dominant_topic collapses multi-topic down to one; no natural priority
-    order for countries the way theme_priority exists for topics, so this
-    just takes the alphabetically-first one."""
+    pipeline.geo) and, since Phase 1, order-significant: ranked by evidence
+    strength, most-relevant first. So this just takes position 0 rather than
+    picking alphabetically, which used to let an incidental mention (e.g.
+    "Australia/New Zealand" on an Ireland story) win the cap purely on
+    spelling."""
     countries = [c for c in (countries_csv or "").split(",") if c]
-    return sorted(countries)[0] if countries else None
+    return countries[0] if countries else None
 
 
 def build_prompt(candidates: list[dict], pick_count: int, recent_ids: set[int]) -> str:
@@ -253,7 +276,8 @@ def process_all() -> dict:
     curate_cfg = cfg["curate"]
     model = cfg["llm"]["model"]
     api_key = get_api_key()
-    window_days = cfg["cluster"].get("window_days", 3)
+    candidate_window_hours = curate_cfg.get("candidate_window_hours", DEFAULT_CANDIDATE_WINDOW_HOURS)
+    min_candidates = curate_cfg.get("min_candidates", DEFAULT_MIN_CANDIDATES)
     max_candidates = curate_cfg.get("max_candidates", 40)
     oversample_count = curate_cfg.get("oversample_count", DEFAULT_OVERSAMPLE_COUNT)
     max_per_country = curate_cfg.get("max_per_country", DEFAULT_MAX_PER_COUNTRY)
@@ -262,7 +286,22 @@ def process_all() -> dict:
     theme_priority = _load_theme_priority()
 
     with get_connection() as conn:
-        candidates = _load_candidates(conn, window_days, max_candidates)
+        # Thin-day fallback: a 24h window can return too few candidates for
+        # max_per_country/max_per_topic to mean anything -- with a small pool
+        # the backfill loop in _select_diverse fires on nearly every pick,
+        # silently ignoring the diversity caps while still looking "curated".
+        # Widening to 48h only when needed keeps the common case tightly
+        # scoped to the last day, and logging it lets us see how often 24h
+        # actually falls short.
+        candidates, widened = _load_candidates_with_fallback(
+            conn, candidate_window_hours, min_candidates, max_candidates
+        )
+        if widened:
+            print(
+                f"Fewer than min_candidates={min_candidates} in the "
+                f"{candidate_window_hours}h window; widened to "
+                f"{WIDENED_CANDIDATE_WINDOW_HOURS}h ({len(candidates)} candidate(s))."
+            )
         recent_ids = _recent_top10_cluster_ids(conn, repeat_lookback_days)
 
     stats = {"candidates": len(candidates), "picked": 0}

@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS feeds (
     url                 TEXT NOT NULL UNIQUE,
     name                TEXT NOT NULL,
     country             TEXT,
+    region              TEXT,                          -- the config/feeds.yaml `regions:` grouping key this feed lives under (e.g. "IRELAND", "UNITED KINGDOM") -- distinct from `country`, which is per-feed metadata within that group
     language            TEXT,
     topic_hint          TEXT,
     active              INTEGER NOT NULL DEFAULT 1,   -- 0/1: set to 0 for dead feeds instead of deleting
@@ -44,6 +45,22 @@ CREATE TABLE IF NOT EXISTS feeds (
     last_error_type     TEXT,                         -- classification of the most recent failure (http_404, timeout, dns, ssl, connection, other); NULL after a success
     last_attempt        TEXT,                         -- ISO8601 timestamp of the most recent fetch attempt, success or failure; drives the auto-recovery cooldown for inactive feeds (see pipeline.fetch)
     deactivated_reason  TEXT                          -- NULL while active; 'auto_failure' (pipeline.fetch, MAX_CONSECUTIVE_FAILURES) or 'manual' (config/feeds.yaml active:false, see pipeline.reconcile_feeds) once active=0. Recovery probes and successful fetches never clear/override 'manual' -- only reconcile_feeds flipping the YAML back to active:true does
+);
+
+-- One row per pipeline.fetch invocation. Exists so pipeline.build can tell
+-- which articles/clusters were first seen in the most recent run (the "Just
+-- In" homepage section, see build.py) without gap-detecting on
+-- articles.fetched -- that timestamp is spread across however long a run
+-- takes, so it breaks the moment a run is slow or a feed times out.
+-- `finished` is NULL until pipeline.fetch's async run completes cleanly; a
+-- crash mid-run just leaves it NULL forever (a truthful "this run didn't
+-- finish" record) rather than something later has to patch up -- every
+-- article already written by that point keeps its real fetch_run_id, so no
+-- data is lost or misattributed.
+CREATE TABLE IF NOT EXISTS fetch_runs (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    started         TEXT NOT NULL,   -- ISO8601, when this pipeline.fetch run started
+    finished        TEXT             -- ISO8601, when it completed; NULL if still running or it crashed
 );
 
 -- One row per article. url_hash (sha256 of the canonical URL) is the PK so
@@ -57,13 +74,15 @@ CREATE TABLE IF NOT EXISTS articles (
     url             TEXT NOT NULL,
     published       TEXT,           -- ISO8601, from feed metadata (may be NULL/unreliable)
     fetched         TEXT NOT NULL,  -- ISO8601, when our pipeline first saw it
+    fetch_run_id    INTEGER REFERENCES fetch_runs(id),  -- which pipeline.fetch run inserted this row; NULL for articles inserted before this column existed
     raw_text        TEXT,           -- extracted article body (trafilatura fallback if feed content is thin); English after translation
     original_raw_text TEXT,         -- raw_text before translation, if translated
     summary         TEXT,
     language        TEXT,
-    country         TEXT,
+    country         TEXT,           -- comma-separated, ORDER-SIGNIFICANT: most-relevant country first (see pipeline.geo.detect_countries), not alphabetical -- pipeline.curate.dominant_country reads position 0
     topics          TEXT,           -- comma-separated theme names matched from config/taxonomy.yaml; '' if tagged with no match, NULL if not yet tagged
     score           INTEGER,        -- count of matched taxonomy keywords (aggregator.py:489-522 score_entry); used to rank cluster members, NOT the daily top 10 (that's LLM-curated, see daily_top10)
+    tag_source      TEXT,           -- provenance of country/topics tagging: 'keyword' | 'llm' | 'embedding'; NULL for rows tagged before this column existed
     image           TEXT,           -- thumbnail URL (feed media/enclosure, or og:image scraped from the article page); NULL if none was found
     cluster_id      INTEGER REFERENCES clusters(id),
     processed_status TEXT NOT NULL DEFAULT 'fetched'
@@ -166,6 +185,16 @@ CREATE TABLE IF NOT EXISTS archive_render_state (
     last_fetched    TEXT NOT NULL      -- max(articles.fetched) among that day's clusters as of the last render
 );
 
+-- Per-cluster cache for pipeline.build's skip-if-unchanged story-page
+-- rendering (site/story/{cluster_id}.html) -- same purpose as
+-- archive_render_state above, just keyed by cluster instead of day: the
+-- max(articles.fetched) among a cluster's own members as of the last time
+-- its story page was actually rewritten.
+CREATE TABLE IF NOT EXISTS story_render_state (
+    cluster_id      INTEGER PRIMARY KEY REFERENCES clusters(id),
+    last_fetched    TEXT NOT NULL
+);
+
 -- Lookup indexes for the queries each stage runs repeatedly.
 CREATE INDEX IF NOT EXISTS idx_articles_status ON articles(processed_status);
 CREATE INDEX IF NOT EXISTS idx_articles_feed ON articles(feed_id);
@@ -226,7 +255,7 @@ def init_db() -> None:
         existing_feed_cols = {row["name"] for row in conn.execute("PRAGMA table_info(feeds)")}
         for col, ddl in (
             ("etag", "TEXT"), ("last_modified", "TEXT"), ("last_error_type", "TEXT"),
-            ("last_attempt", "TEXT"), ("deactivated_reason", "TEXT"),
+            ("last_attempt", "TEXT"), ("deactivated_reason", "TEXT"), ("region", "TEXT"),
         ):
             if col not in existing_feed_cols:
                 conn.execute(f"ALTER TABLE feeds ADD COLUMN {col} {ddl}")
@@ -244,6 +273,10 @@ def init_db() -> None:
             conn.execute("ALTER TABLE articles ADD COLUMN prediction_checked INTEGER NOT NULL DEFAULT 0")
         if "image" not in existing_article_cols:
             conn.execute("ALTER TABLE articles ADD COLUMN image TEXT")
+        if "fetch_run_id" not in existing_article_cols:
+            conn.execute("ALTER TABLE articles ADD COLUMN fetch_run_id INTEGER REFERENCES fetch_runs(id)")
+        if "tag_source" not in existing_article_cols:
+            conn.execute("ALTER TABLE articles ADD COLUMN tag_source TEXT")
         existing_cluster_cols = {row["name"] for row in conn.execute("PRAGMA table_info(clusters)")}
         if "parent_cluster_id" not in existing_cluster_cols:
             conn.execute("ALTER TABLE clusters ADD COLUMN parent_cluster_id INTEGER REFERENCES clusters(id)")
@@ -252,6 +285,10 @@ def init_db() -> None:
             conn.execute("ALTER TABLE predictions ADD COLUMN canonical_id INTEGER REFERENCES predictions(id)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_clusters_parent ON clusters(parent_cluster_id)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_predictions_canonical ON predictions(canonical_id)")
+        # Same "no such column" ordering constraint as the two indexes above:
+        # fetch_run_id is added via ALTER TABLE just above on a pre-existing
+        # db, so this index can't live in SCHEMA's own CREATE INDEX block.
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_articles_fetch_run ON articles(fetch_run_id)")
 
 
 if __name__ == "__main__":
