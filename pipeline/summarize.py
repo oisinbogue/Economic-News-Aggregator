@@ -309,10 +309,10 @@ def process_all(limit: int | None = None) -> dict:
                     tag_values: tuple = ()
                 else:
                     # score_and_tag's *themes* are superseded here, but its
-                    # keyword count still populates articles.score, which
-                    # pipeline.cluster ranks members on until TAGGING_SPEC.md
-                    # Phase 4 swaps it for centroid distance. Leaving score
-                    # NULL on LLM rows would sort them last in that ORDER BY.
+                    # keyword count still populates articles.score -- kept
+                    # only for pipeline.export's master CSV (de facto public
+                    # API) since TAGGING_SPEC.md Phase 4 moved cluster
+                    # ranking to embedding centroid distance.
                     blob = " ".join(filter(None, [title, analysis.summary, body]))
                     score, _ = score_and_tag(blob, load_keywords())
                     tag_columns = "country = ?, topics = ?, score = ?, tag_source = 'llm',"

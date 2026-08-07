@@ -6,8 +6,9 @@ primary country on the same call that produces the summary, and writes them
 with tag_source='llm'. That leaves `topics` non-NULL, so the query below
 skips those rows and this module only ever sees articles whose LLM tag block
 would not parse. It is kept (rather than deleted) because `score_and_tag` is
-still the only thing producing `articles.score`, which pipeline.cluster ranks
-on until TAGGING_SPEC.md Phase 4 replaces it with centroid distance.
+still the only thing producing `articles.score`, which pipeline.export
+publishes in the master CSV -- pipeline.cluster no longer ranks on it as of
+TAGGING_SPEC.md Phase 4 (centroid distance instead).
 
 For each article with processed_status='summarised' and topics IS NULL:
   - country: which country/region the article is actually ABOUT, detected
@@ -25,8 +26,9 @@ For each article with processed_status='summarised' and topics IS NULL:
     article's title+summary+body is kept (comma-separated); '' if none
     matched, distinct from NULL so the row isn't reprocessed forever.
   - score: count of matched keywords, also ported from score_entry. Not
-    used to rank the daily top 10 (that's LLM-curated -- brief feature #3),
-    but used by pipeline.cluster to rank members within a cluster.
+    used to rank the daily top 10 (that's LLM-curated -- brief feature #3)
+    or, since TAGGING_SPEC.md Phase 4, cluster members either -- kept only
+    because pipeline.export publishes it in the master CSV.
 
 Usage: python -m pipeline.tag
 """

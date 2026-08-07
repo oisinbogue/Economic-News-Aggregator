@@ -79,6 +79,36 @@ def _cosine(a: np.ndarray, b: np.ndarray) -> float:
     return float(np.dot(a, b) / denom)
 
 
+def _distance_to_centroid(vector: np.ndarray, centroid: np.ndarray) -> float:
+    return float(np.linalg.norm(vector - centroid))
+
+
+def _rank_rows_by_centroid_distance(
+    conn, rows_by_cluster: dict[int, list[dict]]
+) -> None:
+    """Reorder each cluster's rows in place, closest-to-centroid first, so
+    the most representative article leads (TAGGING_SPEC.md Phase 4). Rows
+    already arrive fetched-ASC from SQL; members with no embedding yet keep
+    that relative order and sort after every embedded member, since there's
+    no distance to rank them by."""
+    embed_model = get_config()["embed"]["model"]
+    url_hashes = [row["url_hash"] for rows in rows_by_cluster.values() for row in rows]
+    vectors = _fetch_embeddings(conn, url_hashes, embed_model)
+
+    for rows in rows_by_cluster.values():
+        member_vectors = [vectors[r["url_hash"]] for r in rows if r["url_hash"] in vectors]
+        if not member_vectors:
+            continue
+        centroid = np.mean(member_vectors, axis=0)
+        rows.sort(
+            key=lambda r: (
+                (0, _distance_to_centroid(vectors[r["url_hash"]], centroid))
+                if r["url_hash"] in vectors
+                else (1, 0.0)
+            )
+        )
+
+
 def _fetch_embeddings(conn, url_hashes: list[str], model: str) -> dict[str, np.ndarray]:
     if not url_hashes:
         return {}
@@ -122,7 +152,7 @@ def process_all() -> dict:
             dict(row)
             for row in conn.execute(
                 """
-                SELECT url_hash, title, score
+                SELECT url_hash, title
                 FROM articles
                 WHERE cluster_id IS NULL AND topics IS NOT NULL AND fetched >= ?
                 ORDER BY fetched
@@ -193,8 +223,24 @@ def process_all() -> dict:
     with get_connection() as conn:
         created_at = now.isoformat()
         for members in groups.values():
-            # Highest-scored member (score may be NULL pre-tagging edge case -> 0) leads.
-            members.sort(key=lambda ci: -(candidates[ci]["score"] or 0))
+            member_vectors = {
+                ci: embeddings[candidates[ci]["url_hash"]]
+                for ci in members
+                if candidates[ci]["url_hash"] in embeddings
+            }
+            if member_vectors:
+                # Most representative member (closest to the cluster
+                # centroid) leads (TAGGING_SPEC.md Phase 4). Members without
+                # an embedding yet keep their fetched-ASC order and sort
+                # last, same fallback spirit as is_match's title overlap.
+                centroid = np.mean(list(member_vectors.values()), axis=0)
+                members.sort(
+                    key=lambda ci: (
+                        (0, _distance_to_centroid(member_vectors[ci], centroid))
+                        if ci in member_vectors
+                        else (1, 0.0)
+                    )
+                )
             lead_hash = candidates[members[0]]["url_hash"]
             label = candidates[members[0]]["title"]
             if label and len(label) > 80:
@@ -205,16 +251,12 @@ def process_all() -> dict:
                 (created_at, label, lead_hash),
             )
             cluster_id = cur.lastrowid
-            member_vectors = []
             for ci in members:
                 conn.execute(
                     "UPDATE articles SET cluster_id = ? WHERE url_hash = ?",
                     (cluster_id, candidates[ci]["url_hash"]),
                 )
-                v = embeddings.get(candidates[ci]["url_hash"])
-                if v is not None:
-                    member_vectors.append(v)
-            new_cluster_vectors[cluster_id] = member_vectors
+            new_cluster_vectors[cluster_id] = list(member_vectors.values())
             stats["new_clusters"] += 1
             stats["new_cluster_members"] += len(members)
 
@@ -266,7 +308,9 @@ def carousel_members_batch(
     """Batched form of `carousel_members`: one query for every cluster_id in
     `cluster_ids` instead of one query per cluster (pipeline.build/export
     render this for hundreds-to-thousands of clusters per run), applying the
-    exact same per-cluster ranking rule to each group of rows.
+    exact same per-cluster ranking rule to each group of rows. `score` is
+    fetched only because callers publish it (pipeline.export's master CSV);
+    it plays no part in the ordering -- see `_rank_rows_by_centroid_distance`.
     """
     if cap is None:
         cap = get_config()["cluster"].get("carousel_cap", 5)
@@ -280,11 +324,12 @@ def carousel_members_batch(
         SELECT cluster_id, url_hash, feed_id, title, url, summary, country, topics, score, published, fetched, image
         FROM articles
         WHERE cluster_id IN ({placeholders})
-        ORDER BY cluster_id, (score IS NULL), score DESC, fetched ASC
+        ORDER BY cluster_id, fetched ASC
         """,
         cluster_ids,
     ):
         rows_by_cluster[row["cluster_id"]].append(dict(row))
+    _rank_rows_by_centroid_distance(conn, rows_by_cluster)
 
     result: dict[int, list[dict]] = {}
     for cluster_id, rows in rows_by_cluster.items():
@@ -307,14 +352,47 @@ def carousel_members_batch(
     return result
 
 
+def all_cluster_members_batch(conn, cluster_ids: list[int]) -> dict[int, list[dict]]:
+    """Every article in each of `cluster_ids` -- unlike `carousel_members_batch`,
+    no 5-cap, no one-per-feed dedup. Used by the per-cluster story permalink
+    page (pipeline.build's `_render_story_pages`), which is meant to show the
+    full picture of what got clustered together, not just the curated
+    carousel a reader sees on the homepage/archive. Batched the same way
+    carousel_members_batch is, for the same reason: pipeline.build checks
+    every cluster's story page for changes on every run.
+    """
+    if not cluster_ids:
+        return {}
+    placeholders = ",".join("?" * len(cluster_ids))
+    result: dict[int, list[dict]] = defaultdict(list)
+    for row in conn.execute(
+        f"""
+        SELECT cluster_id, url_hash, feed_id, title, url, summary, country, topics, score, published, fetched, image
+        FROM articles
+        WHERE cluster_id IN ({placeholders})
+        ORDER BY cluster_id, fetched ASC
+        """,
+        cluster_ids,
+    ):
+        result[row["cluster_id"]].append(dict(row))
+    _rank_rows_by_centroid_distance(conn, result)
+    return dict(result)
+
+
+def all_cluster_members(conn, cluster_id: int) -> list[dict]:
+    """Single-cluster convenience wrapper around `all_cluster_members_batch`."""
+    return all_cluster_members_batch(conn, [cluster_id]).get(cluster_id, [])
+
+
 def carousel_members(conn, cluster_id: int, cap: int | None = None) -> list[dict]:
     """Ranking rule for "up to 5 articles, different outlets' takes" (brief
-    feature #1): highest-scored article per source feed (so near-duplicate
-    wire copy from the same outlet doesn't crowd out other perspectives),
-    ranked by score desc then earliest-fetched first, capped at `cap`.
-    Also flags `perspectives=True` when the cluster spans >= 3 countries,
-    mirroring v1's cross-region flag (aggregator.py:626-628) with `country`
-    in place of the old `region_slug`.
+    feature #1): most representative article (closest to the cluster's
+    embedding centroid, see `_rank_rows_by_centroid_distance` -- TAGGING_SPEC.md
+    Phase 4) per source feed, so near-duplicate wire copy from the same
+    outlet doesn't crowd out other perspectives, capped at `cap`. Also flags
+    `perspectives=True` when the cluster spans >= 3 countries, mirroring
+    v1's cross-region flag (aggregator.py:626-628) with `country` in place
+    of the old `region_slug`.
     """
     return carousel_members_batch(conn, [cluster_id], cap).get(cluster_id, [])
 

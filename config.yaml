@@ -93,6 +93,17 @@ cluster:
   chain_cosine_threshold: 0.78  # centroid-to-centroid similarity needed to link a new cluster to an older one as a chain -- deliberately stricter than embedding_cosine_threshold since a false chain is worse than a missed one; see threshold-selection notes in pipeline/cluster.py
 
 curate:
+  # Deliberately decoupled from cluster.window_days: that knob exists to stop
+  # union-find linking unrelated stories months apart, not to define what
+  # counts as "today's news" for curation. A daily top-10 should be drawn
+  # from roughly the last day of coverage, not the last 3.
+  candidate_window_hours: 24
+  # Floor on how many candidates the 24h window must return before curation
+  # proceeds on it; below this, _load_candidates re-queries at 48h instead
+  # (see pipeline/curate.py) since a too-small pool makes max_per_country/
+  # max_per_topic's backfill loop fire constantly and silently ignore the
+  # diversity caps.
+  min_candidates: 25
   max_candidates: 40  # shortlist size sent to the LLM for top-10 picking, keeps the prompt inside the 8,192-token context
   oversample_count: 20  # ask the LLM to rank this many (not just 10) so the diversity re-pick loop has room to skip over cap-violating picks
   max_per_country: 3   # diversity cap: at most this many of the day's top 10 may share a country tag
@@ -123,7 +134,7 @@ site:
   title: Economic News Aggregator
   base_url: "https://oisinbogue.github.io/Economic-News-Aggregator/"
   output_dir: site        # pipeline.build writes the static site here
-  archive_window_days: 3  # clusters within this window (of "today") show on the homepage; older ones only appear in the archive
+  archive_window_days: 2  # clusters within this window (of "today") show on the homepage; older ones only appear in the archive
 
 backup:
   # pipeline.backup_verify: fail (and don't upload) if any tracked table's

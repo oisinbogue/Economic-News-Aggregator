@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS articles (
     language        TEXT,
     country         TEXT,           -- comma-separated, ORDER-SIGNIFICANT: most-relevant country first (see pipeline.geo.detect_countries), not alphabetical -- pipeline.curate.dominant_country reads position 0
     topics          TEXT,           -- comma-separated theme names matched from config/taxonomy.yaml; '' if tagged with no match, NULL if not yet tagged
-    score           INTEGER,        -- count of matched taxonomy keywords (aggregator.py:489-522 score_entry); used to rank cluster members, NOT the daily top 10 (that's LLM-curated, see daily_top10)
+    score           INTEGER,        -- count of matched taxonomy keywords (aggregator.py:489-522 score_entry); kept only because pipeline.export publishes it in the master CSV (de facto public API) -- since TAGGING_SPEC.md Phase 4, pipeline.cluster ranks members by embedding centroid distance instead, NOT this column, and NOT the daily top 10 either (that's LLM-curated, see daily_top10)
     tag_source      TEXT,           -- provenance of country/topics tagging: 'keyword' | 'llm' | 'embedding'; NULL for rows tagged before this column existed
     image           TEXT,           -- thumbnail URL (feed media/enclosure, or og:image scraped from the article page); NULL if none was found
     cluster_id      INTEGER REFERENCES clusters(id),
