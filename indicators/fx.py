@@ -37,6 +37,7 @@ from xml.etree import ElementTree as ET
 
 import httpx
 
+from indicators import http
 from indicators.config import get_config
 
 ECB_DAILY_URL = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml"
@@ -87,8 +88,7 @@ async def fetch_ecb_rates(hist: bool = True) -> list[tuple[str, str, str, float]
     url = ECB_HIST_90D_URL if hist else ECB_DAILY_URL
 
     async with httpx.AsyncClient(timeout=timeout) as client:
-        resp = await client.get(url, follow_redirects=True)
-        resp.raise_for_status()
+        resp = await http.get(client, url, follow_redirects=True)
 
     return _parse_ecb_xml(resp.text)
 
@@ -131,8 +131,7 @@ async def fetch_stooq_rate(quote: str) -> tuple[str, str, str, float] | None:
     symbol = f"eur{quote.lower()}"
 
     async with httpx.AsyncClient(timeout=timeout) as client:
-        resp = await client.get(STOOQ_CSV_URL, params={"s": symbol, "i": "d"}, follow_redirects=True)
-        resp.raise_for_status()
+        resp = await http.get(client, STOOQ_CSV_URL, params={"s": symbol, "i": "d"}, follow_redirects=True)
 
     return _parse_stooq_csv(resp.text, quote)
 

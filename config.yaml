@@ -165,3 +165,24 @@ indicators:
   boe_base_url: https://www.bankofengland.co.uk/boeapps/iadb/fromshowcolumns.asp
   fetch_concurrency: 5
   fetch_timeout_seconds: 20
+  # Rate-limit safety (INDICATORS_BRIEF.md §8): per-provider concurrency cap
+  # and a polite minimum delay before each request to that provider, on top
+  # of indicators/http.py's per-request exponential backoff on 429/5xx.
+  # Providers not listed here fall back to indicators/fetch.py's
+  # DEFAULT_PROVIDER_CONCURRENCY/DEFAULT_PROVIDER_DELAY. BoE and Stooq are
+  # kept deliberately low/slow -- both have shown bot-detection behaviour
+  # (see indicators/providers/boe.py and stooq.py's docstrings).
+  provider_concurrency:
+    dbnomics: 5
+    ecb: 3
+    eurostat: 3
+    ons: 2
+    boe: 1
+    stooq: 2
+  provider_delay_seconds:
+    dbnomics: 0.2
+    ecb: 0.5
+    eurostat: 0.5
+    ons: 0.5
+    boe: 1.0
+    stooq: 0.5

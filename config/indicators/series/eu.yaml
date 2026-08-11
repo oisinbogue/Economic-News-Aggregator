@@ -26,6 +26,8 @@ series:
     source_agency: Eurostat
     source_url: https://ec.europa.eu/eurostat/web/national-accounts/data
     licence: cc-by-4.0
+    release_schedule: quarterly lag 30d, 11:00 Europe/Brussels
+    release_lag_days: 30
     seasonal_adjustment: sa
     revisable: true
     news_topic_tags: [EUROPE & ECB, MACROECONOMICS, GLOBAL ECONOMY]
@@ -39,6 +41,8 @@ series:
     source_agency: Eurostat / European Central Bank
     source_url: https://data.ecb.europa.eu/data/datasets/ICP
     licence: ecb-terms
+    release_schedule: monthly lag 16d, 11:00 Europe/Brussels
+    release_lag_days: 16
     seasonal_adjustment: nsa
     revisable: false
     news_topic_tags: [EUROPE & ECB, MACROECONOMICS]
@@ -56,6 +60,8 @@ series:
     source_agency: Eurostat
     source_url: https://ec.europa.eu/eurostat/web/hicp/data
     licence: cc-by-4.0
+    release_schedule: monthly lag 16d, 11:00 Europe/Brussels
+    release_lag_days: 16
     seasonal_adjustment: nsa
     revisable: false
     news_topic_tags: [EUROPE & ECB, MACROECONOMICS]
@@ -66,6 +72,7 @@ series:
     source_agency: European Central Bank
     source_url: https://data.ecb.europa.eu/
     licence: ecb-terms
+    # release_schedule: unknown -- ECB deposit facility rate only changes on Governing Council decision dates (~6-week cycle), not a fixed calendar rule.
     seasonal_adjustment: nsa
     revisable: false
     news_topic_tags: [EUROPE & ECB, MACROECONOMICS]
@@ -81,6 +88,8 @@ series:
     source_agency: Eurostat
     source_url: https://ec.europa.eu/eurostat/web/lfs/data
     licence: cc-by-4.0
+    release_schedule: monthly lag 30d, 11:00 Europe/Brussels
+    release_lag_days: 30
     seasonal_adjustment: sa
     revisable: true
     news_topic_tags: [EUROPE & ECB, INEQUALITY & LABOUR]
@@ -94,6 +103,7 @@ series:
     source_agency: Eurostat
     source_url: https://ec.europa.eu/eurostat/web/labour-market/data
     licence: cc-by-4.0
+    # release_schedule: unknown -- OECD's quarterly hourly-earnings dataset has no publicly documented fixed release day.
     seasonal_adjustment: sa
     revisable: true
     news_topic_tags: [EUROPE & ECB, INEQUALITY & LABOUR]
@@ -107,6 +117,7 @@ series:
     source_agency: Eurostat
     source_url: https://ec.europa.eu/eurostat/web/short-term-business-statistics/data
     licence: cc-by-4.0
+    # release_schedule: unknown -- OECD's monthly short-term-statistics aggregate has no publicly documented fixed release day.
     seasonal_adjustment: sa
     revisable: true
     news_topic_tags: [EUROPE & ECB, MACROECONOMICS, GLOBAL ECONOMY]
@@ -120,6 +131,7 @@ series:
     source_agency: Eurostat
     source_url: https://ec.europa.eu/eurostat/web/short-term-business-statistics/data
     licence: cc-by-4.0
+    # release_schedule: unknown -- OECD's monthly short-term-statistics aggregate has no publicly documented fixed release day.
     seasonal_adjustment: sa
     revisable: true
     news_topic_tags: [EUROPE & ECB, MACROECONOMICS]
@@ -133,6 +145,7 @@ series:
     source_agency: European Central Bank
     source_url: https://data.ecb.europa.eu/
     licence: ecb-terms
+    # release_schedule: unknown -- ECB long-term government bond yield series has no publicly documented fixed release day.
     seasonal_adjustment: nsa
     revisable: false
     news_topic_tags: [EUROPE & ECB, MACROECONOMICS, GLOBAL ECONOMY]
@@ -143,6 +156,8 @@ series:
     source_agency: European Central Bank
     source_url: https://data.ecb.europa.eu/data/datasets/EXR
     licence: ecb-terms
+    release_schedule: daily, 16:00 Europe/Brussels
+    release_lag_days: 0
     seasonal_adjustment: nsa
     revisable: false
     news_topic_tags: [EUROPE & ECB, GLOBAL ECONOMY, TRADE & GLOBALISATION]
@@ -162,6 +177,7 @@ series:
     source_agency: Eurostat
     source_url: https://ec.europa.eu/eurostat/web/housing-price-statistics/data
     licence: cc-by-4.0
+    # release_schedule: unknown -- Eurostat house price index has no publicly documented fixed release day.
     seasonal_adjustment: nsa
     revisable: true
     news_topic_tags: [EUROPE & ECB, HOUSING & PROPERTY]
@@ -185,6 +201,7 @@ series:
     source_agency: Eurostat
     source_url: https://ec.europa.eu/eurostat/web/government-finance-statistics/data
     licence: cc-by-4.0
+    # release_schedule: unknown -- Eurostat EDP government debt/deficit release is twice yearly (Apr/Oct) on dates set per-vintage, not a fixed rule.
     seasonal_adjustment: nsa
     revisable: true
     news_topic_tags: [EUROPE & ECB, MACROECONOMICS]
@@ -200,6 +217,7 @@ series:
     source_agency: Eurostat
     source_url: https://ec.europa.eu/eurostat/web/government-finance-statistics/data
     licence: cc-by-4.0
+    # release_schedule: unknown -- Eurostat EDP government debt/deficit release is twice yearly (Apr/Oct) on dates set per-vintage, not a fixed rule.
     seasonal_adjustment: nsa
     revisable: true
     news_topic_tags: [EUROPE & ECB, MACROECONOMICS]
@@ -230,6 +248,7 @@ series:
     source_agency: European Commission (DG ECFIN)
     source_url: https://ec.europa.eu/economy_finance/db_indicators/surveys/index_en.htm
     licence: cc-by-4.0
+    # release_schedule: unknown -- DG ECFIN's flash consumer confidence balance is published near the end of its own reference month, before period close -- doesn't fit this module's lag-after-period-end grammar; needs a dedicated rule shape, not a guess.
     seasonal_adjustment: sa
     revisable: false
     news_topic_tags: [EUROPE & ECB, MACROECONOMICS]
@@ -246,6 +265,7 @@ series:
     source_agency: OECD (Financial Market Statistics)
     source_url: https://data-explorer.oecd.org/
     licence: oecd-terms
+    # release_schedule: unknown -- OECD's monthly share price index has no publicly documented fixed release day (Stooq, which would be daily, is currently bot-gated -- see stooq.py).
     seasonal_adjustment: nsa
     revisable: false
     news_topic_tags: [EUROPE & ECB, GLOBAL ECONOMY]

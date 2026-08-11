@@ -35,6 +35,7 @@ from datetime import date, datetime, timezone
 
 import httpx
 
+from indicators import http
 from indicators.config import get_config
 from indicators.providers import Observation
 
@@ -96,8 +97,7 @@ async def fetch(series_spec: dict) -> list[Observation]:
     }
 
     async with httpx.AsyncClient(timeout=timeout) as client:
-        resp = await client.get(base_url, params=params, headers=headers, follow_redirects=True)
-        resp.raise_for_status()
+        resp = await http.get(client, base_url, params=params, headers=headers, follow_redirects=True)
 
     rows = _parse_boe_csv(resp.text, series_code)
     return [

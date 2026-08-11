@@ -20,6 +20,8 @@ series:
     source_agency: Destatis (Federal Statistical Office of Germany)
     source_url: https://www.destatis.de/EN/Themes/Economy/National-Accounts-Domestic-Product/_node.html
     licence: destatis-terms
+    release_schedule: quarterly lag 45d, 08:00 Europe/Berlin
+    release_lag_days: 45
     seasonal_adjustment: sa
     revisable: true
     news_topic_tags: [EUROPE & ECB, MACROECONOMICS, GLOBAL ECONOMY]
@@ -32,6 +34,8 @@ series:
     source_agency: Destatis
     source_url: https://www.destatis.de/EN/Themes/Economy/Prices/Consumer-Price-Index/_node.html
     licence: destatis-terms
+    release_schedule: monthly lag 16d, 11:00 Europe/Brussels
+    release_lag_days: 16
     seasonal_adjustment: nsa
     revisable: false
     news_topic_tags: [EUROPE & ECB, MACROECONOMICS]
@@ -48,6 +52,8 @@ series:
     source_agency: Destatis / Eurostat
     source_url: https://www.destatis.de/EN/Themes/Economy/Prices/Consumer-Price-Index/_node.html
     licence: cc-by-4.0
+    release_schedule: monthly lag 16d, 11:00 Europe/Brussels
+    release_lag_days: 16
     seasonal_adjustment: nsa
     revisable: false
     news_topic_tags: [EUROPE & ECB, MACROECONOMICS]
@@ -58,6 +64,7 @@ series:
     source_agency: European Central Bank
     source_url: https://data.ecb.europa.eu/
     licence: ecb-terms
+    # release_schedule: unknown -- Shared ECB deposit facility rate only changes on Governing Council decision dates (~6-week cycle), not a fixed calendar rule.
     seasonal_adjustment: nsa
     revisable: false
     notes: Germany uses the euro-area ECB policy rate; there is no separate Bundesbank rate.
@@ -71,6 +78,7 @@ series:
     source_agency: Federal Employment Agency (Bundesagentur für Arbeit) / Destatis
     source_url: https://www.destatis.de/EN/Themes/Labour/Labour-Market/_node.html
     licence: destatis-terms
+    # release_schedule: unknown -- Bundesagentur fuer Arbeit publishes around the end of the reference month itself (near-zero lag); this module's lag-after-period-end grammar isn't a good fit without a confirmed exact day, so left unknown rather than guessed.
     seasonal_adjustment: sa
     revisable: true
     news_topic_tags: [EUROPE & ECB, INEQUALITY & LABOUR]
@@ -83,6 +91,7 @@ series:
     source_agency: Destatis
     source_url: https://www.destatis.de/EN/Themes/Labour/Earnings/_node.html
     licence: destatis-terms
+    # release_schedule: unknown -- OECD's quarterly hourly-earnings dataset has no publicly documented fixed release day.
     seasonal_adjustment: sa
     revisable: true
     news_topic_tags: [EUROPE & ECB, INEQUALITY & LABOUR]
@@ -95,6 +104,7 @@ series:
     source_agency: Destatis
     source_url: https://www.destatis.de/EN/Themes/Economy/Short-Term-Indicators/_node.html
     licence: destatis-terms
+    # release_schedule: unknown -- OECD's monthly short-term-statistics aggregate has no publicly documented fixed release day.
     seasonal_adjustment: sa
     revisable: true
     news_topic_tags: [EUROPE & ECB, MACROECONOMICS, GLOBAL ECONOMY]
@@ -107,6 +117,7 @@ series:
     source_agency: Destatis
     source_url: https://www.destatis.de/EN/Themes/Economy/Short-Term-Indicators/_node.html
     licence: destatis-terms
+    # release_schedule: unknown -- OECD's monthly short-term-statistics aggregate has no publicly documented fixed release day.
     seasonal_adjustment: sa
     revisable: true
     news_topic_tags: [EUROPE & ECB, MACROECONOMICS]
@@ -119,6 +130,7 @@ series:
     source_agency: Deutsche Bundesbank
     source_url: https://www.bundesbank.de/en/statistics
     licence: bundesbank-terms
+    # release_schedule: unknown -- OECD's monthly financial market stats series has no publicly documented fixed release day.
     seasonal_adjustment: nsa
     revisable: false
     news_topic_tags: [EUROPE & ECB, MACROECONOMICS, GLOBAL ECONOMY]
@@ -129,6 +141,8 @@ series:
     source_agency: European Central Bank
     source_url: https://data.ecb.europa.eu/data/datasets/EXR
     licence: ecb-terms
+    release_schedule: daily, 16:00 Europe/Berlin
+    release_lag_days: 0
     seasonal_adjustment: nsa
     revisable: false
     notes: Germany shares the euro/USD exchange rate with the rest of the euro area.
@@ -142,6 +156,7 @@ series:
     source_agency: Bank for International Settlements / Destatis
     source_url: https://www.bis.org/statistics/pp.htm
     licence: bis-terms
+    # release_schedule: unknown -- BIS residential property price releases are irregular/ad hoc, no fixed calendar day published.
     seasonal_adjustment: sa
     revisable: true
     news_topic_tags: [EUROPE & ECB, HOUSING & PROPERTY]
@@ -152,6 +167,7 @@ series:
     source_agency: International Monetary Fund
     source_url: https://www.imf.org/en/Publications/WEO
     licence: imf-terms
+    # release_schedule: unknown -- IMF WEO is published twice yearly (Apr/Oct) on dates set per-vintage, not a fixed rule.
     seasonal_adjustment: nsa
     revisable: true
     news_topic_tags: [EUROPE & ECB, MACROECONOMICS]
@@ -162,6 +178,7 @@ series:
     source_agency: International Monetary Fund
     source_url: https://www.imf.org/en/Publications/WEO
     licence: imf-terms
+    # release_schedule: unknown -- IMF WEO is published twice yearly (Apr/Oct) on dates set per-vintage, not a fixed rule.
     seasonal_adjustment: nsa
     revisable: true
     news_topic_tags: [EUROPE & ECB, MACROECONOMICS]
@@ -172,6 +189,7 @@ series:
     source_agency: International Monetary Fund
     source_url: https://www.imf.org/en/Publications/WEO
     licence: imf-terms
+    # release_schedule: unknown -- IMF WEO is published twice yearly (Apr/Oct) on dates set per-vintage, not a fixed rule.
     seasonal_adjustment: nsa
     revisable: true
     news_topic_tags: [EUROPE & ECB, TRADE & GLOBALISATION, GLOBAL ECONOMY]
@@ -184,6 +202,7 @@ series:
     source_agency: OECD (Consumer Opinion Surveys)
     source_url: https://data-explorer.oecd.org/
     licence: oecd-terms
+    # release_schedule: unknown -- OECD's harmonised consumer confidence indicator has no publicly documented fixed release day.
     seasonal_adjustment: sa
     revisable: false
     news_topic_tags: [EUROPE & ECB, MACROECONOMICS]
@@ -200,6 +219,7 @@ series:
     source_agency: OECD (Financial Market Statistics)
     source_url: https://data-explorer.oecd.org/
     licence: oecd-terms
+    # release_schedule: unknown -- OECD's monthly share price index has no publicly documented fixed release day (Stooq, which would be daily, is currently bot-gated -- see stooq.py).
     seasonal_adjustment: nsa
     revisable: false
     news_topic_tags: [EUROPE & ECB, GLOBAL ECONOMY]

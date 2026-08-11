@@ -6,14 +6,14 @@ for the original design rationale and the full `indicators.db` schema; this
 document is the day-to-day "how do I add a country / indicator / provider"
 guide.
 
-**Status:** Phase 1 (foundation) only -- config schema, `indicators.db`
-schema, the DBnomics provider, transforms, FX, and tests. Five countries:
-US, UK, Ireland, EU (euro area), Germany. No site output yet (Phase 2), no
-scheduled fetch or release calendar yet (Phase 3), no country extras yet
-(Phase 4), no countries beyond the five above (Phase 5+). The indicators
-subsystem is a separate failure domain from the news pipeline -- separate
-package, separate db file (`data/indicators.db`), separate GitHub Actions
-workflows. Nothing here touches `pipeline/` or the site templates.
+**Status:** Phase 1 (foundation) + Phase 2 (site output) + most of Phase 3
+(release calendar, release-aware fetch, rate-limit safety, revision
+logging -- the `indicators.yml` scheduled workflow itself is still a TODO).
+Five countries: US, UK, Ireland, EU (euro area), Germany. No country extras
+yet (Phase 4), no countries beyond the five above (Phase 5+). The
+indicators subsystem is a separate failure domain from the news pipeline --
+separate package, separate db file (`data/indicators.db`), separate GitHub
+Actions workflows. Nothing here touches `pipeline/` or the site templates.
 
 ---
 
@@ -91,9 +91,21 @@ series:
     revisable: true | false
     notes: <string>                     # optional, surfaced as a UI tooltip later
     news_topic_tags: [<THEME>, ...]     # must be keys from config/taxonomy.yaml's `keywords:`
+    release_schedule: <rule string>     # optional -- see "Release schedule grammar" below
+    release_lag_days: <int>             # optional -- typical publication lag, informational
   # ...one entry per core.yaml key, every one of them, no exceptions...
 extras: []                              # country-specific extras, populated Phase 4
 ```
+
+`release_schedule` and `release_lag_days` are both optional (nullable in
+the db). Populate them wherever the real-world release calendar is
+genuinely knowable; where it isn't (an irregular meeting-based rate
+decision, a biannual IMF WEO vintage, an OECD aggregate with no published
+release-day commitment), leave them unset and add a
+`# release_schedule: unknown -- <reason>` comment instead of guessing --
+every current `series/<iso>.yaml` follows this convention, so `grep
+"release_schedule: unknown"` finds every deliberately-unscheduled series
+and why.
 
 **Every `core.yaml` key must appear** in every `series/<iso>.yaml`, either
 as a real provider mapping (above) or as an explicit unavailable marker:
@@ -109,14 +121,14 @@ as a real provider mapping (above) or as an explicit unavailable marker:
 `series` table (`active = 0`, `unavailable_reason` set) rather than
 skipping it, so the gap is visible in the db, not silently missing.
 
-**Providers implemented so far:** `dbnomics` only
-(`indicators/providers/dbnomics.py`). Config already references `ecb`,
-`eurostat`, `ons`, `boe`, and `stooq` for a handful of gb/ie/eu/de series
-where DBnomics coverage is thin (brief §4) -- those provider modules don't
-exist yet, so `indicators/fetch.py` logs a graceful per-series
-`fetch_log` error for them (`"no provider module for provider=..."`) rather
-than crashing the run. Implementing those modules is future work, not part
-of Phase 1.
+**Providers implemented:** `dbnomics`, `ecb`, `eurostat`, `ons`, `boe`, and
+`stooq` (`indicators/providers/*.py`), covering every provider referenced
+across the five Phase-1 countries' `series/*.yaml`. Every one of them
+routes its HTTP call through `indicators/http.py`'s `get()` rather than
+calling `httpx` directly -- see "Rate-limit safety" below. A `provider`
+value in config with no matching module still degrades gracefully: `fetch.py`
+logs a per-series `fetch_log` error (`"no provider module for
+provider=..."`) rather than crashing the run.
 
 ---
 
@@ -183,26 +195,167 @@ rather than live network, matching the project's VCR-style convention.
 
 ---
 
+## Release schedule grammar (`indicators/calendar.py`)
+
+`series.release_schedule` was deliberately left undefined in
+INDICATORS_SCHEMA_PROPOSAL.md ("brief §8: choose the specific schedule
+yourself") -- `indicators/calendar.py` is the one place that defines it,
+parses it, and computes forward dates from it. A rule string is:
+
+```
+<schedule>, <time>
+```
+
+`<schedule>` is one of:
+
+| Shape | Example | Meaning |
+|---|---|---|
+| `daily` | `daily, 21:00 Europe/London` | Every day at the given local time. |
+| `weekly <weekday>` | `weekly monday, 09:00 UTC` | Every week on that weekday. |
+| `monthly <nth> <weekday>` | `monthly first friday, 08:30 America/New_York` | nth ∈ first/second/third/fourth/last (e.g. the US jobs report). |
+| `monthly day <day>` | `monthly day 15, 09:00 UTC` | `<day>` is 1-31 or `last`; clamped to the month's actual last day (so `31` in February resolves to the 28th/29th). |
+| `monthly lag <N>d` | `monthly lag 15d, 08:30 America/New_York` | N days after each month's end -- anchored on the series' own reference period, not the calendar month `after` falls in. |
+| `quarterly lag <N>d` | `quarterly lag 45d, 08:30 America/New_York` | N days after each quarter's end (Mar/Jun/Sep/Dec 31). |
+| `annual lag <N>d` | `annual lag 60d, 09:00 UTC` | N days after each year's end (Dec 31). |
+| `annual month <M> day <D>` | `annual month 4 day 15, 06:00 UTC` | A fixed calendar day every year. |
+
+`<time>` is always `HH:MM <IANA timezone>`, 24-hour, e.g. `07:00
+Europe/London`. The timezone is not optional -- every rule needs one so
+DST transitions resolve correctly (see the DST fixtures in
+`tests/test_indicators_calendar.py`).
+
+Two families, computed differently by `compute_next_release()`:
+
+- **Fixed-calendar** rules (`daily`/`weekly`/`monthly <nth> <weekday>`/
+  `monthly day`/`annual month day`) recur on their own clock, independent
+  of any series data -- the US jobs report is always "first Friday of the
+  month" regardless of what the prior report said.
+- **Lag** rules (`monthly|quarterly|annual lag Nd`) are anchored on the
+  series' own latest stored observation's `period_end` -- "N days after
+  period end" needs to know *which* period end. With no observation yet
+  (a brand-new series), it falls back to guessing the period containing
+  `after` hasn't been released yet.
+
+`scheduled_at` is always stored in `releases` as a UTC ISO datetime;
+`scheduled_tz` keeps the rule's own IANA zone alongside it so the UI can
+convert back to the visitor's local time (brief §8).
+
+`indicators.calendar.populate_releases(conn)` is called at the start of
+every `indicators.fetch.fetch_all()` run. For every active series with a
+`release_schedule`, it: (1) resolves any past `'scheduled'` release to
+`'released'` (a new observation was fetched on or after the scheduled
+time) or `'missed'` (nothing landed within `MISSED_GRACE`, 5 days) or
+leaves it `'scheduled'` (still within grace); (2) ensures a future
+`'scheduled'` row exists, computing one via `compute_next_release()` if
+not. It's idempotent -- a series with a future `'scheduled'` row already
+is left alone, never duplicated. Where a provider exposes real
+release-date metadata (none of Phase 1's providers currently do), prefer
+that over the rule string -- this module's job is to be the fallback, not
+the only source of truth.
+
+Run it standalone with `python -m indicators.calendar`.
+
+---
+
+## Release-aware fetching (`indicators/fetch.py`)
+
+Incremental mode's due-for-refresh check (`_select_due_series()`) now
+looks up each series' nearest still-scheduled `releases` row (via
+`indicators.export._next_release_by_series()`) alongside its last
+successful fetch:
+
+- **No `release_schedule` configured** (still most series -- see the
+  per-country note above): falls back to the plain frequency-only
+  heuristic `_is_due_for_refresh()` (`FREQUENCY_REFRESH_INTERVAL`).
+- **Inside the release window** (`RELEASE_WINDOW_BEFORE` = 3 days before,
+  `RELEASE_WINDOW_AFTER` = 7 days after the scheduled release): polled
+  aggressively, every `AGGRESSIVE_REFRESH_INTERVAL` (6 hours) -- the print
+  may land early, on time, or a little late.
+- **Well outside the window**: backed off to
+  `FAR_FROM_RELEASE_REFRESH_INTERVAL`, which is deliberately much coarser
+  per frequency (e.g. 30 days for a quarterly series vs. the plain
+  heuristic's 21) -- this is what satisfies "a series whose next release
+  is six weeks away must not be refetched every run" (brief §8).
+
+`--backfill` is unaffected -- it ignores the due-for-refresh check
+entirely, same as Phase 1.
+
+### Rate-limit safety
+
+`indicators/http.py`'s `get()`/`request()` wraps every provider's HTTP
+call with exponential backoff + jitter on 429/5xx (honouring a numeric
+`Retry-After` header when present), up to `max_retries` (4 by default, so
+5 attempts total) before propagating an ordinary `HTTPStatusError` --
+which `fetch.py`'s per-series `try/except` already turns into a
+`fetch_log` error row, never an aborted run. Any other 4xx (a genuinely
+bad request) is not retried.
+
+On top of that, `fetch.py` runs one `asyncio.Semaphore` *per provider*
+(not one shared across all of them), sized from `config.yaml`'s
+`indicators.provider_concurrency` (falling back to
+`DEFAULT_PROVIDER_CONCURRENCY` = 3 for an unlisted provider), plus a
+polite minimum delay before each request to that provider
+(`indicators.provider_delay_seconds`, `DEFAULT_PROVIDER_DELAY` = 0.3s). A
+slow/strict provider (BoE, Stooq -- both have shown bot-detection
+behaviour, see their module docstrings) backing off never stalls a fast
+one (DBnomics) sharing the same run.
+
+### Revisions (`observation_revisions`)
+
+Phase 1 left a TODO here: every observation write was `INSERT OR IGNORE`,
+so a refetch that returned a *changed* value for a `(series_id,
+period_start)` already in the db (a preliminary print later revised) was
+silently dropped. `fetch.py`'s `_store_observations()` now does the
+right thing per row: a new `period_start` is inserted as before; an
+existing one with an identical value (the common case -- most of a
+series' history never changes) is left untouched; one with a genuinely
+different value (beyond `REVISION_EPSILON`, a float-noise guard) is
+`UPDATE`d in place *and* the `(old_value, new_value, observed_at)` triple
+is appended to `observation_revisions`. `indicators.export.build_series_history()`
+already surfaces that log per series (used by the series page's revision
+history table).
+
+### Never fails the build
+
+Per brief §8's "never fail the build" rule -- unchanged from Phase 1, just
+reconfirmed still true after the above: a single series' provider raising
+(after `http.py` exhausts its retries) is caught in `fetch_series()` and
+logged as a `fetch_log` `'error'` row; the run continues with every other
+series. `indicators.build`/`indicators.export` render whatever is in the
+db regardless -- a series with no fresh data just serves its last-known
+value and is flagged `stale` (`indicators.export.is_stale()`). Only
+`indicators.config.validate()` failing hard-fails `build.py`.
+
+---
+
 ## Running things
 
 ```bash
 python -m indicators.config     # validate config, exit non-zero on problems
 python -m indicators.db         # init schema + sync `series` table from config
+python -m indicators.calendar   # reconcile past releases + schedule the next one per series
 python -m indicators.fetch      # incremental fetch (skips series not yet "due", see below)
 python -m indicators.fetch --backfill   # full historical pull, every active series unconditionally
+python -m indicators.build      # render indicators/ HTML
+python -m indicators.export     # write manifest.json + per-series JSON/CSV
 ```
 
-**Incremental vs. `--backfill`:** DBnomics always returns a series' full
-history regardless of mode -- there's no since-date query parameter to ask
-for "just what's new". The default incremental mode instead skips a series
-if it already has a successful fetch within roughly one release cycle
-(`indicators/fetch.py`'s `FREQUENCY_REFRESH_INTERVAL`), so a normal run
-doesn't re-pull hundreds of series' full history when almost none of them
-could plausibly have changed. `--backfill` ignores that check entirely --
-use it for a first-time population of `indicators.db`, or to force a
-refetch of everything. It's wired up as a `workflow_dispatch`-only job
-(`.github/workflows/indicators-backfill.yml`), not on any schedule -- the
-scheduled incremental run is a Phase 3 deliverable.
+**Incremental vs. `--backfill`:** most providers here always return a
+series' full history regardless of mode -- there's no since-date query
+parameter to ask for "just what's new". The default incremental mode
+instead skips a series that isn't due yet, per the release-aware check
+described above (falling back to the plain frequency heuristic for a
+series with no `release_schedule`). `--backfill` ignores that check
+entirely -- use it for a first-time population of `indicators.db`, or to
+force a refetch of everything. It's wired up as a `workflow_dispatch`-only
+job (`.github/workflows/indicators-backfill.yml`), not on any schedule --
+the scheduled incremental workflow itself (`indicators.yml`) is still a
+Phase 3 TODO.
+
+`indicators.fetch.main()` calls `indicators.calendar.populate_releases()`
+itself at the start of every run, so running `indicators.calendar`
+standalone is only needed to inspect/refresh the `releases` table without
+also fetching.
 
 ---
 
@@ -212,10 +365,12 @@ scheduled incremental run is a Phase 3 deliverable.
 |---|---|
 | `tests/test_indicators_config.py` | `validate()` |
 | `tests/test_indicators_db.py` | schema, `sync_series_from_config()` upsert behaviour |
-| `tests/test_indicators_providers.py` | `providers/dbnomics.py` against a recorded fixture |
+| `tests/test_indicators_calendar.py` | `parse_rule()`/`compute_next_release()` against hand-checked fixtures (month-boundary clamping, DST spring-forward/autumn-back, lag-rule anchoring) + `populate_releases()`'s reconcile/idempotency/missed-vs-released behaviour |
+| `tests/test_indicators_http.py` | exponential backoff + jitter on 429/5xx against a mocked transport, immediate propagation of a non-retryable 4xx |
+| `tests/test_indicators_providers*.py` | each provider module against a recorded fixture |
 | `tests/test_indicators_fx.py` | ECB/Stooq FX parsing + period-matched `convert()` |
 | `tests/test_indicators_transform.py` | YoY/MoM/QoQ/annualised + derived-series formulas |
-| `tests/test_indicators_fetch.py` | incremental due-for-refresh selection vs. `--backfill` |
+| `tests/test_indicators_fetch.py` | incremental due-for-refresh selection (both the plain and release-aware checks) vs. `--backfill`, `observation_revisions` logging on a changed refetch, and that one series' provider raising never aborts the others |
 | `tests/test_indicators_build.py` | end-to-end smoke test: real 5-country config -> `db.init_db()`/`sync_series_from_config()` -> `fetch.fetch_all()` (mocked DBnomics, no live network) -> `transform.compute_derived()`, asserting every active dbnomics-backed core series ends up with a valid reference period |
 
 None of these hit live network -- provider calls are mocked via

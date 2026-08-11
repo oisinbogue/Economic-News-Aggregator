@@ -17,7 +17,16 @@ import yaml
 import indicators.config as config_mod
 import indicators.db as db_mod
 import indicators.fetch as fetch_mod
+from indicators import http as http_mod
 from indicators.providers import dbnomics
+
+# Captured once, before any test monkeypatches dbnomics.httpx.AsyncClient (an
+# alias for the real httpx module -- patching it mutates the module
+# attribute globally). Mock-install helpers below must build their fake
+# client from *this*, never from `httpx.AsyncClient` read fresh at call
+# time, or a second install within the same test ends up wrapping the
+# previous test's already-patched factory instead of the real class.
+_REAL_ASYNC_CLIENT = httpx.AsyncClient
 
 
 def _write_yaml(path, data):
@@ -156,7 +165,7 @@ def _install_mock_dbnomics(monkeypatch, captured_urls):
         return httpx.Response(200, json=payload)
 
     transport = httpx.MockTransport(handler)
-    real_client = httpx.AsyncClient
+    real_client = _REAL_ASYNC_CLIENT
 
     def factory(*args, **kwargs):
         kwargs.pop("timeout", None)
@@ -196,3 +205,142 @@ def test_backfill_refetches_series_fetched_moments_ago(indicators_env, monkeypat
     backfill_results = asyncio.run(fetch_mod.fetch_all(concurrency=5, backfill=True))
     fetched_ids = {series_id for series_id, _, _, _ in backfill_results}
     assert fetched_ids == {"us.gdp_real", "us.policy_rate"}
+
+
+# --------------------------------------------------------------------------
+# _is_due_for_refresh_release_aware
+# --------------------------------------------------------------------------
+
+def test_release_aware_due_falls_back_without_a_scheduled_release():
+    now = datetime(2026, 8, 10, 12, 0, tzinfo=timezone.utc)
+    last_ok = now - timedelta(hours=5)
+    # No next_release_at -> identical to the plain frequency heuristic.
+    assert fetch_mod._is_due_for_refresh_release_aware("D", last_ok, None, now) is False
+    assert fetch_mod._is_due_for_refresh_release_aware("D", now - timedelta(hours=21), None, now) is True
+
+
+def test_release_aware_due_polls_aggressively_near_scheduled_release():
+    now = datetime(2026, 8, 10, 12, 0, tzinfo=timezone.utc)
+    next_release = now + timedelta(days=1)  # inside RELEASE_WINDOW_BEFORE
+    last_ok = now - timedelta(hours=7)  # past AGGRESSIVE_REFRESH_INTERVAL (6h)
+    assert fetch_mod._is_due_for_refresh_release_aware("Q", last_ok, next_release, now) is True
+
+
+def test_release_aware_due_backs_off_far_from_scheduled_release():
+    now = datetime(2026, 8, 10, 12, 0, tzinfo=timezone.utc)
+    next_release = now + timedelta(days=42)  # six weeks away
+    last_ok = now - timedelta(days=5)  # would be "due" under the plain quarterly heuristic (21d)... not here
+    assert fetch_mod._is_due_for_refresh_release_aware("Q", last_ok, next_release, now) is False
+
+
+def test_release_aware_due_eventually_fires_far_from_release():
+    now = datetime(2026, 8, 10, 12, 0, tzinfo=timezone.utc)
+    next_release = now + timedelta(days=42)
+    last_ok = now - timedelta(days=31)  # past FAR_FROM_RELEASE_REFRESH_INTERVAL["Q"] (30d)
+    assert fetch_mod._is_due_for_refresh_release_aware("Q", last_ok, next_release, now) is True
+
+
+# --------------------------------------------------------------------------
+# observation_revisions wiring
+# --------------------------------------------------------------------------
+
+def _install_mock_dbnomics_with_value(monkeypatch, value: float):
+    payload = {
+        "errors": None,
+        "series": {"docs": [{"period_start_day": ["2024-01-01"], "value": [value]}]},
+    }
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=payload)
+
+    transport = httpx.MockTransport(handler)
+    real_client = _REAL_ASYNC_CLIENT
+
+    def factory(*args, **kwargs):
+        kwargs.pop("timeout", None)
+        return real_client(transport=transport, **kwargs)
+
+    monkeypatch.setattr(dbnomics.httpx, "AsyncClient", factory)
+
+
+def test_refetch_with_changed_value_logs_revision_and_updates_observation(indicators_env, monkeypatch):
+    monkeypatch.setattr(fetch_mod.fx, "fetch_ecb_rates", _no_ecb_rates)
+    monkeypatch.setattr(fetch_mod.fx, "fetch_stooq_rate", _no_stooq_rate)
+
+    _install_mock_dbnomics_with_value(monkeypatch, 100.0)
+    asyncio.run(fetch_mod.fetch_all(concurrency=5, backfill=True))
+
+    with db_mod.get_connection() as conn:
+        value = conn.execute(
+            "SELECT value FROM observations WHERE series_id = 'us.gdp_real' AND period_start = '2024-01-01'"
+        ).fetchone()["value"]
+        revision_count_before = conn.execute("SELECT COUNT(*) AS n FROM observation_revisions").fetchone()["n"]
+    assert value == 100.0
+    assert revision_count_before == 0
+
+    _install_mock_dbnomics_with_value(monkeypatch, 103.5)
+    asyncio.run(fetch_mod.fetch_all(concurrency=5, backfill=True))
+
+    with db_mod.get_connection() as conn:
+        row = conn.execute(
+            "SELECT value FROM observations WHERE series_id = 'us.gdp_real' AND period_start = '2024-01-01'"
+        ).fetchone()
+        revision = conn.execute(
+            "SELECT old_value, new_value FROM observation_revisions WHERE series_id = 'us.gdp_real'"
+        ).fetchone()
+
+    assert row["value"] == 103.5
+    assert revision["old_value"] == 100.0
+    assert revision["new_value"] == 103.5
+
+
+def test_refetch_with_unchanged_value_does_not_log_a_revision(indicators_env, monkeypatch):
+    monkeypatch.setattr(fetch_mod.fx, "fetch_ecb_rates", _no_ecb_rates)
+    monkeypatch.setattr(fetch_mod.fx, "fetch_stooq_rate", _no_stooq_rate)
+
+    _install_mock_dbnomics_with_value(monkeypatch, 100.0)
+    asyncio.run(fetch_mod.fetch_all(concurrency=5, backfill=True))
+    asyncio.run(fetch_mod.fetch_all(concurrency=5, backfill=True))
+
+    with db_mod.get_connection() as conn:
+        revision_count = conn.execute("SELECT COUNT(*) AS n FROM observation_revisions").fetchone()["n"]
+    assert revision_count == 0
+
+
+# --------------------------------------------------------------------------
+# One provider failing must never abort the run
+# --------------------------------------------------------------------------
+
+def test_one_series_error_does_not_abort_other_series(indicators_env, monkeypatch):
+    monkeypatch.setattr(fetch_mod.fx, "fetch_ecb_rates", _no_ecb_rates)
+    monkeypatch.setattr(fetch_mod.fx, "fetch_stooq_rate", _no_stooq_rate)
+
+    payload = {
+        "errors": None,
+        "series": {"docs": [{"period_start_day": ["2024-01-01"], "value": [100.0]}]},
+    }
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if "A006RC" in str(request.url) or "T10105" in str(request.url):
+            return httpx.Response(500)
+        return httpx.Response(200, json=payload)
+
+    transport = httpx.MockTransport(handler)
+    real_client = _REAL_ASYNC_CLIENT
+
+    def factory(*args, **kwargs):
+        kwargs.pop("timeout", None)
+        return real_client(transport=transport, **kwargs)
+
+    monkeypatch.setattr(dbnomics.httpx, "AsyncClient", factory)
+    monkeypatch.setattr(http_mod.asyncio, "sleep", _no_sleep)
+
+    results = asyncio.run(fetch_mod.fetch_all(concurrency=5, backfill=True))
+    statuses = {series_id: status for series_id, status, _, _ in results}
+
+    assert statuses["us.gdp_real"] == "error"
+    assert statuses["us.policy_rate"] == "ok"
+
+
+async def _no_sleep(*_args, **_kwargs) -> None:
+    return None

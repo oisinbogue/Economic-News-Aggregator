@@ -35,6 +35,7 @@ from datetime import date
 
 import httpx
 
+from indicators import http
 from indicators.config import get_config
 from indicators.providers import Observation
 
@@ -83,8 +84,7 @@ async def fetch(series_spec: dict) -> list[Observation]:
     uri = series_spec["provider_series_id"].lstrip("/")
 
     async with httpx.AsyncClient(timeout=timeout) as client:
-        resp = await client.get(base_url, params={"uri": f"/{uri}"}, follow_redirects=True)
-        resp.raise_for_status()
+        resp = await http.get(client, base_url, params={"uri": f"/{uri}"}, follow_redirects=True)
         payload = resp.json()
 
     frequency = series_spec.get("frequency") or "M"

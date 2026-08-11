@@ -35,6 +35,7 @@ from datetime import date, timedelta
 
 import httpx
 
+from indicators import http
 from indicators.config import get_config
 from indicators.providers import Observation
 
@@ -97,8 +98,7 @@ async def fetch(series_spec: dict) -> list[Observation]:
     url = f"{base_url}/{flow_ref}/{sdmx_key}"
 
     async with httpx.AsyncClient(timeout=timeout) as client:
-        resp = await client.get(url, params={"format": "jsondata"}, follow_redirects=True)
-        resp.raise_for_status()
+        resp = await http.get(client, url, params={"format": "jsondata"}, follow_redirects=True)
         payload = resp.json()
 
     data_sets = payload.get("dataSets")

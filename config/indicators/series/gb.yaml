@@ -20,6 +20,8 @@ series:
     source_agency: Office for National Statistics
     source_url: https://www.ons.gov.uk/economy/grossdomesticproductgdp
     licence: ogl
+    release_schedule: quarterly lag 40d, 07:00 Europe/London
+    release_lag_days: 40
     seasonal_adjustment: sa
     revisable: true
     news_topic_tags: [MACROECONOMICS, GLOBAL ECONOMY]
@@ -33,6 +35,8 @@ series:
     source_agency: Office for National Statistics
     source_url: https://www.ons.gov.uk/economy/inflationandpriceindices
     licence: ogl
+    release_schedule: monthly lag 16d, 07:00 Europe/London
+    release_lag_days: 16
     seasonal_adjustment: nsa
     revisable: false
     news_topic_tags: [MACROECONOMICS]
@@ -52,6 +56,8 @@ series:
     source_agency: Office for National Statistics
     source_url: https://www.ons.gov.uk/economy/inflationandpriceindices
     licence: ogl
+    release_schedule: monthly lag 16d, 07:00 Europe/London
+    release_lag_days: 16
     seasonal_adjustment: nsa
     revisable: false
     news_topic_tags: [MACROECONOMICS]
@@ -64,6 +70,7 @@ series:
     source_agency: Bank of England
     source_url: https://www.bankofengland.co.uk/boeapps/database
     licence: ogl
+    # release_schedule: unknown -- Bank Rate only changes on MPC decision dates (~8/year), not a fixed calendar rule -- see boe.py's docstring on IADB's non-daily update pattern.
     seasonal_adjustment: nsa
     revisable: false
     news_topic_tags: [MACROECONOMICS]
@@ -76,6 +83,8 @@ series:
     source_agency: Office for National Statistics
     source_url: https://www.ons.gov.uk/employmentandlabourmarket
     licence: ogl
+    release_schedule: monthly lag 40d, 07:00 Europe/London
+    release_lag_days: 40
     seasonal_adjustment: sa
     revisable: true
     news_topic_tags: [INEQUALITY & LABOUR]
@@ -88,6 +97,8 @@ series:
     source_agency: Office for National Statistics
     source_url: https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/earningsandworkinghours
     licence: ogl
+    release_schedule: monthly lag 40d, 07:00 Europe/London
+    release_lag_days: 40
     seasonal_adjustment: sa
     revisable: true
     news_topic_tags: [INEQUALITY & LABOUR]
@@ -100,6 +111,8 @@ series:
     source_agency: Office for National Statistics
     source_url: https://www.ons.gov.uk/economy/economicoutputandproductivity
     licence: ogl
+    release_schedule: monthly lag 40d, 07:00 Europe/London
+    release_lag_days: 40
     seasonal_adjustment: sa
     revisable: true
     news_topic_tags: [MACROECONOMICS, GLOBAL ECONOMY]
@@ -112,6 +125,8 @@ series:
     source_agency: Office for National Statistics
     source_url: https://www.ons.gov.uk/businessindustryandtrade/retailindustry
     licence: ogl
+    release_schedule: monthly lag 20d, 07:00 Europe/London
+    release_lag_days: 20
     seasonal_adjustment: sa
     revisable: true
     news_topic_tags: [MACROECONOMICS]
@@ -124,6 +139,7 @@ series:
     source_agency: UK Debt Management Office
     source_url: https://www.dmo.gov.uk/
     licence: ogl
+    # release_schedule: unknown -- Primary source (OECD monthly financial market stats) has no publicly documented fixed release day.
     seasonal_adjustment: nsa
     revisable: false
     news_topic_tags: [MACROECONOMICS, GLOBAL ECONOMY]
@@ -137,6 +153,8 @@ series:
     source_agency: Federal Reserve Board (H.10)
     source_url: https://www.federalreserve.gov/releases/h10/
     licence: public-domain
+    release_schedule: daily, 16:30 America/New_York
+    release_lag_days: 0
     seasonal_adjustment: nsa
     revisable: false
     news_topic_tags: [GLOBAL ECONOMY, TRADE & GLOBALISATION]
@@ -149,6 +167,7 @@ series:
     source_agency: Bank for International Settlements
     source_url: https://www.bis.org/statistics/pp.htm
     licence: bis-terms
+    # release_schedule: unknown -- BIS residential property price releases are irregular/ad hoc, no fixed calendar day published.
     seasonal_adjustment: sa
     revisable: true
     news_topic_tags: [HOUSING & PROPERTY]
@@ -159,6 +178,7 @@ series:
     source_agency: International Monetary Fund
     source_url: https://www.imf.org/en/Publications/WEO
     licence: imf-terms
+    # release_schedule: unknown -- IMF WEO is published twice yearly (Apr/Oct) on dates set per-vintage, not a fixed rule.
     seasonal_adjustment: nsa
     revisable: true
     news_topic_tags: [MACROECONOMICS]
@@ -169,6 +189,7 @@ series:
     source_agency: International Monetary Fund
     source_url: https://www.imf.org/en/Publications/WEO
     licence: imf-terms
+    # release_schedule: unknown -- IMF WEO is published twice yearly (Apr/Oct) on dates set per-vintage, not a fixed rule.
     seasonal_adjustment: nsa
     revisable: true
     news_topic_tags: [MACROECONOMICS]
@@ -179,6 +200,7 @@ series:
     source_agency: International Monetary Fund
     source_url: https://www.imf.org/en/Publications/WEO
     licence: imf-terms
+    # release_schedule: unknown -- IMF WEO is published twice yearly (Apr/Oct) on dates set per-vintage, not a fixed rule.
     seasonal_adjustment: nsa
     revisable: true
     news_topic_tags: [TRADE & GLOBALISATION, GLOBAL ECONOMY]
@@ -191,6 +213,7 @@ series:
     source_agency: OECD (Consumer Opinion Surveys)
     source_url: https://data-explorer.oecd.org/
     licence: oecd-terms
+    # release_schedule: unknown -- OECD's harmonised consumer confidence indicator has no publicly documented fixed release day.
     seasonal_adjustment: sa
     revisable: false
     news_topic_tags: [MACROECONOMICS]
@@ -207,6 +230,7 @@ series:
     source_agency: OECD (Financial Market Statistics)
     source_url: https://data-explorer.oecd.org/
     licence: oecd-terms
+    # release_schedule: unknown -- OECD's monthly share price index has no publicly documented fixed release day (Stooq, which would be daily, is currently bot-gated -- see stooq.py).
     seasonal_adjustment: nsa
     revisable: false
     news_topic_tags: [GLOBAL ECONOMY]

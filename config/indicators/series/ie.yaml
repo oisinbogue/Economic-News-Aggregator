@@ -21,6 +21,8 @@ series:
     source_agency: Central Statistics Office Ireland
     source_url: https://www.cso.ie/en/statistics/nationalaccounts/
     licence: cc-by-4.0
+    release_schedule: quarterly lag 90d, 11:00 Europe/Dublin
+    release_lag_days: 90
     seasonal_adjustment: sa
     revisable: true
     notes: >-
@@ -37,6 +39,8 @@ series:
     source_agency: Central Statistics Office Ireland
     source_url: https://www.cso.ie/en/statistics/prices/consumerpriceindex/
     licence: cc-by-4.0
+    release_schedule: monthly lag 16d, 11:00 Europe/Brussels
+    release_lag_days: 16
     seasonal_adjustment: nsa
     revisable: false
     news_topic_tags: [IRELAND, MACROECONOMICS]
@@ -53,6 +57,8 @@ series:
     source_agency: Central Statistics Office Ireland / Eurostat
     source_url: https://www.cso.ie/en/statistics/prices/consumerpriceindex/
     licence: cc-by-4.0
+    release_schedule: monthly lag 16d, 11:00 Europe/Brussels
+    release_lag_days: 16
     seasonal_adjustment: nsa
     revisable: false
     news_topic_tags: [IRELAND, MACROECONOMICS]
@@ -65,6 +71,7 @@ series:
     source_agency: European Central Bank
     source_url: https://data.ecb.europa.eu/
     licence: ecb-terms
+    # release_schedule: unknown -- Shared ECB deposit facility rate only changes on Governing Council decision dates (~6-week cycle), not a fixed calendar rule.
     seasonal_adjustment: nsa
     revisable: false
     notes: Ireland uses the euro-area ECB policy rate; there is no separate Irish central bank rate.
@@ -78,6 +85,7 @@ series:
     source_agency: Central Statistics Office Ireland
     source_url: https://www.cso.ie/en/statistics/labourmarket/
     licence: cc-by-4.0
+    # release_schedule: unknown -- CSO's monthly unemployment release has no confirmed fixed day; left unknown rather than guessed.
     seasonal_adjustment: sa
     revisable: true
     news_topic_tags: [IRELAND, INEQUALITY & LABOUR]
@@ -93,6 +101,7 @@ series:
     source_agency: Central Statistics Office Ireland
     source_url: https://www.cso.ie/en/statistics/earthlyandlabourcosts/
     licence: cc-by-4.0
+    # release_schedule: unknown -- OECD's quarterly hourly-earnings (Manufacturing proxy) dataset has no publicly documented fixed release day.
     seasonal_adjustment: sa
     revisable: true
     notes: OECD earnings index for Ireland only breaks out Manufacturing, not the whole economy; treat as a proxy.
@@ -106,6 +115,7 @@ series:
     source_agency: Central Statistics Office Ireland
     source_url: https://www.cso.ie/en/statistics/industry/industrialproduction/
     licence: cc-by-4.0
+    # release_schedule: unknown -- Also affected by volatile multinational contract-manufacturing swings (see gdp_real note); no confirmed fixed release day.
     seasonal_adjustment: sa
     revisable: true
     notes: Also distorted by multinational contract-manufacturing swings; see gdp_real note.
@@ -119,6 +129,7 @@ series:
     source_agency: Central Statistics Office Ireland
     source_url: https://www.cso.ie/en/statistics/services/retailsalesindex/
     licence: cc-by-4.0
+    # release_schedule: unknown -- OECD's monthly short-term-statistics aggregate has no publicly documented fixed release day.
     seasonal_adjustment: sa
     revisable: true
     news_topic_tags: [IRELAND, MACROECONOMICS]
@@ -131,6 +142,7 @@ series:
     source_agency: National Treasury Management Agency
     source_url: https://www.ntma.ie/
     licence: cc-by-4.0
+    # release_schedule: unknown -- OECD's monthly financial market stats series has no publicly documented fixed release day.
     seasonal_adjustment: nsa
     revisable: false
     news_topic_tags: [IRELAND, EUROPE & ECB, MACROECONOMICS]
@@ -141,6 +153,8 @@ series:
     source_agency: European Central Bank
     source_url: https://data.ecb.europa.eu/data/datasets/EXR
     licence: ecb-terms
+    release_schedule: daily, 16:00 Europe/Dublin
+    release_lag_days: 0
     seasonal_adjustment: nsa
     revisable: false
     notes: Ireland shares the euro/USD exchange rate with the rest of the euro area.
@@ -154,6 +168,7 @@ series:
     source_agency: Bank for International Settlements / CSO Ireland
     source_url: https://www.cso.ie/en/statistics/prices/residentialpropertypriceindex/
     licence: bis-terms
+    # release_schedule: unknown -- BIS residential property price releases are irregular/ad hoc, no fixed calendar day published.
     seasonal_adjustment: sa
     revisable: true
     news_topic_tags: [IRELAND, HOUSING & PROPERTY]
@@ -164,6 +179,7 @@ series:
     source_agency: International Monetary Fund
     source_url: https://www.imf.org/en/Publications/WEO
     licence: imf-terms
+    # release_schedule: unknown -- IMF WEO is published twice yearly (Apr/Oct) on dates set per-vintage, not a fixed rule.
     seasonal_adjustment: nsa
     revisable: true
     notes: Ireland's debt-to-GDP ratio is depressed by the same GNI*-distorting flows as gdp_real; GNI*-denominated debt ratio is a Phase-4 extra.
@@ -175,6 +191,7 @@ series:
     source_agency: International Monetary Fund
     source_url: https://www.imf.org/en/Publications/WEO
     licence: imf-terms
+    # release_schedule: unknown -- IMF WEO is published twice yearly (Apr/Oct) on dates set per-vintage, not a fixed rule.
     seasonal_adjustment: nsa
     revisable: true
     news_topic_tags: [IRELAND, MACROECONOMICS]
@@ -185,6 +202,7 @@ series:
     source_agency: International Monetary Fund
     source_url: https://www.imf.org/en/Publications/WEO
     licence: imf-terms
+    # release_schedule: unknown -- IMF WEO is published twice yearly (Apr/Oct) on dates set per-vintage, not a fixed rule.
     seasonal_adjustment: nsa
     revisable: true
     news_topic_tags: [IRELAND, TRADE & GLOBALISATION, GLOBAL ECONOMY]
@@ -199,6 +217,7 @@ series:
     source_agency: OECD (Consumer Opinion Surveys)
     source_url: https://data-explorer.oecd.org/
     licence: oecd-terms
+    # release_schedule: unknown -- OECD's harmonised consumer confidence indicator has no publicly documented fixed release day.
     seasonal_adjustment: sa
     revisable: false
     news_topic_tags: [IRELAND, MACROECONOMICS]
@@ -215,6 +234,7 @@ series:
     source_agency: OECD (Financial Market Statistics)
     source_url: https://data-explorer.oecd.org/
     licence: oecd-terms
+    # release_schedule: unknown -- OECD's monthly share price index has no publicly documented fixed release day (Stooq, which would be daily, is currently bot-gated -- see stooq.py).
     seasonal_adjustment: nsa
     revisable: false
     news_topic_tags: [IRELAND, GLOBAL ECONOMY]

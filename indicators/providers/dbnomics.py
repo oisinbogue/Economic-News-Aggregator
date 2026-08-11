@@ -37,6 +37,7 @@ from datetime import date, timedelta
 
 import httpx
 
+from indicators import http
 from indicators.config import get_config
 from indicators.providers import Observation
 
@@ -94,8 +95,7 @@ async def fetch(series_spec: dict) -> list[Observation]:
         url += f"/{series_code}"
 
     async with httpx.AsyncClient(timeout=timeout) as client:
-        resp = await client.get(url, params={"observations": 1, "limit": 1}, follow_redirects=True)
-        resp.raise_for_status()
+        resp = await http.get(client, url, params={"observations": 1, "limit": 1}, follow_redirects=True)
         payload = resp.json()
 
     if payload.get("errors") or "series" not in payload:
