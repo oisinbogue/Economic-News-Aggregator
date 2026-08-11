@@ -129,12 +129,17 @@ def _rationales_for_today(conn) -> dict[int, tuple[int, str]]:
     return {row["cluster_id"]: (row["rank"], row["rationale"]) for row in rows}
 
 
-def _item_json(lead: dict, rationales: dict[int, tuple[int, str]]) -> dict:
+def _item_json(lead: dict, rationales: dict[int, tuple[int, str]], base_url: str) -> dict:
     rank_rationale = rationales.get(lead["cluster_id"])
+    # `permalink` is the shareable link for this specific cluster
+    # (site/story/{cluster_id}.html, see pipeline.build's _render_story_pages)
+    # -- `url` stays the original source article's offsite link, unchanged.
+    permalink = f"{base_url}{lead['permalink']}" if base_url else lead.get("permalink")
     return {
         "cluster_id": lead["cluster_id"],
         "title": lead["title"],
         "url": lead["url"],
+        "permalink": permalink,
         "source": lead.get("source_name"),
         "summary": lead.get("summary") or "",
         "countries": lead.get("countries") or [],
@@ -150,20 +155,29 @@ def _item_json(lead: dict, rationales: dict[int, tuple[int, str]]) -> dict:
 
 def build_latest_json(conn, site_cfg: dict, leads: list[dict]) -> dict:
     rationales = _rationales_for_today(conn)
+    base_url = site_cfg.get("base_url", "")
     top10 = sorted(
         (l for l in leads if l["cluster_id"] in rationales),
         key=lambda l: rationales[l["cluster_id"]][0],
     )
     return {
         "generated": datetime.now(timezone.utc).isoformat(),
-        "site": {"title": site_cfg.get("title", ""), "base_url": site_cfg.get("base_url", "")},
-        "top10": [_item_json(l, rationales) for l in top10],
-        "latest": [_item_json(l, rationales) for l in leads],
+        "site": {"title": site_cfg.get("title", ""), "base_url": base_url},
+        "top10": [_item_json(l, rationales, base_url) for l in top10],
+        "latest": [_item_json(l, rationales, base_url) for l in leads],
     }
 
 
 def _rss_item(lead: dict, base_url: str) -> str:
-    link = escape(lead["url"])
+    # <link>/<guid> now point at this cluster's own permalink page
+    # (site/story/{cluster_id}.html) rather than the original source
+    # article -- that page is the one place on our own site that shows the
+    # full carousel of takes and the "why it matters" rationale, which is
+    # exactly what a reader following an RSS link would want to land on.
+    # Falls back to the offsite article URL only when no base_url is
+    # configured (dev/local run with no real site to link into).
+    permalink = f"{base_url}{lead['permalink']}" if base_url else None
+    link = escape(permalink or lead["url"])
     try:
         pub_date = format_datetime(datetime.fromisoformat(lead["fetched"]).replace(tzinfo=timezone.utc))
     except (ValueError, TypeError):
@@ -171,14 +185,22 @@ def _rss_item(lead: dict, base_url: str) -> str:
     categories = "".join(
         f"<category>{escape(t)}</category>" for t in (lead.get("topic_list") or [])
     )
-    guid = escape(f"{base_url}#{lead['cluster_id']}") if base_url else escape(lead["url"])
+    guid = escape(permalink) if permalink else escape(lead["url"])
+    is_permalink = "true" if permalink else "false"
+    description = escape(lead.get("summary") or "")
+    if permalink:
+        # Original source article stays reachable from the item even though
+        # <link> no longer points at it.
+        # &#8212; (em dash), not &mdash; -- XML only defines the 5 predefined
+        # entities (amp/lt/gt/quot/apos); &mdash; would make this item invalid XML.
+        description += f' &#8212; <a href="{escape(lead["url"])}">original source</a>'
     return (
         "<item>"
         f"<title>{escape(lead['title'] or '')}</title>"
         f"<link>{link}</link>"
-        f"<guid isPermaLink=\"false\">{guid}</guid>"
+        f"<guid isPermaLink=\"{is_permalink}\">{guid}</guid>"
         f"<pubDate>{pub_date}</pubDate>"
-        f"<description>{escape(lead.get('summary') or '')}</description>"
+        f"<description>{description}</description>"
         f"<source>{escape(lead.get('source_name') or '')}</source>"
         f"{categories}"
         "</item>"
@@ -207,6 +229,63 @@ def build_rss(leads: list[dict], site_cfg: dict) -> str:
     )
 
 
+def build_sitemap(output_dir: Path, base_url: str) -> str:
+    """robots/sitemap discoverability (this module's other outputs -- CSV,
+    latest.json, feed.xml -- are the machine-readable "de facto API"; this
+    is what actually gets the HTML pages themselves crawled). Walks the
+    already-rendered output_dir rather than re-deriving the page list from
+    the db, so it can never list a page pipeline.build didn't actually
+    write.
+    """
+    static_pages = ["index.html", "archive/index.html", "health.html", "predictions.html"]
+    archive_days = sorted(
+        p.relative_to(output_dir).as_posix()
+        for p in (output_dir / "archive").glob("*.html")
+        if p.name != "index.html"
+    )
+    story_pages = sorted(
+        p.relative_to(output_dir).as_posix()
+        for p in (output_dir / "story").glob("*.html")
+    ) if (output_dir / "story").exists() else []
+    urls = static_pages + archive_days + story_pages
+
+    entries = []
+    for url in urls:
+        path = output_dir / url
+        try:
+            lastmod = datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc).strftime("%Y-%m-%d")
+        except OSError:
+            lastmod = None
+        loc = escape(f"{base_url}{'' if url == 'index.html' else url}")
+        entry = f"<url><loc>{loc}</loc>"
+        if lastmod:
+            entry += f"<lastmod>{lastmod}</lastmod>"
+        entry += "</url>"
+        entries.append(entry)
+
+    return (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+        f"{''.join(entries)}"
+        "</urlset>"
+    )
+
+
+def build_robots(base_url: str) -> str:
+    lines = ["User-agent: *", "Allow: /"]
+    if base_url:
+        lines += ["", f"Sitemap: {base_url}sitemap.xml"]
+    return "\n".join(lines) + "\n"
+
+
+def write_discovery_files(output_dir: Path, site_cfg: dict) -> dict:
+    base_url = site_cfg.get("base_url", "")
+    sitemap = build_sitemap(output_dir, base_url)
+    (output_dir / "sitemap.xml").write_text(sitemap, encoding="utf-8")
+    (output_dir / "robots.txt").write_text(build_robots(base_url), encoding="utf-8")
+    return {"sitemap_urls": sitemap.count("<url>")}
+
+
 def write_feed_exports(conn, output_dir: Path) -> dict:
     cfg = get_config()
     site_cfg = cfg["site"]
@@ -233,15 +312,17 @@ def main() -> dict:
         print("site output_dir doesn't exist yet -- run `python -m pipeline.build` first.")
         sys.exit(1)
 
-    print("Writing exports (CSV, latest.json, feed.xml)...")
+    print("Writing exports (CSV, latest.json, feed.xml, sitemap.xml, robots.txt)...")
     with get_connection() as conn:
         csv_stats = write_csv_exports(conn, output_dir)
         feed_stats = write_feed_exports(conn, output_dir)
+    discovery_stats = write_discovery_files(output_dir, cfg["site"])
 
-    stats = {**csv_stats, **feed_stats}
+    stats = {**csv_stats, **feed_stats, **discovery_stats}
     print(
         f"Done: master.csv ({stats['master_rows']} rows), {stats['daily_files']} daily CSV(s), "
-        f"latest.json ({stats['feed_items']} items, {stats['top10_items']} in top 10), feed.xml."
+        f"latest.json ({stats['feed_items']} items, {stats['top10_items']} in top 10), feed.xml, "
+        f"sitemap.xml ({stats['sitemap_urls']} URLs), robots.txt."
     )
     sys.stdout.flush()
     return stats

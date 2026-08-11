@@ -2,6 +2,8 @@
 {% import "_cluster_card.html" as cards %}
 
 {% block title %}{{ day }} — {{ site.title }}{% endblock %}
+{% block description %}Economic news stories archived from {{ day }}, clustered across international sources.{% endblock %}
+{% block og_image %}{{ groups[0].clusters[0].image if groups and groups[0].clusters and groups[0].clusters[0].image else (site.base_url ~ "static/og-default.png") }}{% endblock %}
 
 {% block content %}
 <p class="breadcrumb"><a href="index.html">&#8592; Archive</a></p>
@@ -12,7 +14,7 @@
   <h2 class="section-title">{{ group.name }}</h2>
   <div class="card-grid">
     {% for cluster in group.clusters %}
-      {{ cards.cluster_card(cluster) }}
+      {{ cards.cluster_card(cluster, asset_prefix=asset_prefix) }}
     {% endfor %}
   </div>
 </section>

@@ -1,0 +1,30 @@
+# The Phase-1 countries/blocs for the Indicators subsystem (INDICATORS_BRIEF.md
+# §10). iso is the alpha-2 code used as the series_id prefix (e.g. ie.cpi_headline)
+# and as the config/indicators/series/<iso>.yaml filename. EU is a bloc, not a
+# country, but is treated identically everywhere else in this schema.
+countries:
+  us:
+    iso: us
+    name: United States
+    currency: USD
+    timezone: America/New_York
+  gb:
+    iso: gb
+    name: United Kingdom
+    currency: GBP
+    timezone: Europe/London
+  ie:
+    iso: ie
+    name: Ireland
+    currency: EUR
+    timezone: Europe/Dublin
+  eu:
+    iso: eu
+    name: Euro Area
+    currency: EUR
+    timezone: Europe/Brussels
+  de:
+    iso: de
+    name: Germany
+    currency: EUR
+    timezone: Europe/Berlin

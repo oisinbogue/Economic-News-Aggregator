@@ -1,0 +1,213 @@
+# UK series -> provider mapping. Every core.yaml key must appear below, either
+# with a real provider mapping or `unavailable: true` + `unavailable_reason`.
+#
+# Corrected 2026-08-11: the `FRED/...` codes originally here were invented
+# without checking against the live API and all 404'd (DBnomics has no
+# 'FRED' provider -- see indicators/providers/dbnomics.py's module
+# docstring). Replaced with OECD short-term-economic-statistics /
+# labour-force-survey / financial-market series (dataset family
+# DSD_STES/DSD_LFS/DSD_EAR, `<ISO3>...` series codes, consistent across
+# gb/de/eu/ie) or direct ONS series, each confirmed live 2026-08-11.
+country: gb
+series:
+  gdp_real:
+    provider: dbnomics
+    # Real GDP, chain-linked volume, national currency, quarterly, SA.
+    # OECD Quarterly National Accounts. Confirmed live 2026-08-11 against
+    # https://api.db.nomics.world/v22/series/OECD/DSD_NAMAIN1@DF_QNA_EXPENDITURE_NATIO_CURR/Q.Y.GBR.S1.S1.B1GQ._Z._Z._Z.XDC.L.N.T0102.
+    provider_series_id: OECD/DSD_NAMAIN1@DF_QNA_EXPENDITURE_NATIO_CURR/Q.Y.GBR.S1.S1.B1GQ._Z._Z._Z.XDC.L.N.T0102
+    fallback_providers: [ons]
+    source_agency: Office for National Statistics
+    source_url: https://www.ons.gov.uk/economy/grossdomesticproductgdp
+    licence: ogl
+    seasonal_adjustment: sa
+    revisable: true
+    news_topic_tags: [MACROECONOMICS, GLOBAL ECONOMY]
+  cpi_headline:
+    provider: ons
+    # CPI INDEX 00: ALL ITEMS 2015=100 (CDID D7BT, dataset MM23).
+    # Confirmed live 2026-08-11 against
+    # https://api.ons.gov.uk/v1/data?uri=/economy/inflationandpriceindices/timeseries/d7bt/mm23.
+    provider_series_id: economy/inflationandpriceindices/timeseries/d7bt/mm23
+    fallback_providers: []
+    source_agency: Office for National Statistics
+    source_url: https://www.ons.gov.uk/economy/inflationandpriceindices
+    licence: ogl
+    seasonal_adjustment: nsa
+    revisable: false
+    news_topic_tags: [MACROECONOMICS]
+  cpi_core:
+    provider: ons
+    # ONS core CPI excluding energy, food, alcohol & tobacco -- not
+    # reliably mirrored on DBnomics/FRED at time of writing; sourced direct
+    # from the ONS API instead. CDID DKO8 (dataset MM23), confirmed live
+    # 2026-08-10 against https://api.ons.gov.uk/v1/data?uri=/economy/inflationandpriceindices/timeseries/dko8/mm23
+    # -- the previously-listed D7G8 was actually "CPI annual rate: food and
+    # non-alcoholic beverages", not the ex-energy/food/alcohol/tobacco core
+    # measure. provider_series_id is the ONS website's own URI path (see
+    # indicators/providers/ons.py's docstring for why the topic segment is
+    # needed, not just "<dataset>/<cdid>").
+    provider_series_id: economy/inflationandpriceindices/timeseries/dko8/mm23
+    fallback_providers: []
+    source_agency: Office for National Statistics
+    source_url: https://www.ons.gov.uk/economy/inflationandpriceindices
+    licence: ogl
+    seasonal_adjustment: nsa
+    revisable: false
+    news_topic_tags: [MACROECONOMICS]
+  policy_rate:
+    provider: boe
+    # Bank of England Bank Rate. Confirmed live 2026-08-10 against the BoE
+    # IADB CSV endpoint (see indicators/providers/boe.py's docstring).
+    provider_series_id: IUMBEDR
+    fallback_providers: [dbnomics]
+    source_agency: Bank of England
+    source_url: https://www.bankofengland.co.uk/boeapps/database
+    licence: ogl
+    seasonal_adjustment: nsa
+    revisable: false
+    news_topic_tags: [MACROECONOMICS]
+  unemployment_rate:
+    provider: dbnomics
+    # Monthly unemployment rate, 15+, SA. OECD infra-annual labour force
+    # statistics. Confirmed live 2026-08-11.
+    provider_series_id: OECD/DSD_LFS@DF_IALFS_UNE_M/GBR.UNE_LF_M.PT_LF_SUB._Z.Y._T.Y_GE15._Z.M
+    fallback_providers: [ons]
+    source_agency: Office for National Statistics
+    source_url: https://www.ons.gov.uk/employmentandlabourmarket
+    licence: ogl
+    seasonal_adjustment: sa
+    revisable: true
+    news_topic_tags: [INEQUALITY & LABOUR]
+  wages_nominal:
+    provider: dbnomics
+    # Earnings index, private sector, quarterly, SA. OECD hourly-earnings
+    # dataset. Confirmed live 2026-08-11.
+    provider_series_id: OECD/DSD_EAR@DF_HOU_EAR/GBR.EAR.IX.Y._Z.S1D.Q
+    fallback_providers: [ons]
+    source_agency: Office for National Statistics
+    source_url: https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/earningsandworkinghours
+    licence: ogl
+    seasonal_adjustment: sa
+    revisable: true
+    news_topic_tags: [INEQUALITY & LABOUR]
+  industrial_production:
+    provider: dbnomics
+    # Production volume index, industry excl. construction, monthly, SA.
+    # OECD short-term economic statistics. Confirmed live 2026-08-11.
+    provider_series_id: OECD/DSD_STES@DF_INDSERV/GBR.M.PRVM.IX.BTE.Y._Z._Z.N
+    fallback_providers: [ons]
+    source_agency: Office for National Statistics
+    source_url: https://www.ons.gov.uk/economy/economicoutputandproductivity
+    licence: ogl
+    seasonal_adjustment: sa
+    revisable: true
+    news_topic_tags: [MACROECONOMICS, GLOBAL ECONOMY]
+  retail_sales:
+    provider: dbnomics
+    # Retail trade volume index, monthly, calendar+seasonally adjusted.
+    # OECD short-term economic statistics. Confirmed live 2026-08-11.
+    provider_series_id: OECD/DSD_STES@DF_INDSERV/GBR.M.TOVM.IX.G47.Y._Z._Z.N
+    fallback_providers: [ons]
+    source_agency: Office for National Statistics
+    source_url: https://www.ons.gov.uk/businessindustryandtrade/retailindustry
+    licence: ogl
+    seasonal_adjustment: sa
+    revisable: true
+    news_topic_tags: [MACROECONOMICS]
+  govt_bond_10y:
+    provider: dbnomics
+    # Long-term (10y) government bond yield, monthly. OECD financial
+    # market statistics. Confirmed live 2026-08-11.
+    provider_series_id: OECD/DSD_STES@DF_FINMARK/GBR.M.IRLT.PA._Z._Z._Z._Z.N
+    fallback_providers: [boe]
+    source_agency: UK Debt Management Office
+    source_url: https://www.dmo.gov.uk/
+    licence: ogl
+    seasonal_adjustment: nsa
+    revisable: false
+    news_topic_tags: [MACROECONOMICS, GLOBAL ECONOMY]
+  fx_vs_usd:
+    provider: dbnomics
+    # US dollars per British pound, business-day. FED H.10 dataset (series
+    # code includes a literal '$'). Confirmed live 2026-08-11 against
+    # https://api.db.nomics.world/v22/series/FED/H10/RXI%24US_N.B.UK.
+    provider_series_id: FED/H10/RXI$US_N.B.UK
+    fallback_providers: [stooq]
+    source_agency: Federal Reserve Board (H.10)
+    source_url: https://www.federalreserve.gov/releases/h10/
+    licence: public-domain
+    seasonal_adjustment: nsa
+    revisable: false
+    news_topic_tags: [GLOBAL ECONOMY, TRADE & GLOBALISATION]
+  house_prices:
+    provider: dbnomics
+    # BIS Selected residential property prices, real index (2010=100),
+    # quarterly. Confirmed live 2026-08-11.
+    provider_series_id: BIS/WS_SPP/Q.GB.R.628
+    fallback_providers: [ons]
+    source_agency: Bank for International Settlements
+    source_url: https://www.bis.org/statistics/pp.htm
+    licence: bis-terms
+    seasonal_adjustment: sa
+    revisable: true
+    news_topic_tags: [HOUSING & PROPERTY]
+  govt_debt_gdp:
+    provider: dbnomics
+    provider_series_id: IMF/WEO:latest/GBR.GGXWDG_NGDP   # see us.yaml note on IMF WEO code verification
+    fallback_providers: []
+    source_agency: International Monetary Fund
+    source_url: https://www.imf.org/en/Publications/WEO
+    licence: imf-terms
+    seasonal_adjustment: nsa
+    revisable: true
+    news_topic_tags: [MACROECONOMICS]
+  budget_balance_gdp:
+    provider: dbnomics
+    provider_series_id: IMF/WEO:latest/GBR.GGXCNL_NGDP
+    fallback_providers: []
+    source_agency: International Monetary Fund
+    source_url: https://www.imf.org/en/Publications/WEO
+    licence: imf-terms
+    seasonal_adjustment: nsa
+    revisable: true
+    news_topic_tags: [MACROECONOMICS]
+  current_account_gdp:
+    provider: dbnomics
+    provider_series_id: IMF/WEO:latest/GBR.BCA_NGDPD
+    fallback_providers: []
+    source_agency: International Monetary Fund
+    source_url: https://www.imf.org/en/Publications/WEO
+    licence: imf-terms
+    seasonal_adjustment: nsa
+    revisable: true
+    news_topic_tags: [TRADE & GLOBALISATION, GLOBAL ECONOMY]
+  consumer_confidence:
+    provider: dbnomics
+    # OECD composite consumer confidence indicator, percentage balance,
+    # SA. Confirmed live 2026-08-11.
+    provider_series_id: OECD/DSD_STES@DF_CS/GBR.M.CCICP.PB._Z.Y._Z._Z.N
+    fallback_providers: []
+    source_agency: OECD (Consumer Opinion Surveys)
+    source_url: https://data-explorer.oecd.org/
+    licence: oecd-terms
+    seasonal_adjustment: sa
+    revisable: false
+    news_topic_tags: [MACROECONOMICS]
+  equity_index:
+    provider: dbnomics
+    # OECD share price index, monthly, for the FTSE market. Stooq (the
+    # only daily, no-key source) is bot-gated for non-browser clients as
+    # of this writing (confirmed live 2026-08-11, see
+    # indicators/providers/stooq.py's docstring) -- kept as a fallback in
+    # case that changes; the ticker itself remains unverified. Confirmed
+    # live 2026-08-11.
+    provider_series_id: OECD/DSD_STES@DF_FINMARK/GBR.M.SHARE.IX._Z._Z._Z._Z.N
+    fallback_providers: [stooq]
+    source_agency: OECD (Financial Market Statistics)
+    source_url: https://data-explorer.oecd.org/
+    licence: oecd-terms
+    seasonal_adjustment: nsa
+    revisable: false
+    news_topic_tags: [GLOBAL ECONOMY]
+extras: []   # populated in Phase 4

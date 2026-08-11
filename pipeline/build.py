@@ -1,22 +1,19 @@
 """Static site generator (brief Phase 4).
 
 Renders `data/aggregator.db` into a static site under `site.output_dir`
-(config.yaml) with Jinja2 templates: a homepage (LLM-curated top 10 +
-category-grouped carousels of everything else clustered in the last
-`site.archive_window_days` days) and a full date-indexed archive.
+(config.yaml) via Jinja2: a homepage (LLM-curated top 10 + category-grouped
+carousels of everything else clustered in the last `site.archive_window_days`
+days) and a full date-indexed archive.
 
-Why client-side search rather than hitting SQLite from the page: the
-brief's hosting decision (Sec 2) is GitHub Pages, which serves static
-files only -- there's no server to run SQL against. Search (brief
-feature #7, "queryable ... from day one") is handled by Pagefind, which
-indexes the rendered HTML in a separate `pagefind --site site` step
-after this module runs (see the GitHub Actions workflow); the db itself
-remains directly queryable for anyone with repo access.
+Search is client-side because hosting is GitHub Pages (brief Sec 2) -- static
+files only, no server to run SQL against. Pagefind (brief feature #7) indexes
+the rendered HTML in a separate `pagefind --site site` step after this module
+runs (see the Actions workflow); the db stays directly queryable for anyone
+with repo access.
 
-Carousel ranking (brief feature #1, "5-article cap ... defined ranking")
-is pipeline.cluster.carousel_members -- this module doesn't reimplement
-it, just calls it and attaches the display fields (source name, etc.)
-the templates need.
+Carousel ranking (brief feature #1, "5-article cap ... defined ranking") lives
+in pipeline.cluster.carousel_members; this module just calls it and attaches
+the display fields (source name, etc.) the templates need.
 
 Usage: python -m pipeline.build
 """
@@ -33,7 +30,7 @@ from pathlib import Path
 import yaml
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from pipeline.cluster import carousel_members_batch
+from pipeline.cluster import all_cluster_members_batch, carousel_members_batch
 from pipeline.config import get_config, resolve_path
 from pipeline.db import get_connection, init_db
 from pipeline.timeutil import utc_today
@@ -41,6 +38,12 @@ from pipeline.timeutil import utc_today
 REPO_ROOT = Path(__file__).resolve().parent.parent
 TEMPLATES_DIR = REPO_ROOT / "templates"
 STATIC_DIR = REPO_ROOT / "static"
+
+# Cap on the homepage's "Just In" section (see _load_latest_just_in below) --
+# deliberately not padded up to this with older stories: a single fetch run
+# usually surfaces only a handful of genuinely new clusters, and showing
+# fewer than 10 (or hiding the section outright) is the honest result.
+JUST_IN_MAX_STORIES = 10
 
 
 def load_taxonomy_meta() -> dict:
@@ -57,10 +60,9 @@ def load_taxonomy_meta() -> dict:
 def dominant_theme(topics_csv: str | None, theme_priority: list[str]) -> str:
     """Picks the single theme a cluster is grouped under on the site.
 
-    Ported from v1's dominant_theme (aggregator.py:910-921): an article
-    matching multiple themes is shown under the highest-priority one (so
-    an Irish housing story lands under Ireland, not Global Economy) rather
-    than an arbitrary/alphabetical pick.
+    Ported from v1 (aggregator.py:910-921): a multi-theme article shows under
+    the highest-priority theme (Irish housing -> Ireland, not Global Economy)
+    rather than an arbitrary/alphabetical pick.
     """
     topics = [t for t in (topics_csv or "").split(",") if t]
     if not topics:
@@ -78,9 +80,9 @@ def ordered_themes(present: set[str], category_display_order: list[str]) -> list
 
 
 def _portable_day_month_year(dt: datetime) -> str:
-    """`%-d`/`%#d` (no leading zero) isn't portable across platforms -- this
-    runs both on a Windows laptop and ubuntu-latest in CI (see
-    .github/workflows/pipeline.yml), so strip the zero manually instead."""
+    """`%-d`/`%#d` (no leading zero) isn't portable: this runs both on a Windows
+    laptop and on ubuntu-latest in CI (.github/workflows/pipeline.yml), so strip
+    the zero manually instead."""
     return f"{dt.day} {dt.strftime('%b %Y, %H:%M')} UTC"
 
 
@@ -94,11 +96,10 @@ def _fmt_date(dt_str: str | None) -> str:
 
 
 def _group_archive_days(day_summaries: list[dict]) -> list[dict]:
-    """Reshape the flat, most-recent-first list of {date, count} into
-    year -> month groups so the archive index can render collapsible
-    sections instead of one ever-growing flat list (the archive gains a
-    day every run, forever). Input order (descending by date) is preserved
-    within each month."""
+    """Reshape the flat, most-recent-first [{date, count}] into year -> month
+    groups so the archive index renders collapsible sections instead of one
+    ever-growing flat list (the archive gains a day every run, forever).
+    Descending date order is preserved within each month."""
     years: dict[str, dict] = {}
     for d in day_summaries:
         date = d["date"]
@@ -133,15 +134,14 @@ def _feed_names(conn) -> dict[int, str]:
 def _load_feed_health(conn, recovery_interval_hours: float) -> list[dict]:
     """Per-feed status for the source health dashboard (brief feature #5).
 
-    Reads the live feeds table -- there's no separate history log, just the
-    streak/timestamp state fetch.py already maintains, which is enough to
-    show what auto-recovery is actually doing: a "healthy" feed working
-    fine, a "degraded" feed accumulating failures but still being fetched
-    every run, an "inactive" feed that got auto-deactivated and is now
-    only probed occasionally (recovery_check_interval_hours) rather than
-    abandoned for good the way v1's mark_dead_feeds.py left it, or a "muted"
-    feed a human deliberately turned off (config/feeds.yaml active:false --
-    see pipeline.reconcile_feeds) which auto-recovery never touches.
+    Reads the live feeds table -- no separate history log, just the
+    streak/timestamp state fetch.py maintains, which is enough to show what
+    auto-recovery is doing: "healthy" (fine), "degraded" (accumulating failures
+    but still fetched every run), "inactive" (auto-deactivated, now only probed
+    every recovery_check_interval_hours rather than abandoned for good the way
+    v1's mark_dead_feeds.py left it), or "muted" (a human turned it off via
+    config/feeds.yaml active:false -- see pipeline.reconcile_feeds -- which
+    auto-recovery never touches).
     """
     rows = [dict(row) for row in conn.execute("SELECT * FROM feeds ORDER BY name")]
     article_stats = {
@@ -155,12 +155,11 @@ def _load_feed_health(conn, recovery_interval_hours: float) -> list[dict]:
     for row in rows:
         stats = article_stats.get(row["id"], {})
         row["article_count"] = stats.get("article_count", 0)
-        # Shown as two separate columns rather than one "last article" figure
-        # -- last_published matches what the story cards actually display
-        # (see _finalize_lead), while last_fetched is what this dashboard used
-        # to report alone. A feed handing back a stale article today should
-        # show a recent fetch date next to an old published date, not read as
-        # freshly active.
+        # Two columns rather than one "last article" figure: last_published
+        # matches what the story cards display (see _finalize_lead), while
+        # last_fetched is what this dashboard used to report alone. A feed
+        # handing back a stale article today should show a recent fetch next to
+        # an old published date, not read as freshly active.
         row["last_published"] = stats.get("last_published")
         row["last_fetched"] = stats.get("last_fetched")
         row["last_published_display"] = _fmt_date(row["last_published"])
@@ -188,15 +187,15 @@ def _load_feed_health(conn, recovery_interval_hours: float) -> list[dict]:
 
 
 def _load_all_leads(conn, limit: int | None = None) -> list[dict]:
-    """One row per cluster: its representative (lead) article, joined with
-    feed name for display. Ordered newest-first, optionally capped to the
-    `limit` most recent (callers that only need the newest N, e.g. the
-    export feed, avoid loading and holding the full cluster history)."""
+    """One row per cluster: its representative (lead) article, joined with feed
+    name for display. Newest-first, optionally capped to the `limit` most recent
+    (callers needing only the newest N, e.g. the export feed, avoid loading and
+    holding the full cluster history)."""
     query = """
         SELECT clusters.id AS cluster_id, clusters.label,
                articles.title, articles.url, articles.summary,
                articles.country, articles.topics, articles.published,
-               articles.fetched, articles.feed_id, feeds.name AS source_name
+               articles.fetched, articles.fetch_run_id, articles.feed_id, feeds.name AS source_name
         FROM clusters
         JOIN articles ON articles.url_hash = clusters.representative_article
         JOIN feeds ON feeds.id = articles.feed_id
@@ -226,19 +225,117 @@ def _finalize_lead(lead: dict, members: list[dict], feed_names: dict[int, str], 
     lead["countries"] = sorted(countries)
     lead["topic_list"] = sorted(topics)
     lead["fetched_display"] = _fmt_date(lead.get("published") or lead.get("fetched"))
+    lead["image"] = next((m["image"] for m in members if m.get("image")), None)
+    # `day`/`permalink` back the per-cluster story page (site/story/{id}.html,
+    # see _render_story_pages) -- computed here, once, so every consumer
+    # (homepage/archive cards, the story page itself, export.py) agrees on
+    # the same archive day a cluster belongs to and the same permalink path.
+    lead["day"] = (lead.get("fetched") or "")[:10] or "unknown"
+    lead["permalink"] = f"story/{lead['cluster_id']}.html"
     return lead
 
 
 def _attach_carousels(
     conn, leads: list[dict], feed_names: dict[int, str], theme_priority: list[str]
 ) -> list[dict]:
-    """Attaches carousel members to every lead in `leads` with a single
-    grouped query (pipeline.cluster.carousel_members_batch) instead of one
-    carousel_members() query per cluster."""
+    """Attaches carousel members to every lead with one grouped query
+    (pipeline.cluster.carousel_members_batch) instead of one carousel_members()
+    query per cluster."""
     members_by_cluster = carousel_members_batch(conn, [lead["cluster_id"] for lead in leads])
     for lead in leads:
         _finalize_lead(lead, members_by_cluster.get(lead["cluster_id"], []), feed_names, theme_priority)
     return leads
+
+
+def _render_story_pages(
+    env: Environment, output_dir: Path, site_meta: dict, all_leads: list[dict], feed_names: dict[int, str]
+) -> int:
+    """One permalink page per cluster: site/story/{cluster_id}.html -- the
+    shareable link a reader can send someone for a specific story's carousel
+    of takes and "why it matters" rationale, which nothing on the site could
+    give them before (see this feature's own brief). This is also now the
+    canonical, Pagefind-indexed page for that story's text (archive_day.html
+    stopped indexing itself for the same content, above).
+
+    Skip-if-unchanged the same way archive days are (story_render_state
+    mirrors archive_render_state): a cluster's full membership only grows
+    over time, so re-rendering only fires when a fresh article actually
+    joined it since the last run -- otherwise this would mean rewriting
+    every story page in the site's history on every one of the 6 runs/day.
+    """
+    story_dir = output_dir / "story"
+    story_dir.mkdir(exist_ok=True)
+    story_tmpl = env.get_template("story.html")
+
+    with get_connection() as conn:
+        prev_render_state = {
+            row["cluster_id"]: row["last_fetched"]
+            for row in conn.execute("SELECT cluster_id, last_fetched FROM story_render_state")
+        }
+        members_by_cluster = all_cluster_members_batch(conn, [lead["cluster_id"] for lead in all_leads])
+
+    rendered = 0
+    new_render_state: dict[int, str] = {}
+    for lead in all_leads:
+        cluster_id = lead["cluster_id"]
+        all_members = members_by_cluster.get(cluster_id, [])
+        for m in all_members:
+            m["source_name"] = feed_names.get(m["feed_id"], "Unknown source")
+            m["fetched_display"] = _fmt_date(m.get("published") or m.get("fetched"))
+
+        max_fetched = max((m.get("fetched") or "") for m in all_members) if all_members else (lead.get("fetched") or "")
+        new_render_state[cluster_id] = max_fetched
+        story_path = story_dir / f"{cluster_id}.html"
+        if prev_render_state.get(cluster_id) == max_fetched and story_path.exists():
+            continue
+
+        story_path.write_text(
+            story_tmpl.render(
+                site=site_meta, cluster=lead, all_members=all_members,
+                asset_prefix="../", active_nav="", show_filters=False,
+                pagefind_index=True,
+                canonical_path=lead["permalink"],
+            ),
+            encoding="utf-8",
+        )
+        rendered += 1
+
+    with get_connection() as conn:
+        conn.executemany(
+            "INSERT INTO story_render_state (cluster_id, last_fetched) VALUES (?, ?) "
+            "ON CONFLICT(cluster_id) DO UPDATE SET last_fetched = excluded.last_fetched",
+            list(new_render_state.items()),
+        )
+    return rendered
+
+
+def _latest_fetch_run_id(conn) -> int | None:
+    row = conn.execute("SELECT id FROM fetch_runs ORDER BY id DESC LIMIT 1").fetchone()
+    return row["id"] if row else None
+
+
+def _load_latest_just_in(all_leads: list[dict], latest_run_id: int | None, exclude_ids: set[int]) -> list[dict]:
+    """Clusters first CREATED by the latest pipeline.fetch run (brief "Just
+    In" section) -- not clusters that merely gained a new article this run.
+
+    A cluster's `representative_article` is set once, at cluster-creation
+    time, and never updated afterwards (see pipeline.cluster) -- so checking
+    that article's own fetch_run_id (not any member's) is exactly "was this
+    cluster founded by the latest run", which is what distinguishes a
+    genuinely new story from an existing, still-developing one that just
+    reattached another article (pipeline.cluster's own reattachment note,
+    also referenced in pipeline.curate).
+
+    `all_leads` is already ordered newest-fetched-first (_load_all_leads), so
+    filtering preserves that order -- no re-sort needed before capping.
+    """
+    if latest_run_id is None:
+        return []
+    just_in = [
+        lead for lead in all_leads
+        if lead["cluster_id"] not in exclude_ids and lead.get("fetch_run_id") == latest_run_id
+    ]
+    return just_in[:JUST_IN_MAX_STORIES]
 
 
 def _group_by_theme(leads: list[dict], category_display_order: list[str]) -> list[dict]:
@@ -260,14 +357,13 @@ def _prediction_display(p: dict) -> dict:
 
 def _load_prediction_data(conn, feed_names: dict[int, str]) -> dict:
     """Resolved-prediction leaderboard + read-only pending-review queue for
-    predictions.html (brief feature #8, "Output"). Confirmation itself
-    happens locally via `python -m pipeline.review` -- see that module's
-    docstring for why a static GitHub Pages site can't do it in-browser.
+    predictions.html (brief feature #8, "Output"). Confirmation happens locally
+    via `python -m pipeline.review` -- see that module's docstring for why a
+    static GitHub Pages site can't do it in-browser.
     """
     # canonical_id IS NULL excludes rows pipeline.dedup_predictions collapsed
-    # into another prediction from the same cluster -- the canonical row
-    # (the one duplicates point at) has no canonical_id of its own, so it
-    # still shows.
+    # into another prediction from the same cluster; the canonical row they
+    # point at has no canonical_id of its own, so it still shows.
     pending = [
         _prediction_display(dict(row))
         for row in conn.execute(
@@ -344,26 +440,29 @@ def render_site() -> dict:
     window_days = site_cfg.get("archive_window_days", 3)
 
     output_dir = resolve_path(site_cfg.get("output_dir", "site"))
-    # rmtree-then-recreate is simpler but OneDrive (this repo's own folder,
-    # per launch context) can hold a transient lock on a synced directory
-    # right after another process touches it, turning that into a flaky
-    # PermissionError. Clearing file-by-file and tolerating undeletable
-    # directories (they get reused, not left stale-but-wrong) avoids that.
-    # archive/ is excluded from this wipe: most archive day pages haven't
-    # changed since the last run (see the skip-if-unchanged check below), and
-    # deleting them here would force every single one to be rewritten anyway.
+    # rmtree-then-recreate is simpler, but OneDrive (this repo's own folder) can
+    # hold a transient lock on a synced directory right after another process
+    # touches it, turning that into a flaky PermissionError. Clearing
+    # file-by-file and tolerating undeletable directories (reused, not left
+    # stale-but-wrong) avoids that. archive/ and story/ are both excluded: most
+    # of their pages are unchanged since the last run (skip-if-unchanged checks
+    # below), and deleting them here would force every one to be rewritten
+    # anyway -- exactly the "don't make it worse" re-render cost this function's
+    # own docstring warns against.
+    PRESERVED_DIRS = ("archive", "story")
     if output_dir.exists():
         for child in output_dir.rglob("*"):
-            if child.is_file() and "archive" not in child.relative_to(output_dir).parts[:1]:
+            if child.is_file() and child.relative_to(output_dir).parts[0] not in PRESERVED_DIRS:
                 child.unlink(missing_ok=True)
         for child in sorted(output_dir.rglob("*"), key=lambda p: len(p.parts), reverse=True):
-            if child.is_dir() and "archive" not in child.relative_to(output_dir).parts[:1]:
+            if child.is_dir() and child.relative_to(output_dir).parts[0] not in PRESERVED_DIRS:
                 try:
                     child.rmdir()
                 except OSError:
                     pass
     output_dir.mkdir(parents=True, exist_ok=True)
     (output_dir / "archive").mkdir(exist_ok=True)
+    (output_dir / "story").mkdir(exist_ok=True)
 
     env = Environment(
         loader=FileSystemLoader(str(TEMPLATES_DIR)),
@@ -381,6 +480,7 @@ def render_site() -> dict:
 
         feed_health = _load_feed_health(conn, recovery_interval_hours)
         prediction_data = _load_prediction_data(conn, feed_names)
+        latest_fetch_run_id = _latest_fetch_run_id(conn)
 
         today = utc_today().isoformat()
         top10_rows = [
@@ -391,9 +491,8 @@ def render_site() -> dict:
             )
         ]
         if not top10_rows:
-            # No curate run yet today (e.g. first run of the day hasn't
-            # happened) -- fall back to the most recent date we have so the
-            # homepage isn't just empty.
+            # No curate run yet today -- fall back to the most recent date we
+            # have so the homepage isn't just empty.
             latest = conn.execute("SELECT MAX(date) AS d FROM daily_top10").fetchone()
             if latest and latest["d"]:
                 today = latest["d"]
@@ -415,17 +514,20 @@ def render_site() -> dict:
         top10.append({**lead, "rank": row["rank"], "rationale": row["rationale"]})
     top10_ids = {t["cluster_id"] for t in top10}
 
+    just_in = _load_latest_just_in(all_leads, latest_fetch_run_id, top10_ids)
+    just_in_ids = {j["cluster_id"] for j in just_in}
+    excluded_from_recent_ids = top10_ids | just_in_ids
+
     window_start = (datetime.now(timezone.utc) - timedelta(days=window_days)).isoformat()
     recent_leads = [
         lead for lead in all_leads
-        if lead["cluster_id"] not in top10_ids
-        # Gate on the same date actually shown on the card (published if the
-        # feed supplied one, else fetched) rather than fetched alone -- a
-        # feed can hand us a genuinely old article (real published date, not
-        # a metadata glitch) on today's fetch, and fetched-only filtering let
-        # that display as "recent" on the homepage even though it's from
-        # months or years ago. Archive grouping is unaffected: that's meant
-        # to be a complete historical record indexed by when we found it.
+        if lead["cluster_id"] not in excluded_from_recent_ids
+        # Gate on the date the card actually shows (published if the feed gave
+        # one, else fetched), not fetched alone -- a feed can hand us a
+        # genuinely old article (real published date, not a metadata glitch) on
+        # today's fetch, and fetched-only filtering displayed that as "recent".
+        # Archive grouping is unaffected: that's a complete historical record
+        # indexed by when we found it.
         and (lead.get("published") or lead.get("fetched") or "") >= window_start
     ]
     recent_groups = _group_by_theme(recent_leads, category_display_order)
@@ -445,21 +547,23 @@ def render_site() -> dict:
     index_tmpl = env.get_template("index.html")
     (output_dir / "index.html").write_text(
         index_tmpl.render(
-            site=site_meta, top10=top10, groups=recent_groups, today=today,
+            site=site_meta, top10=top10, just_in=just_in, groups=recent_groups, today=today,
             asset_prefix="", active_nav="home", show_filters=True,
-            # Every story here also lands permanently on its archive day page,
-            # which is the canonical page Pagefind indexes -- keeps search
-            # results from showing the same story twice.
+            # Every story also lands permanently on its archive day page, the
+            # canonical page Pagefind indexes -- keeps search results from
+            # showing the same story twice.
             pagefind_index=False,
+            canonical_path="",
         ),
         encoding="utf-8",
     )
 
     # ---- archive: group every cluster by the UTC date of its lead article ----
+    # (`lead["day"]` was computed once in _finalize_lead so this grouping and
+    # each cluster's own story-page `day` breadcrumb can never drift apart.)
     by_date: dict[str, list[dict]] = defaultdict(list)
     for lead in all_leads:
-        day = (lead.get("fetched") or "")[:10] or "unknown"
-        by_date[day].append(lead)
+        by_date[lead["day"]].append(lead)
 
     top10_by_date: dict[str, dict[int, str]] = defaultdict(dict)
     prev_render_state: dict[str, str] = {}
@@ -479,11 +583,10 @@ def render_site() -> dict:
         leads_for_day = by_date[day]
         day_summaries.append({"date": day, "count": len(leads_for_day)})
 
-        # A day's content is only re-rendered when its most-recently-fetched
-        # article has moved on since the last run (or the file is missing) --
-        # otherwise this day's archive page is identical to what's already on
-        # disk, and rendering it again 6x/day for the site's entire history
-        # is pure waste.
+        # Re-render a day only when its most-recently-fetched article has moved
+        # since the last run (or the file is missing) -- otherwise the page is
+        # identical to what's already on disk, and rendering it again 6x/day for
+        # the site's entire history is pure waste.
         max_fetched = max((lead.get("fetched") or "") for lead in leads_for_day)
         new_render_state[day] = max_fetched
         day_path = output_dir / "archive" / f"{day}.html"
@@ -496,7 +599,13 @@ def render_site() -> dict:
         day_path.write_text(
             archive_day_tmpl.render(
                 site=site_meta, day=day, groups=groups, asset_prefix="../", active_nav="archive",
-                show_filters=True, pagefind_index=True,
+                show_filters=True,
+                # Each cluster shown here also has its own story/{id}.html
+                # permalink page (see _render_story_pages below), which is now
+                # the canonical page Pagefind indexes for that story's text --
+                # indexing it here too would double-hit every search result.
+                pagefind_index=False,
+                canonical_path=f"archive/{day}.html",
             ),
             encoding="utf-8",
         )
@@ -512,9 +621,13 @@ def render_site() -> dict:
         archive_index_tmpl.render(
             site=site_meta, years=_group_archive_days(day_summaries), asset_prefix="../",
             active_nav="archive", pagefind_index=False,
+            canonical_path="archive/index.html",
         ),
         encoding="utf-8",
     )
+
+    # ---- per-cluster story permalink pages ----
+    story_pages_rendered = _render_story_pages(env, output_dir, site_meta, all_leads, feed_names)
 
     # ---- source health dashboard (brief feature #5) ----
     health_tmpl = env.get_template("health.html")
@@ -523,6 +636,7 @@ def render_site() -> dict:
             site=site_meta, feeds=feed_health,
             recovery_interval_hours=recovery_interval_hours, asset_prefix="", active_nav="health",
             pagefind_index=False,
+            canonical_path="health.html",
         ),
         encoding="utf-8",
     )
@@ -533,6 +647,7 @@ def render_site() -> dict:
         predictions_tmpl.render(
             site=site_meta, predictions=prediction_data, asset_prefix="", active_nav="predictions",
             pagefind_index=False,
+            canonical_path="predictions.html",
         ),
         encoding="utf-8",
     )
@@ -543,7 +658,9 @@ def render_site() -> dict:
     return {
         "clusters": len(all_leads),
         "top10": len(top10),
+        "just_in": len(just_in),
         "archive_days": len(archive_days),
+        "story_pages_rendered": story_pages_rendered,
         "feeds_inactive": sum(1 for f in feed_health if f["status"] == "inactive"),
         "feeds_degraded": sum(1 for f in feed_health if f["status"] == "degraded"),
         "feeds_muted": sum(1 for f in feed_health if f["status"] == "muted"),
@@ -558,7 +675,8 @@ def main() -> dict:
     stats = render_site()
     print(
         f"Done: {stats['clusters']} cluster(s) rendered, {stats['top10']} in today's top 10, "
-        f"{stats['archive_days']} archive day(s), "
+        f"{stats['just_in']} just in from the latest fetch run, "
+        f"{stats['archive_days']} archive day(s), {stats['story_pages_rendered']} story page(s) (re)rendered, "
         f"{stats['feeds_inactive']} feed(s) inactive, {stats['feeds_degraded']} degraded, "
         f"{stats['feeds_muted']} muted, "
         f"{stats['predictions_pending_review']} prediction(s) awaiting review, "

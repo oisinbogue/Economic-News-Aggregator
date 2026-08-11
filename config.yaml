@@ -7,6 +7,7 @@ paths:
   feeds_yaml: config/feeds.yaml
   taxonomy_yaml: config/taxonomy.yaml
   countries_yaml: config/countries.yaml
+  indicators_db_file: data/indicators.db
 
 run:
   fetch_concurrency: 30
@@ -150,3 +151,17 @@ maintenance:
   # aggregator.db from growing without bound. See that module's docstring
   # for why this is safe against the prediction-resolution workflow.
   prune_text_after_days: 90
+
+indicators:
+  # Runtime knobs for the indicators/ package (separate from pipeline/ --
+  # see INDICATORS_BRIEF.md §2/§3). Structural config -- country list, core
+  # indicator definitions, provider mappings -- lives in config/indicators/,
+  # not here, since those are seed files like feeds.yaml/taxonomy.yaml.
+  active_countries: [us, gb, ie, eu, de]   # Phase-1 gate; Phase 5+ grows this list
+  dbnomics_base_url: https://api.db.nomics.world/v22/
+  ecb_base_url: https://data-api.ecb.europa.eu/service/data
+  eurostat_base_url: https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data
+  ons_base_url: https://api.ons.gov.uk/v1/data
+  boe_base_url: https://www.bankofengland.co.uk/boeapps/iadb/fromshowcolumns.asp
+  fetch_concurrency: 5
+  fetch_timeout_seconds: 20

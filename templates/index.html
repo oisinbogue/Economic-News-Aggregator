@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% import "_cluster_card.html" as cards %}
 
+{% block title %}{{ site.title }} — Top 10 economic news, {{ today }}{% endblock %}
+{% block description %}Today's LLM-curated top 10 economic news stories ({{ today }}), clustered across international sources for multiple perspectives on each.{% endblock %}
+{% block og_image %}{{ top10[0].image if top10 and top10[0].image else (groups[0].clusters[0].image if groups and groups[0].clusters and groups[0].clusters[0].image else (site.base_url ~ "static/og-default.png")) }}{% endblock %}
+
 {% block content %}
 {% if top10 %}
 <section class="section" id="top10">
@@ -10,18 +14,18 @@
   {% if hero_stories %}
   <div class="hero">
     {% if hero_stories|length > 1 %}
-    <div class="hero-flank">{{ cards.cluster_card(hero_stories[1], rank=hero_stories[1].rank) }}</div>
+    <div class="hero-flank">{{ cards.cluster_card(hero_stories[1], rank=hero_stories[1].rank, asset_prefix=asset_prefix) }}</div>
     {% endif %}
-    <div class="hero-center">{{ cards.cluster_card(hero_stories[0], rank=hero_stories[0].rank) }}</div>
+    <div class="hero-center">{{ cards.cluster_card(hero_stories[0], rank=hero_stories[0].rank, asset_prefix=asset_prefix) }}</div>
     {% if hero_stories|length > 2 %}
-    <div class="hero-flank">{{ cards.cluster_card(hero_stories[2], rank=hero_stories[2].rank) }}</div>
+    <div class="hero-flank">{{ cards.cluster_card(hero_stories[2], rank=hero_stories[2].rank, asset_prefix=asset_prefix) }}</div>
     {% endif %}
   </div>
   {% endif %}
   {% if rest_stories %}
   <div class="card-grid">
     {% for cluster in rest_stories %}
-      {{ cards.cluster_card(cluster, rank=cluster.rank) }}
+      {{ cards.cluster_card(cluster, rank=cluster.rank, asset_prefix=asset_prefix) }}
     {% endfor %}
   </div>
   {% endif %}
@@ -30,12 +34,23 @@
 <p class="empty-note">No curated top 10 yet today -- check back after the next pipeline run, or see the <a href="archive/index.html">archive</a>.</p>
 {% endif %}
 
+{% if just_in %}
+<section class="section" id="just-in">
+  <h2 class="section-title">Just In <span class="section-sub">new stories from the latest pipeline run</span></h2>
+  <div class="card-grid">
+    {% for cluster in just_in %}
+      {{ cards.cluster_card(cluster, asset_prefix=asset_prefix) }}
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
 {% for group in groups %}
 <section class="section">
   <h2 class="section-title">{{ group.name }}</h2>
   <div class="card-grid">
     {% for cluster in group.clusters %}
-      {{ cards.cluster_card(cluster) }}
+      {{ cards.cluster_card(cluster, asset_prefix=asset_prefix) }}
     {% endfor %}
   </div>
 </section>

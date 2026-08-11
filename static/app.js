@@ -205,6 +205,209 @@
     });
   }
 
+  // Source Health page: client-side sort/filter over the plain feeds table
+  // (no framework, matches the rest of the site -- see initFilters above for
+  // the same pattern applied to homepage cluster cards).
+  function initHealthTable() {
+    var table = document.getElementById("health-table");
+    if (!table) return;
+    var tbody = table.querySelector("tbody");
+    var rows = Array.prototype.slice.call(tbody.querySelectorAll("tr"));
+    var headers = Array.prototype.slice.call(table.querySelectorAll("th[data-sort]"));
+    var textInput = document.getElementById("health-filter-text");
+    var statusSelect = document.getElementById("health-filter-status");
+    var regionSelect = document.getElementById("health-filter-region");
+    var visibleCount = document.getElementById("health-visible-count");
+    var noMatches = document.getElementById("health-no-matches");
+
+    var sortKey = null;
+    var sortDir = 1;
+
+    function applyFilters() {
+      var text = (textInput.value || "").trim().toLowerCase();
+      var status = statusSelect.value;
+      var region = regionSelect.value;
+      var visible = 0;
+
+      rows.forEach(function (row) {
+        var textOk = !text || (row.dataset.filterText || "").indexOf(text) !== -1;
+        var statusOk = !status || row.dataset.status === status;
+        var regionOk = !region || row.dataset.region === region;
+        var hide = !(textOk && statusOk && regionOk);
+        row.classList.toggle("health-row-hidden", hide);
+        if (!hide) visible += 1;
+      });
+
+      visibleCount.textContent = visible + " of " + rows.length + " feeds";
+      noMatches.hidden = visible !== 0;
+    }
+
+    function applySort(key) {
+      var type = headers.filter(function (h) { return h.dataset.sort === key; })[0].dataset.sortType;
+      if (sortKey === key) {
+        sortDir = -sortDir;
+      } else {
+        sortKey = key;
+        sortDir = 1;
+      }
+      headers.forEach(function (h) {
+        h.removeAttribute("data-sort-dir");
+      });
+      var activeHeader = headers.filter(function (h) { return h.dataset.sort === key; })[0];
+      activeHeader.setAttribute("data-sort-dir", sortDir === 1 ? "asc" : "desc");
+
+      var attr = "data-" + key + "-sort";
+      rows.sort(function (a, b) {
+        var av = a.getAttribute(attr) || "";
+        var bv = b.getAttribute(attr) || "";
+        if (type === "number") {
+          return (parseFloat(av) - parseFloat(bv)) * sortDir;
+        }
+        if (av < bv) return -1 * sortDir;
+        if (av > bv) return 1 * sortDir;
+        return 0;
+      });
+      rows.forEach(function (row) { tbody.appendChild(row); });
+    }
+
+    headers.forEach(function (h) {
+      h.addEventListener("click", function () { applySort(h.dataset.sort); });
+    });
+    textInput.addEventListener("input", applyFilters);
+    statusSelect.addEventListener("change", applyFilters);
+    regionSelect.addEventListener("change", applyFilters);
+
+    applyFilters();
+  }
+
+  // Indicators landing/country grid: search + topic/country chips + core/all
+  // toggle, all client-side over cards already in the DOM (server-rendered
+  // by indicators/build.py -- see indicators/data/manifest.json for the
+  // machine-readable equivalent). Cards beyond PAGE_SIZE start hidden so the
+  // landing page doesn't paint all ~700 cards at once (INDICATORS_BRIEF.md
+  // #9); "Show more" reveals another page at a time.
+  var INDICATOR_PAGE_SIZE = 24;
+
+  function initIndicators() {
+    var grid = document.getElementById("indicator-grid");
+    if (!grid) return;
+
+    var cards = Array.prototype.slice.call(grid.querySelectorAll(".indicator-card"));
+    var searchInput = document.getElementById("indicator-search");
+    var tierChips = Array.prototype.slice.call(document.querySelectorAll("[data-tier-chip]"));
+    var topicChips = Array.prototype.slice.call(document.querySelectorAll("[data-topic-chip]"));
+    var countryChips = Array.prototype.slice.call(document.querySelectorAll("[data-country-chip]"));
+    var clearBtn = document.getElementById("indicator-clear-filters");
+    var loadMoreBtn = document.getElementById("indicator-load-more");
+    var visibleCountEl = document.getElementById("indicator-visible-count");
+    var noMatchesEl = document.getElementById("indicator-no-matches");
+
+    var state = {
+      tier: "core",
+      topics: new Set(),
+      countries: new Set(),
+      query: "",
+      revealCount: INDICATOR_PAGE_SIZE
+    };
+
+    function matches(card) {
+      if (state.tier === "core" && card.dataset.tier !== "core") return false;
+      if (state.topics.size && !state.topics.has(card.dataset.topic)) return false;
+      if (state.countries.size && !state.countries.has(card.dataset.country)) return false;
+      if (state.query && (card.dataset.search || "").indexOf(state.query) === -1) return false;
+      return true;
+    }
+
+    function render() {
+      var matched = cards.filter(matches);
+      var shown = 0;
+      cards.forEach(function (card) {
+        var isMatch = matches(card);
+        card.classList.toggle("filtered-out", !isMatch);
+        if (!isMatch) return;
+        shown += 1;
+        card.classList.toggle("paginated-hidden", shown > state.revealCount);
+      });
+
+      var anyActive = state.tier !== "core" || state.topics.size || state.countries.size || state.query;
+      if (clearBtn) clearBtn.hidden = !anyActive;
+
+      var visibleNow = Math.min(matched.length, state.revealCount);
+      if (visibleCountEl) {
+        visibleCountEl.textContent = matched.length
+          ? "Showing " + visibleNow + " of " + matched.length + " indicators"
+          : "";
+      }
+      if (noMatchesEl) noMatchesEl.hidden = matched.length !== 0;
+      if (loadMoreBtn) loadMoreBtn.hidden = matched.length <= state.revealCount;
+    }
+
+    function resetPaginationAndRender() {
+      state.revealCount = INDICATOR_PAGE_SIZE;
+      render();
+    }
+
+    if (searchInput) {
+      var debounce = null;
+      searchInput.addEventListener("input", function () {
+        clearTimeout(debounce);
+        debounce = setTimeout(function () {
+          state.query = searchInput.value.trim().toLowerCase();
+          resetPaginationAndRender();
+        }, 120);
+      });
+    }
+
+    tierChips.forEach(function (chip) {
+      chip.addEventListener("click", function () {
+        state.tier = chip.dataset.tierChip;
+        tierChips.forEach(function (c) { c.classList.toggle("active", c === chip); });
+        resetPaginationAndRender();
+      });
+    });
+
+    topicChips.forEach(function (chip) {
+      chip.addEventListener("click", function () {
+        var value = chip.dataset.topicChip;
+        if (state.topics.has(value)) { state.topics.delete(value); chip.classList.remove("active"); }
+        else { state.topics.add(value); chip.classList.add("active"); }
+        resetPaginationAndRender();
+      });
+    });
+
+    countryChips.forEach(function (chip) {
+      chip.addEventListener("click", function () {
+        var value = chip.dataset.countryChip;
+        if (state.countries.has(value)) { state.countries.delete(value); chip.classList.remove("active"); }
+        else { state.countries.add(value); chip.classList.add("active"); }
+        resetPaginationAndRender();
+      });
+    });
+
+    if (clearBtn) {
+      clearBtn.addEventListener("click", function () {
+        state.tier = "core";
+        state.topics.clear();
+        state.countries.clear();
+        state.query = "";
+        if (searchInput) searchInput.value = "";
+        tierChips.forEach(function (c) { c.classList.toggle("active", c.dataset.tierChip === "core"); });
+        topicChips.forEach(function (c) { c.classList.remove("active"); });
+        countryChips.forEach(function (c) { c.classList.remove("active"); });
+        resetPaginationAndRender();
+      });
+    }
+
+    if (loadMoreBtn) {
+      loadMoreBtn.addEventListener("click", function () {
+        state.revealCount += INDICATOR_PAGE_SIZE;
+        render();
+      });
+    }
+
+    render();
+  }
+
   function initReviewHelp() {
     var btn = document.getElementById("review-help-btn");
     var dialog = document.getElementById("review-help-dialog");
@@ -420,6 +623,8 @@
   document.addEventListener("DOMContentLoaded", function () {
     initCarousels();
     initFilters();
+    initHealthTable();
+    initIndicators();
     initReviewHelp();
     initBackupStatus();
     initTheme();

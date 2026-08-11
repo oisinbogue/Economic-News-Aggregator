@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% import "_indicator_card.html" as cards_macro %}
+
+{% block title %}Indicators — {{ site.title }}{% endblock %}
+{% block description %}Live macroeconomic indicators by country and topic: GDP, inflation, rates, labour, housing and more, sourced from official statistical agencies.{% endblock %}
+
+{% block content %}
+<h1 class="section-title">Indicators</h1>
+<p class="section-note">
+  Macroeconomic indicators sourced directly from national and supranational statistical
+  agencies (attribution on every card), updated on each series' own release schedule.
+  Figures are shown against their <strong>reference period</strong>, not the date they were
+  published — a card reading &ldquo;2.1% &middot; Q1 2026&rdquo; describes Q1, however
+  recently that print was released.
+</p>
+
+{% if cards %}
+<div class="indicator-controls">
+  <input type="search" id="indicator-search" class="health-filter-text" placeholder="Search by title, country, or source...">
+  <div class="filter-group" data-facet="tier" role="group" aria-label="Coverage">
+    <button type="button" class="chip active" data-tier-chip="core">Core 16</button>
+    <button type="button" class="chip" data-tier-chip="all">All series</button>
+  </div>
+  <button type="button" id="indicator-clear-filters" class="chip chip-clear" hidden>Clear filters</button>
+</div>
+
+<div class="indicator-controls indicator-controls-chips">
+  <div class="filter-group" data-facet="topic" role="group" aria-label="Filter by topic">
+    <span class="filter-label">Topic</span>
+    {% for t in topics %}
+    <button type="button" class="chip" data-topic-chip="{{ t }}">{{ t }}</button>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="indicator-controls indicator-controls-chips">
+  <div class="filter-group" data-facet="country" role="group" aria-label="Filter by country">
+    <span class="filter-label">Country</span>
+    {% for c in countries %}
+    <button type="button" class="chip" data-country-chip="{{ c.iso }}">{{ c.flag }} {{ c.name }}</button>
+    {% endfor %}
+  </div>
+</div>
+
+<p class="indicator-visible-count" id="indicator-visible-count" role="status"></p>
+
+<div class="indicator-grid" id="indicator-grid">
+  {% for card in cards %}
+  {{ cards_macro.indicator_card(card, from_page="index") }}
+  {% endfor %}
+</div>
+
+<div class="indicator-load-more-wrap">
+  <button type="button" id="indicator-load-more" class="chip indicator-load-more" hidden>Show more indicators</button>
+</div>
+<p class="empty-note indicator-no-matches" id="indicator-no-matches" hidden>No indicators match the current filters.</p>
+
+<p class="section-note indicator-footnote">
+  Values reflect each agency's own methodology and seasonal adjustment. Where a series has
+  no official target band, colour is neutral regardless of whether it rose or fell — see a
+  series' own page for full methodology and licence terms.
+</p>
+{% else %}
+<p class="empty-note">No indicators published yet.</p>
+{% endif %}
+{% endblock %}

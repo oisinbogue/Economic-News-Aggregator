@@ -1,0 +1,42 @@
+name: Indicators backfill
+
+# Manually-triggered, full-historical-pull run for the indicators subsystem
+# (INDICATORS_BRIEF.md §8/§13 deliverable 4). Deliberately workflow_dispatch
+# only -- no `schedule:` trigger -- the scheduled incremental run (and the
+# indicators.db snapshot-to-GitHub-Releases persistence this workflow does
+# not attempt) are Phase 3 concerns (INDICATORS_BRIEF.md §10), not yet
+# built. Use this to (re)populate indicators.db from scratch on a fresh
+# runner, or to force-refetch series that `python -m indicators.fetch`'s
+# incremental due-for-refresh check would otherwise skip.
+#
+# Separate workflow and separate db file from pipeline.yml -- the
+# indicators subsystem is its own failure domain and must never block or be
+# blocked by the news pipeline (INDICATORS_BRIEF.md §2).
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Validate indicators config
+        run: python -m indicators.config
+
+      - name: Initialise schema + sync series from config
+        run: python -m indicators.db
+
+      - name: Backfill full history for every active series
+        run: python -m indicators.fetch --backfill

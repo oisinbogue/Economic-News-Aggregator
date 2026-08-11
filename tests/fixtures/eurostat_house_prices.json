@@ -1,0 +1,29 @@
+{
+  "version": "2.0",
+  "class": "dataset",
+  "label": "House price index - quarterly data",
+  "source": "ESTAT",
+  "value": {
+    "0": 143.2,
+    "1": 144.0,
+    "2": 145.1
+  },
+  "dimension": {
+    "freq": { "category": { "index": { "Q": 0 } } },
+    "purchase": { "category": { "index": { "TOTAL": 0 }, "label": { "TOTAL": "Total" } } },
+    "unit": {
+      "category": {
+        "index": { "I15_Q": 0 },
+        "label": { "I15_Q": "Quarterly index, 2015=100" }
+      }
+    },
+    "geo": { "category": { "index": { "EA20": 0 } } },
+    "time": {
+      "category": {
+        "index": { "2025-Q3": 0, "2025-Q4": 1, "2026-Q1": 2 }
+      }
+    }
+  },
+  "id": ["freq", "purchase", "unit", "geo", "time"],
+  "size": [1, 1, 1, 1, 3]
+}

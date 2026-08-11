@@ -1,0 +1,221 @@
+# Ireland series -> provider mapping. Every core.yaml key must appear below,
+# either with a real provider mapping or `unavailable: true` +
+# `unavailable_reason`. Ireland shares the euro-area policy rate and EUR/USD
+# exchange rate with eu.yaml/de.yaml (there is no separate Irish central
+# bank rate or currency).
+#
+# Corrected 2026-08-11: the `FRED/...` codes originally here were invented
+# without checking against the live API and all 404'd (DBnomics has no
+# 'FRED' provider -- see indicators/providers/dbnomics.py's module
+# docstring). Replaced with OECD short-term-economic-statistics /
+# labour-force-survey / financial-market series, consistent with
+# gb.yaml/de.yaml/eu.yaml, each confirmed live 2026-08-11.
+country: ie
+series:
+  gdp_real:
+    provider: dbnomics
+    # Real GDP, chain-linked volume, national currency, quarterly, SA.
+    # OECD Quarterly National Accounts. Confirmed live 2026-08-11.
+    provider_series_id: OECD/DSD_NAMAIN1@DF_QNA_EXPENDITURE_NATIO_CURR/Q.Y.IRL.S1.S1.B1GQ._Z._Z._Z.XDC.L.N.T0102
+    fallback_providers: [cso]
+    source_agency: Central Statistics Office Ireland
+    source_url: https://www.cso.ie/en/statistics/nationalaccounts/
+    licence: cc-by-4.0
+    seasonal_adjustment: sa
+    revisable: true
+    notes: >-
+      Irish headline GDP is heavily distorted by multinational profit-shifting
+      and contract-manufacturing flows; interpret in isolation with caution.
+      See the Modified Domestic Demand / GNI* extras planned for Phase 4.
+    news_topic_tags: [IRELAND, MACROECONOMICS, GLOBAL ECONOMY]
+  cpi_headline:
+    provider: dbnomics
+    # Eurostat HICP, all items, annual rate of change. Confirmed live
+    # 2026-08-11.
+    provider_series_id: Eurostat/prc_hicp_manr/M.RCH_A.CP00.IE
+    fallback_providers: [cso]
+    source_agency: Central Statistics Office Ireland
+    source_url: https://www.cso.ie/en/statistics/prices/consumerpriceindex/
+    licence: cc-by-4.0
+    seasonal_adjustment: nsa
+    revisable: false
+    news_topic_tags: [IRELAND, MACROECONOMICS]
+  cpi_core:
+    provider: dbnomics
+    # Eurostat HICP excluding energy & unprocessed food, member-state
+    # breakdown. Corrected 2026-08-11: prc_hicp_manr's real dimension
+    # order is freq.unit.coicop.geo (4 segments, not 3 -- the previous key
+    # was missing the `unit` dimension and 404'd); unit RCH_A (annual rate
+    # of change), coicop TOT_X_NRG_FOOD_NP, matching eu.yaml/de.yaml's
+    # already-corrected cpi_core entries. Confirmed live 2026-08-11.
+    provider_series_id: Eurostat/prc_hicp_manr/M.RCH_A.TOT_X_NRG_FOOD_NP.IE
+    fallback_providers: [cso]
+    source_agency: Central Statistics Office Ireland / Eurostat
+    source_url: https://www.cso.ie/en/statistics/prices/consumerpriceindex/
+    licence: cc-by-4.0
+    seasonal_adjustment: nsa
+    revisable: false
+    news_topic_tags: [IRELAND, MACROECONOMICS]
+  policy_rate:
+    provider: ecb
+    # ECB deposit facility rate. Confirmed live 2026-08-10 against
+    # https://data-api.ecb.europa.eu/service/data/FM/D.U2.EUR.4F.KR.DFR.LEV?format=jsondata.
+    provider_series_id: ECB/FM/D.U2.EUR.4F.KR.DFR.LEV
+    fallback_providers: [dbnomics]
+    source_agency: European Central Bank
+    source_url: https://data.ecb.europa.eu/
+    licence: ecb-terms
+    seasonal_adjustment: nsa
+    revisable: false
+    notes: Ireland uses the euro-area ECB policy rate; there is no separate Irish central bank rate.
+    news_topic_tags: [IRELAND, EUROPE & ECB, MACROECONOMICS]
+  unemployment_rate:
+    provider: dbnomics
+    # Monthly unemployment rate, 15+, SA. OECD infra-annual labour force
+    # statistics. Confirmed live 2026-08-11.
+    provider_series_id: OECD/DSD_LFS@DF_IALFS_UNE_M/IRL.UNE_LF_M.PT_LF_SUB._Z.Y._T.Y_GE15._Z.M
+    fallback_providers: [cso]
+    source_agency: Central Statistics Office Ireland
+    source_url: https://www.cso.ie/en/statistics/labourmarket/
+    licence: cc-by-4.0
+    seasonal_adjustment: sa
+    revisable: true
+    news_topic_tags: [IRELAND, INEQUALITY & LABOUR]
+  wages_nominal:
+    provider: dbnomics
+    # Earnings index, manufacturing, quarterly, SA -- OECD's hourly-earnings
+    # dataset has no "total economy, private sector" breakdown for Ireland
+    # the way it does for gb/de/eu (only Manufacturing); confirmed live
+    # 2026-08-11 this is the best available whole-economy proxy on
+    # DBnomics.
+    provider_series_id: OECD/DSD_EAR@DF_HOU_EAR/IRL.EAR.IX.Y.C.S1.Q
+    fallback_providers: [cso]
+    source_agency: Central Statistics Office Ireland
+    source_url: https://www.cso.ie/en/statistics/earthlyandlabourcosts/
+    licence: cc-by-4.0
+    seasonal_adjustment: sa
+    revisable: true
+    notes: OECD earnings index for Ireland only breaks out Manufacturing, not the whole economy; treat as a proxy.
+    news_topic_tags: [IRELAND, INEQUALITY & LABOUR]
+  industrial_production:
+    provider: dbnomics
+    # Production volume index, industry excl. construction, monthly, SA.
+    # OECD short-term economic statistics. Confirmed live 2026-08-11.
+    provider_series_id: OECD/DSD_STES@DF_INDSERV/IRL.M.PRVM.IX.BTE.Y._Z._Z.N
+    fallback_providers: [cso]
+    source_agency: Central Statistics Office Ireland
+    source_url: https://www.cso.ie/en/statistics/industry/industrialproduction/
+    licence: cc-by-4.0
+    seasonal_adjustment: sa
+    revisable: true
+    notes: Also distorted by multinational contract-manufacturing swings; see gdp_real note.
+    news_topic_tags: [IRELAND, MACROECONOMICS]
+  retail_sales:
+    provider: dbnomics
+    # Retail trade volume index, monthly, calendar+seasonally adjusted.
+    # OECD short-term economic statistics. Confirmed live 2026-08-11.
+    provider_series_id: OECD/DSD_STES@DF_INDSERV/IRL.M.TOVM.IX.G47.Y._Z._Z.N
+    fallback_providers: [cso]
+    source_agency: Central Statistics Office Ireland
+    source_url: https://www.cso.ie/en/statistics/services/retailsalesindex/
+    licence: cc-by-4.0
+    seasonal_adjustment: sa
+    revisable: true
+    news_topic_tags: [IRELAND, MACROECONOMICS]
+  govt_bond_10y:
+    provider: dbnomics
+    # Long-term (10y) government bond yield, monthly. OECD financial
+    # market statistics. Confirmed live 2026-08-11.
+    provider_series_id: OECD/DSD_STES@DF_FINMARK/IRL.M.IRLT.PA._Z._Z._Z._Z.N
+    fallback_providers: []
+    source_agency: National Treasury Management Agency
+    source_url: https://www.ntma.ie/
+    licence: cc-by-4.0
+    seasonal_adjustment: nsa
+    revisable: false
+    news_topic_tags: [IRELAND, EUROPE & ECB, MACROECONOMICS]
+  fx_vs_usd:
+    provider: ecb
+    provider_series_id: ECB/EXR/D.USD.EUR.SP00.A   # ECB reference rate, EUR/USD, daily -- confirmed live 2026-08-10
+    fallback_providers: [stooq]
+    source_agency: European Central Bank
+    source_url: https://data.ecb.europa.eu/data/datasets/EXR
+    licence: ecb-terms
+    seasonal_adjustment: nsa
+    revisable: false
+    notes: Ireland shares the euro/USD exchange rate with the rest of the euro area.
+    news_topic_tags: [IRELAND, GLOBAL ECONOMY, TRADE & GLOBALISATION]
+  house_prices:
+    provider: dbnomics
+    # BIS Selected residential property prices, real index (2010=100),
+    # quarterly. Confirmed live 2026-08-11.
+    provider_series_id: BIS/WS_SPP/Q.IE.R.628
+    fallback_providers: [cso]
+    source_agency: Bank for International Settlements / CSO Ireland
+    source_url: https://www.cso.ie/en/statistics/prices/residentialpropertypriceindex/
+    licence: bis-terms
+    seasonal_adjustment: sa
+    revisable: true
+    news_topic_tags: [IRELAND, HOUSING & PROPERTY]
+  govt_debt_gdp:
+    provider: dbnomics
+    provider_series_id: IMF/WEO:latest/IRL.GGXWDG_NGDP   # see us.yaml note on IMF WEO code verification
+    fallback_providers: []
+    source_agency: International Monetary Fund
+    source_url: https://www.imf.org/en/Publications/WEO
+    licence: imf-terms
+    seasonal_adjustment: nsa
+    revisable: true
+    notes: Ireland's debt-to-GDP ratio is depressed by the same GNI*-distorting flows as gdp_real; GNI*-denominated debt ratio is a Phase-4 extra.
+    news_topic_tags: [IRELAND, MACROECONOMICS]
+  budget_balance_gdp:
+    provider: dbnomics
+    provider_series_id: IMF/WEO:latest/IRL.GGXCNL_NGDP
+    fallback_providers: []
+    source_agency: International Monetary Fund
+    source_url: https://www.imf.org/en/Publications/WEO
+    licence: imf-terms
+    seasonal_adjustment: nsa
+    revisable: true
+    news_topic_tags: [IRELAND, MACROECONOMICS]
+  current_account_gdp:
+    provider: dbnomics
+    provider_series_id: IMF/WEO:latest/IRL.BCA_NGDPD
+    fallback_providers: []
+    source_agency: International Monetary Fund
+    source_url: https://www.imf.org/en/Publications/WEO
+    licence: imf-terms
+    seasonal_adjustment: nsa
+    revisable: true
+    news_topic_tags: [IRELAND, TRADE & GLOBALISATION, GLOBAL ECONOMY]
+  consumer_confidence:
+    provider: dbnomics
+    # Corrected 2026-08-11: OECD's composite consumer confidence indicator
+    # (percentage balance, SA) does in fact cover Ireland -- the earlier
+    # `unavailable` marker was based only on checking DBnomics/CSO PxStat
+    # directly, not OECD's harmonised series. Confirmed live 2026-08-11.
+    provider_series_id: OECD/DSD_STES@DF_CS/IRL.M.CCICP.PB._Z.Y._Z._Z.N
+    fallback_providers: []
+    source_agency: OECD (Consumer Opinion Surveys)
+    source_url: https://data-explorer.oecd.org/
+    licence: oecd-terms
+    seasonal_adjustment: sa
+    revisable: false
+    news_topic_tags: [IRELAND, MACROECONOMICS]
+  equity_index:
+    provider: dbnomics
+    # OECD share price index, monthly, for the ISEQ market. Stooq (the
+    # only daily, no-key source) is bot-gated for non-browser clients as
+    # of this writing (confirmed live 2026-08-11, see
+    # indicators/providers/stooq.py's docstring) -- kept as a fallback in
+    # case that changes; the ticker itself remains unverified. Confirmed
+    # live 2026-08-11.
+    provider_series_id: OECD/DSD_STES@DF_FINMARK/IRL.M.SHARE.IX._Z._Z._Z._Z.N
+    fallback_providers: [stooq]
+    source_agency: OECD (Financial Market Statistics)
+    source_url: https://data-explorer.oecd.org/
+    licence: oecd-terms
+    seasonal_adjustment: nsa
+    revisable: false
+    news_topic_tags: [IRELAND, GLOBAL ECONOMY]
+extras: []   # populated in Phase 4

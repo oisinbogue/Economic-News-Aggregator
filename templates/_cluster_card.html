@@ -1,10 +1,11 @@
-{% macro cluster_card(cluster, rank=None) %}
+{% macro cluster_card(cluster, rank=None, asset_prefix="") %}
 <article class="cluster-card"
          data-countries="{{ cluster.countries|join(',') }}"
          data-topics="{{ cluster.topic_list|join(',') }}">
   {% for t in cluster.topic_list %}<span data-pagefind-filter="topic:{{ t }}" hidden></span>{% endfor %}
   {% for c in cluster.countries %}<span data-pagefind-filter="country:{{ c }}" hidden></span>{% endfor %}
   {% if rank %}<div class="rank-badge" data-rank="{{ rank }}">Top story #{{ rank }}</div>{% endif %}
+  {% if cluster.permalink %}<a class="permalink-link" href="{{ asset_prefix }}{{ cluster.permalink }}" aria-label="Permalink to this story">&#128279; Permalink</a>{% endif %}
   <div class="carousel"{% if cluster.members|length > 1 %} tabindex="0" role="region" aria-roledescription="carousel" aria-label="{{ cluster.members|length }} takes on this story, use left and right arrow keys to browse"{% endif %}>
     <div class="carousel-track">
       {% for m in cluster.members %}

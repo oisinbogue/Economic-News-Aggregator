@@ -1,0 +1,114 @@
+# The 16 core indicators every Phase-1 country must report (INDICATORS_BRIEF.md
+# §6.1), country-agnostic. Provider mappings live per country in
+# config/indicators/series/<iso>.yaml, because the same indicator key is
+# sourced differently per country (e.g. policy_rate is a Fed funds rate for
+# `us` and a shared ECB deposit rate for `eu`/`de`/`ie`).
+#
+# target_band is the country-agnostic default (e.g. the ~2% inflation target
+# shared by the Fed and ECB). series/<iso>.yaml may override it per country
+# with its own `target_band` key when a country's target genuinely differs
+# (resolves open question 1 in INDICATORS_SCHEMA_PROPOSAL.md).
+indicators:
+  gdp_real:
+    topic: economy
+    unit: percent
+    frequency: Q
+    transform_default: yoy   # qoq also stored, per brief §6.1
+    direction_good: up
+  cpi_headline:
+    topic: prices
+    unit: percent
+    frequency: M
+    transform_default: yoy
+    direction_good: neutral
+    target_band: [1.0, 3.0]   # ECB/Fed ~2% target, banded
+  cpi_core:
+    topic: prices
+    unit: percent
+    frequency: M
+    transform_default: yoy
+    direction_good: neutral
+    target_band: [1.0, 3.0]
+  policy_rate:
+    topic: rates
+    unit: percent
+    frequency: D
+    transform_default: level
+    direction_good: neutral
+  unemployment_rate:
+    topic: labour
+    unit: percent
+    frequency: M
+    transform_default: level
+    direction_good: down
+  wages_nominal:
+    topic: labour
+    unit: percent
+    frequency: Q
+    transform_default: yoy
+    direction_good: up
+  industrial_production:
+    topic: economy
+    unit: percent
+    frequency: M
+    transform_default: yoy
+    direction_good: up
+  retail_sales:
+    topic: economy
+    unit: percent
+    frequency: M
+    transform_default: yoy
+    direction_good: up
+  govt_bond_10y:
+    topic: rates
+    unit: percent
+    frequency: D
+    transform_default: level
+    direction_good: neutral
+  fx_vs_usd:
+    topic: markets
+    unit: ratio
+    frequency: D
+    transform_default: level
+    direction_good: neutral
+  house_prices:
+    topic: housing
+    unit: index
+    frequency: Q
+    transform_default: yoy
+    direction_good: neutral
+  govt_debt_gdp:
+    topic: government
+    unit: percent_gdp
+    frequency: A
+    transform_default: level
+    direction_good: down
+  budget_balance_gdp:
+    topic: government
+    unit: percent_gdp
+    frequency: A
+    transform_default: level
+    direction_good: up
+  current_account_gdp:
+    topic: government
+    unit: percent_gdp
+    frequency: A
+    transform_default: level
+    direction_good: neutral
+  consumer_confidence:
+    topic: confidence
+    unit: index
+    frequency: M
+    transform_default: level
+    direction_good: up
+  equity_index:
+    topic: markets
+    unit: index
+    # Corrected 2026-08-11: primary source is now the OECD monthly share
+    # price index (Stooq -- the only daily, no-key equity source -- is
+    # bot-gated for non-browser clients as of this writing; kept as a
+    # fallback_provider per series in case that changes). See
+    # config/indicators/series/*.yaml's equity_index entries.
+    frequency: M
+    transform_default: yoy   # level also stored, per brief §6.1
+    direction_good: up

@@ -1,0 +1,69 @@
+{% macro sparkline(card) %}
+{% set points = card.sparkline %}
+{% if points and points|length > 1 %}
+  {% set ns = namespace(min=points[0], max=points[0]) %}
+  {% for v in points %}
+    {% if v < ns.min %}{% set ns.min = v %}{% endif %}
+    {% if v > ns.max %}{% set ns.max = v %}{% endif %}
+  {% endfor %}
+  {% set span = (ns.max - ns.min) if ns.max != ns.min else 1 %}
+  {% set w = 100 %}
+  {% set h = 28 %}
+  {% set step = (w / (points|length - 1)) %}
+  {% set coords = [] %}
+  {% for v in points %}
+    {% set x = (loop.index0 * step) | round(2) %}
+    {% set y = (h - ((v - ns.min) / span * h)) | round(2) %}
+    {% if coords.append(x ~ "," ~ y) %}{% endif %}
+  {% endfor %}
+  {% set rising = points[-1] >= points[0] %}
+<svg class="spark" viewBox="0 0 {{ w }} {{ h }}" preserveAspectRatio="none" role="img" aria-label="Trend over the last {{ points|length }} observations: {{ 'rising' if rising else 'falling' }}, from {{ points[0] }} to {{ points[-1] }}">
+  <title>{{ 'Rising' if rising else 'Falling' }} trend, last {{ points|length }} observations</title>
+  <polyline points="{{ coords|join(' ') }}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"></polyline>
+</svg>
+{% endif %}
+{% endmacro %}
+
+{% macro indicator_card(card, from_page="index") %}
+{# `from_page` sets the relative path back to this card's series page:
+   "index" (indicators/index.html -> indicators/<iso>/<key>/) needs the
+   country segment, "country" (indicators/<iso>/index.html -> ./<key>/)
+   is already inside that country's directory and must not repeat it. #}
+{% set href = (card.country ~ "/" ~ card.indicator_key ~ "/index.html") if from_page == "index" else (card.indicator_key ~ "/index.html") %}
+<article class="indicator-card trend-{{ card.trend_color }}{% if card.stale %} is-stale{% endif %}"
+          data-country="{{ card.country }}"
+          data-topic="{{ card.topic }}"
+          data-tier="{{ card.tier }}"
+          data-search="{{ (card.title ~ ' ' ~ card.country_name ~ ' ' ~ card.source_agency) | lower }}">
+  <a class="indicator-card-link" href="{{ href }}">
+    <div class="indicator-card-head">
+      <span class="indicator-flag" aria-hidden="true">{{ card.flag }}</span>
+      <span class="indicator-country">{{ card.country_name }}</span>
+      {% if card.is_derived %}
+      <span class="indicator-derived" tabindex="0" title="Computed series{% if card.derivation %}: {{ card.derivation }}{% endif %}">computed</span>
+      {% endif %}
+      {% if card.stale %}
+      <span class="indicator-stale-dot" title="No update in longer than expected for this series' release schedule">stale</span>
+      {% endif %}
+    </div>
+    <h3 class="indicator-title">{{ card.title }}</h3>
+    <div class="indicator-meta">
+      <span class="indicator-topic">{{ card.topic }}</span>
+      <span class="indicator-source">{{ card.source_agency }}</span>
+    </div>
+    <div class="indicator-value-row">
+      <span class="indicator-value">{{ card.value_display }}</span>
+      {% if card.change_display %}
+      <span class="indicator-badge indicator-badge-{{ card.trend_color }}" aria-label="Change vs prior period: {{ card.change_display }}, {{ card.trend_color }}">
+        <span class="indicator-arrow" aria-hidden="true">{{ "▲" if card.trend_arrow == "up" else ("▼" if card.trend_arrow == "down" else "●") }}</span>{{ card.change_display }}
+      </span>
+      {% endif %}
+    </div>
+    {% if card.period_label %}<div class="indicator-period">{{ card.period_label }}</div>{% endif %}
+    {{ sparkline(card) }}
+    <div class="indicator-foot">
+      {% if card.next_release_label %}<span class="indicator-next-release">Next: {{ card.next_release_label }}</span>{% endif %}
+    </div>
+  </a>
+</article>
+{% endmacro %}

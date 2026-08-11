@@ -1,0 +1,35 @@
+{
+  "dataSets": [
+    {
+      "series": {
+        "0:0:0:0:0:0": {
+          "observations": {
+            "0": [2.1, 0, 0, null, null],
+            "1": [2.0, 0, 0, null, null],
+            "2": [1.9, 0, 0, null, null]
+          }
+        }
+      }
+    }
+  ],
+  "structure": {
+    "name": "Indices of Consumer prices",
+    "dimensions": {
+      "series": [
+        { "id": "FREQ", "values": [{ "id": "M", "name": "Monthly" }] }
+      ],
+      "observation": [
+        {
+          "id": "TIME_PERIOD",
+          "name": "Time period or range",
+          "role": "time",
+          "values": [
+            { "id": "2026-04", "name": "2026-04" },
+            { "id": "2026-05", "name": "2026-05" },
+            { "id": "2026-06", "name": "2026-06" }
+          ]
+        }
+      ]
+    }
+  }
+}

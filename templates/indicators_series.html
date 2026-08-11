@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% import "_indicator_card.html" as cards_macro %}
+
+{% block title %}{{ series.title }} — {{ country.name }} — {{ site.title }}{% endblock %}
+{% block description %}{{ series.title }} for {{ country.name }}, from {{ series.source_agency }}: full history, methodology, and revisions.{% endblock %}
+
+{% block content %}
+<p class="breadcrumb"><a href="../../index.html">&#8592; All indicators</a> &middot; <a href="../index.html">{{ country.flag }} {{ country.name }}</a></p>
+<h1 class="section-title">{{ series.title }}
+  {% if card.is_derived %}<span class="indicator-derived" tabindex="0" title="Computed series{% if series.notes %}: {{ series.notes }}{% endif %}">computed</span>{% endif %}
+</h1>
+
+<div class="indicator-series-head">
+  <div class="indicator-value-row">
+    <span class="indicator-value indicator-value-lg">{{ card.value_display }}</span>
+    {% if card.change_display %}
+    <span class="indicator-badge indicator-badge-{{ card.trend_color }}" aria-label="Change vs prior period: {{ card.change_display }}, {{ card.trend_color }}">
+      <span class="indicator-arrow" aria-hidden="true">{{ "▲" if card.trend_arrow == "up" else ("▼" if card.trend_arrow == "down" else "●") }}</span>{{ card.change_display }}
+    </span>
+    {% endif %}
+  </div>
+  {% if card.period_label %}<div class="indicator-period">{{ card.period_label }}</div>{% endif %}
+  {% if card.stale %}<p class="indicator-stale-note">Stale — no observation within 1.5&times; the expected release interval for this series' frequency.</p>{% endif %}
+  {% if card.next_release_label %}<p class="indicator-next-release">Next release: {{ card.next_release_label }}</p>{% endif %}
+</div>
+
+{% if series.notes %}
+<p class="section-note indicator-notes">{{ series.notes }}</p>
+{% endif %}
+{% if series.is_derived and series.derivation %}
+<p class="section-note indicator-notes">Computed as: <code>{{ series.derivation }}</code></p>
+{% endif %}
+
+<h2 class="section-title">Methodology &amp; attribution</h2>
+<dl class="indicator-meta-list">
+  <div><dt>Source</dt><dd><a href="{{ series.source_url }}" target="_blank" rel="noopener">{{ series.source_agency }}</a></dd></div>
+  <div><dt>Licence</dt><dd>{{ series.licence }}</dd></div>
+  <div><dt>Topic</dt><dd>{{ series.topic }}</dd></div>
+  <div><dt>Frequency</dt><dd>{{ {"D":"Daily","W":"Weekly","M":"Monthly","Q":"Quarterly","A":"Annual"}[series.frequency] | default(series.frequency) }}</dd></div>
+  <div><dt>Unit</dt><dd>{{ series.unit }}{% if series.unit_currency %} ({{ series.unit_currency }}){% endif %}</dd></div>
+  <div><dt>Transform shown</dt><dd>{{ series.transform_default }}</dd></div>
+  <div><dt>Seasonal adjustment</dt><dd>{{ {"sa":"Seasonally adjusted","nsa":"Not seasonally adjusted","unknown":"Unknown"}[series.seasonal_adjustment] | default(series.seasonal_adjustment) }}</dd></div>
+  <div><dt>Revisable</dt><dd>{{ "Yes — historic values may be restated" if series.revisable else "No" }}</dd></div>
+  {% if series.target_value is not none or series.target_band_low is not none %}
+  <div><dt>Target</dt><dd>
+    {% if series.target_band_low is not none and series.target_band_high is not none %}{{ series.target_band_low }}–{{ series.target_band_high }}%{% elif series.target_value is not none %}{{ series.target_value }}{% endif %}
+  </dd></div>
+  {% endif %}
+</dl>
+
+<p class="indicator-downloads">
+  Download full history: <a href="{{ data_json }}">JSON</a> &middot; <a href="{{ data_csv }}">CSV</a>
+  ({{ series.observations|length }} observation{{ "s" if series.observations|length != 1 else "" }})
+</p>
+
+<h2 class="section-title">History <span class="section-sub">last {{ card.sparkline|length }} points, downsampled</span></h2>
+<div class="indicator-series-chart">{{ cards_macro.sparkline(card) }}</div>
+
+<h2 class="section-title">Recent observations</h2>
+{% if recent_observations %}
+<div class="health-table-wrap">
+  <table class="health-table indicator-history">
+    <thead>
+      <tr>
+        <th>Period</th>
+        <th>Value</th>
+        {% if series.unit_currency %}<th>USD</th>{% endif %}
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for o in recent_observations %}
+      <tr>
+        <td>{{ o.period_start }} &ndash; {{ o.period_end }}</td>
+        <td>{{ o.value | fmt_value(series.unit, series.unit_currency, series.scale) }}</td>
+        {% if series.unit_currency %}<td>{% if o.value_usd is not none %}${{ '%.2f' | format(o.value_usd) }}{% else %}&mdash;{% endif %}</td>{% endif %}
+        <td>{{ "Preliminary" if o.is_preliminary else "Final" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="empty-note">No observations recorded yet.</p>
+{% endif %}
+
+{% if revisions %}
+<h2 class="section-title">Revision history</h2>
+<div class="health-table-wrap">
+  <table class="health-table indicator-revisions">
+    <thead><tr><th>Period start</th><th>Old value</th><th>New value</th><th>Observed</th></tr></thead>
+    <tbody>
+      {% for r in revisions %}
+      <tr>
+        <td>{{ r.period_start }}</td>
+        <td>{{ r.old_value | fmt_value(series.unit, series.unit_currency, series.scale) }}</td>
+        <td>{{ r.new_value | fmt_value(series.unit, series.unit_currency, series.scale) }}</td>
+        <td>{{ r.observed_at }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}

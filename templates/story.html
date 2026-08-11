@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% import "_cluster_card.html" as cards %}
+
+{% block title %}{{ cluster.title }} — {{ site.title }}{% endblock %}
+{% block description %}{{ cluster.summary or (cluster.members|length|string ~ " source(s) covering this story, clustered from " ~ (cluster.day or "recent") ~ ".") }}{% endblock %}
+{% block og_image %}{{ cluster.image if cluster.image else (site.base_url ~ "static/og-default.png") }}{% endblock %}
+
+{% block content %}
+<p class="breadcrumb"><a href="{{ asset_prefix }}archive/{{ cluster.day }}.html">&#8592; {{ cluster.day }}</a></p>
+
+<section class="section" id="story">
+  {{ cards.cluster_card(cluster, asset_prefix=asset_prefix) }}
+</section>
+
+{% if all_members and all_members|length > cluster.members|length %}
+<section class="section">
+  <h2 class="section-title">All sources in this story <span class="section-sub">{{ all_members|length }} article(s)</span></h2>
+  <ul class="all-sources-list">
+    {% for m in all_members %}
+    <li class="all-sources-item">
+      <a href="{{ m.url }}" target="_blank" rel="noopener">{{ m.title }}</a>
+      <span class="meta">
+        <span class="source">{{ m.source_name }}</span>
+        {% if m.country %}<span class="country">{{ m.country }}</span>{% endif %}
+        <span class="date">{{ m.fetched_display }}</span>
+      </span>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<p class="breadcrumb"><a href="{{ asset_prefix }}archive/{{ cluster.day }}.html#c-{{ cluster.cluster_id }}">&#8592; Back to {{ cluster.day }} archive</a></p>
+{% endblock %}

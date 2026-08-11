@@ -1,0 +1,206 @@
+# Germany series -> provider mapping. Every core.yaml key must appear below,
+# either with a real provider mapping or `unavailable: true` +
+# `unavailable_reason`. Germany shares the euro-area policy rate and EUR/USD
+# exchange rate with eu.yaml/ie.yaml.
+#
+# Corrected 2026-08-11: the `FRED/...` codes originally here were invented
+# without checking against the live API and all 404'd (DBnomics has no
+# 'FRED' provider -- see indicators/providers/dbnomics.py's module
+# docstring). Replaced with OECD short-term-economic-statistics /
+# labour-force-survey / financial-market series, consistent with
+# gb.yaml/ie.yaml/eu.yaml, each confirmed live 2026-08-11.
+country: de
+series:
+  gdp_real:
+    provider: dbnomics
+    # Real GDP, chain-linked volume, national currency, quarterly, SA.
+    # OECD Quarterly National Accounts. Confirmed live 2026-08-11.
+    provider_series_id: OECD/DSD_NAMAIN1@DF_QNA_EXPENDITURE_NATIO_CURR/Q.Y.DEU.S1.S1.B1GQ._Z._Z._Z.XDC.L.N.T0102
+    fallback_providers: [destatis]
+    source_agency: Destatis (Federal Statistical Office of Germany)
+    source_url: https://www.destatis.de/EN/Themes/Economy/National-Accounts-Domestic-Product/_node.html
+    licence: destatis-terms
+    seasonal_adjustment: sa
+    revisable: true
+    news_topic_tags: [EUROPE & ECB, MACROECONOMICS, GLOBAL ECONOMY]
+  cpi_headline:
+    provider: dbnomics
+    # Eurostat HICP, all items, annual rate of change. Confirmed live
+    # 2026-08-11.
+    provider_series_id: Eurostat/prc_hicp_manr/M.RCH_A.CP00.DE
+    fallback_providers: [destatis]
+    source_agency: Destatis
+    source_url: https://www.destatis.de/EN/Themes/Economy/Prices/Consumer-Price-Index/_node.html
+    licence: destatis-terms
+    seasonal_adjustment: nsa
+    revisable: false
+    news_topic_tags: [EUROPE & ECB, MACROECONOMICS]
+  cpi_core:
+    provider: eurostat
+    # Eurostat HICP excluding energy & unprocessed food, member-state
+    # breakdown. Corrected 2026-08-10: see eu.yaml's cpi_core note --
+    # prc_hicp_manr's real dimension order is freq.unit.coicop.geo, unit
+    # RCH_A (annual rate of change), coicop TOT_X_NRG_FOOD_NP. Confirmed
+    # against
+    # https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/prc_hicp_manr/M.RCH_A.TOT_X_NRG_FOOD_NP.DE?format=JSON.
+    provider_series_id: Eurostat/prc_hicp_manr/M.RCH_A.TOT_X_NRG_FOOD_NP.DE
+    fallback_providers: [destatis]
+    source_agency: Destatis / Eurostat
+    source_url: https://www.destatis.de/EN/Themes/Economy/Prices/Consumer-Price-Index/_node.html
+    licence: cc-by-4.0
+    seasonal_adjustment: nsa
+    revisable: false
+    news_topic_tags: [EUROPE & ECB, MACROECONOMICS]
+  policy_rate:
+    provider: ecb
+    provider_series_id: ECB/FM/D.U2.EUR.4F.KR.DFR.LEV   # ECB deposit facility rate -- confirmed live 2026-08-10, see ie.yaml note
+    fallback_providers: [dbnomics]
+    source_agency: European Central Bank
+    source_url: https://data.ecb.europa.eu/
+    licence: ecb-terms
+    seasonal_adjustment: nsa
+    revisable: false
+    notes: Germany uses the euro-area ECB policy rate; there is no separate Bundesbank rate.
+    news_topic_tags: [EUROPE & ECB, MACROECONOMICS]
+  unemployment_rate:
+    provider: dbnomics
+    # Monthly unemployment rate, 15+, SA. OECD infra-annual labour force
+    # statistics. Confirmed live 2026-08-11.
+    provider_series_id: OECD/DSD_LFS@DF_IALFS_UNE_M/DEU.UNE_LF_M.PT_LF_SUB._Z.Y._T.Y_GE15._Z.M
+    fallback_providers: [destatis]
+    source_agency: Federal Employment Agency (Bundesagentur für Arbeit) / Destatis
+    source_url: https://www.destatis.de/EN/Themes/Labour/Labour-Market/_node.html
+    licence: destatis-terms
+    seasonal_adjustment: sa
+    revisable: true
+    news_topic_tags: [EUROPE & ECB, INEQUALITY & LABOUR]
+  wages_nominal:
+    provider: dbnomics
+    # Earnings index, private sector, quarterly, SA. OECD hourly-earnings
+    # dataset. Confirmed live 2026-08-11.
+    provider_series_id: OECD/DSD_EAR@DF_HOU_EAR/DEU.EAR.IX.Y._Z.S1D.Q
+    fallback_providers: [destatis]
+    source_agency: Destatis
+    source_url: https://www.destatis.de/EN/Themes/Labour/Earnings/_node.html
+    licence: destatis-terms
+    seasonal_adjustment: sa
+    revisable: true
+    news_topic_tags: [EUROPE & ECB, INEQUALITY & LABOUR]
+  industrial_production:
+    provider: dbnomics
+    # Production volume index, industry excl. construction, monthly, SA.
+    # OECD short-term economic statistics. Confirmed live 2026-08-11.
+    provider_series_id: OECD/DSD_STES@DF_INDSERV/DEU.M.PRVM.IX.BTE.Y._Z._Z.N
+    fallback_providers: [destatis]
+    source_agency: Destatis
+    source_url: https://www.destatis.de/EN/Themes/Economy/Short-Term-Indicators/_node.html
+    licence: destatis-terms
+    seasonal_adjustment: sa
+    revisable: true
+    news_topic_tags: [EUROPE & ECB, MACROECONOMICS, GLOBAL ECONOMY]
+  retail_sales:
+    provider: dbnomics
+    # Retail trade volume index, monthly, calendar+seasonally adjusted.
+    # OECD short-term economic statistics. Confirmed live 2026-08-11.
+    provider_series_id: OECD/DSD_STES@DF_INDSERV/DEU.M.TOVM.IX.G47.Y._Z._Z.N
+    fallback_providers: [destatis]
+    source_agency: Destatis
+    source_url: https://www.destatis.de/EN/Themes/Economy/Short-Term-Indicators/_node.html
+    licence: destatis-terms
+    seasonal_adjustment: sa
+    revisable: true
+    news_topic_tags: [EUROPE & ECB, MACROECONOMICS]
+  govt_bond_10y:
+    provider: dbnomics
+    # Long-term (10y) government bond (Bund) yield, monthly. OECD
+    # financial market statistics. Confirmed live 2026-08-11.
+    provider_series_id: OECD/DSD_STES@DF_FINMARK/DEU.M.IRLT.PA._Z._Z._Z._Z.N
+    fallback_providers: []
+    source_agency: Deutsche Bundesbank
+    source_url: https://www.bundesbank.de/en/statistics
+    licence: bundesbank-terms
+    seasonal_adjustment: nsa
+    revisable: false
+    news_topic_tags: [EUROPE & ECB, MACROECONOMICS, GLOBAL ECONOMY]
+  fx_vs_usd:
+    provider: ecb
+    provider_series_id: ECB/EXR/D.USD.EUR.SP00.A   # ECB reference rate, EUR/USD, daily -- confirmed live 2026-08-10
+    fallback_providers: [stooq]
+    source_agency: European Central Bank
+    source_url: https://data.ecb.europa.eu/data/datasets/EXR
+    licence: ecb-terms
+    seasonal_adjustment: nsa
+    revisable: false
+    notes: Germany shares the euro/USD exchange rate with the rest of the euro area.
+    news_topic_tags: [EUROPE & ECB, GLOBAL ECONOMY, TRADE & GLOBALISATION]
+  house_prices:
+    provider: dbnomics
+    # BIS Selected residential property prices, real index (2010=100),
+    # quarterly. Confirmed live 2026-08-11.
+    provider_series_id: BIS/WS_SPP/Q.DE.R.628
+    fallback_providers: [destatis]
+    source_agency: Bank for International Settlements / Destatis
+    source_url: https://www.bis.org/statistics/pp.htm
+    licence: bis-terms
+    seasonal_adjustment: sa
+    revisable: true
+    news_topic_tags: [EUROPE & ECB, HOUSING & PROPERTY]
+  govt_debt_gdp:
+    provider: dbnomics
+    provider_series_id: IMF/WEO:latest/DEU.GGXWDG_NGDP   # see us.yaml note on IMF WEO code verification
+    fallback_providers: []
+    source_agency: International Monetary Fund
+    source_url: https://www.imf.org/en/Publications/WEO
+    licence: imf-terms
+    seasonal_adjustment: nsa
+    revisable: true
+    news_topic_tags: [EUROPE & ECB, MACROECONOMICS]
+  budget_balance_gdp:
+    provider: dbnomics
+    provider_series_id: IMF/WEO:latest/DEU.GGXCNL_NGDP
+    fallback_providers: []
+    source_agency: International Monetary Fund
+    source_url: https://www.imf.org/en/Publications/WEO
+    licence: imf-terms
+    seasonal_adjustment: nsa
+    revisable: true
+    news_topic_tags: [EUROPE & ECB, MACROECONOMICS]
+  current_account_gdp:
+    provider: dbnomics
+    provider_series_id: IMF/WEO:latest/DEU.BCA_NGDPD
+    fallback_providers: []
+    source_agency: International Monetary Fund
+    source_url: https://www.imf.org/en/Publications/WEO
+    licence: imf-terms
+    seasonal_adjustment: nsa
+    revisable: true
+    news_topic_tags: [EUROPE & ECB, TRADE & GLOBALISATION, GLOBAL ECONOMY]
+  consumer_confidence:
+    provider: dbnomics
+    # OECD composite consumer confidence indicator, percentage balance,
+    # SA. Confirmed live 2026-08-11.
+    provider_series_id: OECD/DSD_STES@DF_CS/DEU.M.CCICP.PB._Z.Y._Z._Z.N
+    fallback_providers: [destatis]
+    source_agency: OECD (Consumer Opinion Surveys)
+    source_url: https://data-explorer.oecd.org/
+    licence: oecd-terms
+    seasonal_adjustment: sa
+    revisable: false
+    news_topic_tags: [EUROPE & ECB, MACROECONOMICS]
+  equity_index:
+    provider: dbnomics
+    # OECD share price index, monthly, for the DAX market. Stooq (the
+    # only daily, no-key source) is bot-gated for non-browser clients as
+    # of this writing (confirmed live 2026-08-11, see
+    # indicators/providers/stooq.py's docstring) -- kept as a fallback in
+    # case that changes; the ticker itself remains unverified. Confirmed
+    # live 2026-08-11.
+    provider_series_id: OECD/DSD_STES@DF_FINMARK/DEU.M.SHARE.IX._Z._Z._Z._Z.N
+    fallback_providers: [stooq]
+    source_agency: OECD (Financial Market Statistics)
+    source_url: https://data-explorer.oecd.org/
+    licence: oecd-terms
+    seasonal_adjustment: nsa
+    revisable: false
+    news_topic_tags: [EUROPE & ECB, GLOBAL ECONOMY]
+extras: []   # populated in Phase 4

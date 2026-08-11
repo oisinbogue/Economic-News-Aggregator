@@ -1,0 +1,86 @@
+{
+  "_meta": {
+    "args": {
+      "align_periods": false,
+      "dataset_code": "NIPA-T10105",
+      "dimensions": {},
+      "facets": false,
+      "format": "json",
+      "limit": 100,
+      "metadata": true,
+      "observations": true,
+      "offset": 0,
+      "provider_code": "BEA",
+      "q": "",
+      "series_code": null
+    },
+    "version": "22.1.17"
+  },
+  "dataset": {
+    "code": "NIPA-T10105",
+    "provider_code": "BEA",
+    "name": "Table 1.1.5. Gross Domestic Product - LastRevised: July 30, 2026"
+  },
+  "provider": {
+    "code": "BEA",
+    "indexed_at": "2026-07-26T01:26:43.564Z",
+    "name": "U.S. Bureau of Economic Analysis",
+    "region": "US",
+    "slug": "bea",
+    "terms_of_use": "https://bea.gov/API/_pdf/bea_api_tos.pdf",
+    "website": "http://www.bea.gov"
+  },
+  "errors": null,
+  "series": {
+    "docs": [
+      {
+        "@frequency": "quarterly",
+        "dataset_code": "NIPA-T10105",
+        "dataset_name": "Table 1.1.5. Gross Domestic Product - LastRevised: July 30, 2026",
+        "dimensions": {
+          "FREQ": "Q",
+          "concept": "gross-private-domestic-investment",
+          "metric": "millions-of-current-dollars",
+          "unit": "level"
+        },
+        "indexed_at": "2026-06-26T01:37:24.800Z",
+        "period": [
+          "2024-Q3",
+          "2024-Q4",
+          "2025-Q1",
+          "2025-Q2",
+          "2025-Q3",
+          "2025-Q4",
+          "2026-Q1",
+          "2026-Q2"
+        ],
+        "period_start_day": [
+          "2024-07-01",
+          "2024-10-01",
+          "2025-01-01",
+          "2025-04-01",
+          "2025-07-01",
+          "2025-10-01",
+          "2026-01-01",
+          "2026-04-01"
+        ],
+        "provider_code": "BEA",
+        "series_code": "A006RC-Q",
+        "series_name": "Gross private domestic investment (line 7) - Quarterly",
+        "value": [
+          5330249.0,
+          5261830.0,
+          null,
+          5358632.0,
+          5419029.0,
+          5500636.0,
+          5634016.0,
+          5719908.0
+        ]
+      }
+    ],
+    "limit": 1,
+    "num_found": 1,
+    "offset": 0
+  }
+}

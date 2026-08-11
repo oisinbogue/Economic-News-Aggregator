@@ -1,0 +1,41 @@
+{
+  "dataSets": [
+    {
+      "series": {
+        "0:0:0:0:0:0:0": {
+          "observations": {
+            "0": [2.25, 0, 0, null, null],
+            "1": [2.25, 0, 0, null, null],
+            "2": [null, 0, 0, null, null],
+            "3": [2.25, 0, 0, null, null],
+            "4": [2.0, 0, 0, null, null],
+            "5": [2.0, 0, 0, null, null]
+          }
+        }
+      }
+    }
+  ],
+  "structure": {
+    "name": "Financial market data",
+    "dimensions": {
+      "series": [
+        { "id": "FREQ", "values": [{ "id": "D", "name": "Daily" }] }
+      ],
+      "observation": [
+        {
+          "id": "TIME_PERIOD",
+          "name": "Time period or range",
+          "role": "time",
+          "values": [
+            { "id": "2026-08-05", "name": "2026-08-05" },
+            { "id": "2026-08-06", "name": "2026-08-06" },
+            { "id": "2026-08-07", "name": "2026-08-07" },
+            { "id": "2026-08-08", "name": "2026-08-08" },
+            { "id": "2026-08-09", "name": "2026-08-09" },
+            { "id": "2026-08-10", "name": "2026-08-10" }
+          ]
+        }
+      ]
+    }
+  }
+}

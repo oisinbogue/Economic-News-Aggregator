@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% import "_indicator_card.html" as cards_macro %}
+
+{% block title %}{{ country.name }} indicators — {{ site.title }}{% endblock %}
+{% block description %}Macroeconomic indicators for {{ country.name }}: GDP, inflation, rates, labour, housing and more.{% endblock %}
+
+{% block content %}
+<p class="breadcrumb"><a href="../index.html">&#8592; All indicators</a></p>
+<h1 class="section-title">{{ country.flag }} {{ country.name }}</h1>
+
+{% if cards %}
+{% set topics = cards | map(attribute="topic") | unique | sort | list %}
+{% for topic in topics %}
+{% set topic_cards = cards | selectattr("topic", "equalto", topic) | list %}
+<section class="section">
+  <h2 class="section-title">{{ topic }}</h2>
+  <div class="indicator-grid">
+    {% for card in topic_cards %}
+    {{ cards_macro.indicator_card(card, from_page="country") }}
+    {% endfor %}
+  </div>
+</section>
+{% endfor %}
+{% else %}
+<p class="empty-note">No indicators published for {{ country.name }} yet.</p>
+{% endif %}
+{% endblock %}

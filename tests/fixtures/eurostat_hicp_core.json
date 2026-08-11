@@ -1,0 +1,29 @@
+{
+  "version": "2.0",
+  "class": "dataset",
+  "label": "HICP - monthly data (annual rate of change)",
+  "source": "ESTAT",
+  "value": {
+    "0": 2.3,
+    "1": null,
+    "2": 2.1
+  },
+  "dimension": {
+    "freq": { "category": { "index": { "M": 0 } } },
+    "unit": { "category": { "index": { "RCH_A": 0 } } },
+    "coicop": {
+      "category": {
+        "index": { "TOT_X_NRG_FOOD_NP": 0 },
+        "label": { "TOT_X_NRG_FOOD_NP": "Overall index excluding energy and unprocessed food" }
+      }
+    },
+    "geo": { "category": { "index": { "EA20": 0 } } },
+    "time": {
+      "category": {
+        "index": { "2026-04": 0, "2026-05": 1, "2026-06": 2 }
+      }
+    }
+  },
+  "id": ["freq", "unit", "coicop", "geo", "time"],
+  "size": [1, 1, 1, 1, 3]
+}

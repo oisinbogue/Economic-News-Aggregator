@@ -1,0 +1,202 @@
+# US series -> provider mapping. Every core.yaml key must appear below, either
+# with a real provider mapping or `unavailable: true` + `unavailable_reason`.
+#
+# Corrected 2026-08-11: every `provider_series_id: FRED/...` code below was
+# invented in an earlier session without checking against the live API --
+# DBnomics has no 'FRED' provider (see indicators/providers/dbnomics.py's
+# module docstring) so all 10 of them 404'd on a real backfill run. Replaced
+# with real DBnomics provider/dataset/series codes (BEA/BLS/FED), each
+# confirmed live 2026-08-11 to return observations.
+country: us
+series:
+  gdp_real:
+    provider: dbnomics
+    # Real GDP, chained dollars, quantity index -- BEA NIPA Table 1.1.6,
+    # line 1. Confirmed live 2026-08-11 against
+    # https://api.db.nomics.world/v22/series/BEA/NIPA-T10106/A191RX-Q.
+    provider_series_id: BEA/NIPA-T10106/A191RX-Q
+    fallback_providers: []
+    source_agency: Bureau of Economic Analysis
+    source_url: https://www.bea.gov/data/gdp
+    licence: public-domain
+    seasonal_adjustment: sa
+    revisable: true
+    news_topic_tags: [MACROECONOMICS, GLOBAL ECONOMY]
+  cpi_headline:
+    provider: dbnomics
+    # CPI-U, all items, SA. BLS series id CUSR0000SA0 under DBnomics'
+    # BLS/cu dataset. Confirmed live 2026-08-11.
+    provider_series_id: BLS/cu/CUSR0000SA0
+    fallback_providers: []
+    source_agency: Bureau of Labor Statistics
+    source_url: https://www.bls.gov/cpi/
+    licence: public-domain
+    seasonal_adjustment: sa
+    revisable: true
+    news_topic_tags: [MACROECONOMICS]
+  cpi_core:
+    provider: dbnomics
+    # CPI-U less food & energy, SA. Confirmed live 2026-08-11.
+    provider_series_id: BLS/cu/CUSR0000SA0L1E
+    fallback_providers: []
+    source_agency: Bureau of Labor Statistics
+    source_url: https://www.bls.gov/cpi/
+    licence: public-domain
+    seasonal_adjustment: sa
+    revisable: true
+    news_topic_tags: [MACROECONOMICS]
+  policy_rate:
+    provider: dbnomics
+    # Effective federal funds rate, business-day. FED H15 dataset.
+    # Confirmed live 2026-08-11.
+    provider_series_id: FED/H15/RIFSPFF_N.B
+    fallback_providers: []
+    source_agency: Federal Reserve Board
+    source_url: https://www.federalreserve.gov/releases/h15/
+    licence: public-domain
+    seasonal_adjustment: nsa
+    revisable: false
+    news_topic_tags: [MACROECONOMICS]
+  unemployment_rate:
+    provider: dbnomics
+    # Unemployment rate, 16+, SA. BLS series id LNS14000000 under
+    # DBnomics' BLS/ln dataset. Confirmed live 2026-08-11.
+    provider_series_id: BLS/ln/LNS14000000
+    fallback_providers: []
+    source_agency: Bureau of Labor Statistics
+    source_url: https://www.bls.gov/cps/
+    licence: public-domain
+    seasonal_adjustment: sa
+    revisable: true
+    news_topic_tags: [INEQUALITY & LABOUR]
+  wages_nominal:
+    provider: dbnomics
+    # Avg hourly earnings, all employees, total private, SA. BLS series id
+    # CES0500000003 under DBnomics' BLS/ce dataset. Confirmed live 2026-08-11.
+    provider_series_id: BLS/ce/CES0500000003
+    fallback_providers: []
+    source_agency: Bureau of Labor Statistics
+    source_url: https://www.bls.gov/ces/
+    licence: public-domain
+    seasonal_adjustment: sa
+    revisable: true
+    news_topic_tags: [INEQUALITY & LABOUR]
+  industrial_production:
+    provider: dbnomics
+    # Total index, monthly, SA. FED G17 industrial-production dataset.
+    # Confirmed live 2026-08-11.
+    provider_series_id: FED/G17_IP_MAJOR_INDUSTRY_GROUPS/IP.B50001.S
+    fallback_providers: []
+    source_agency: Federal Reserve Board
+    source_url: https://www.federalreserve.gov/releases/g17/
+    licence: public-domain
+    seasonal_adjustment: sa
+    revisable: true
+    news_topic_tags: [MACROECONOMICS, GLOBAL ECONOMY]
+  retail_sales:
+    provider: dbnomics
+    # Retail trade volume index, monthly, calendar+seasonally adjusted.
+    # No US Census retail-sales series is mirrored on DBnomics; using
+    # OECD's short-term economic statistics retail-trade-volume series
+    # instead (same dataset used for gb/ie/de/eu, for consistency).
+    # Confirmed live 2026-08-11.
+    provider_series_id: OECD/DSD_STES@DF_INDSERV/USA.M.TOVM.IX.G47.Y._Z._Z.N
+    fallback_providers: []
+    source_agency: OECD (Short-Term Economic Statistics)
+    source_url: https://data-explorer.oecd.org/
+    licence: oecd-terms
+    seasonal_adjustment: sa
+    revisable: true
+    news_topic_tags: [MACROECONOMICS]
+  govt_bond_10y:
+    provider: dbnomics
+    # 10-Year Treasury constant maturity rate, business-day. FED H15
+    # dataset. Confirmed live 2026-08-11.
+    provider_series_id: FED/H15/RIFLGFCY10_N.B
+    fallback_providers: []
+    source_agency: US Department of the Treasury
+    source_url: https://home.treasury.gov/resource-center/data-chart-center/interest-rates
+    licence: public-domain
+    seasonal_adjustment: nsa
+    revisable: false
+    news_topic_tags: [MACROECONOMICS, GLOBAL ECONOMY]
+  fx_vs_usd:
+    unavailable: true
+    unavailable_reason: US is the USD base currency; a vs-USD exchange rate does not apply to itself.
+    news_topic_tags: [GLOBAL ECONOMY, TRADE & GLOBALISATION]
+  house_prices:
+    provider: dbnomics
+    # BIS Selected residential property prices, real index (2010=100),
+    # quarterly. Confirmed live 2026-08-11 against
+    # https://api.db.nomics.world/v22/series/BIS/WS_SPP/Q.US.R.628.
+    provider_series_id: BIS/WS_SPP/Q.US.R.628
+    fallback_providers: []
+    source_agency: Bank for International Settlements
+    source_url: https://www.bis.org/statistics/pp.htm
+    licence: bis-terms
+    seasonal_adjustment: sa
+    revisable: true
+    news_topic_tags: [HOUSING & PROPERTY]
+  govt_debt_gdp:
+    provider: dbnomics
+    provider_series_id: IMF/WEO:latest/USA.GGXWDG_NGDP   # see current_account_gdp note below on IMF WEO code verification
+    fallback_providers: []
+    source_agency: International Monetary Fund
+    source_url: https://www.imf.org/en/Publications/WEO
+    licence: imf-terms
+    seasonal_adjustment: nsa
+    revisable: true
+    news_topic_tags: [MACROECONOMICS]
+  budget_balance_gdp:
+    provider: dbnomics
+    provider_series_id: IMF/WEO:latest/USA.GGXCNL_NGDP
+    fallback_providers: []
+    source_agency: International Monetary Fund
+    source_url: https://www.imf.org/en/Publications/WEO
+    licence: imf-terms
+    seasonal_adjustment: nsa
+    revisable: true
+    news_topic_tags: [MACROECONOMICS]
+  current_account_gdp:
+    provider: dbnomics
+    # IMF World Economic Outlook, current account balance % of GDP.
+    # Confirmed live 2026-08-11 against
+    # https://api.db.nomics.world/v22/series/IMF/WEO:latest/USA.BCA_NGDPD.
+    provider_series_id: IMF/WEO:latest/USA.BCA_NGDPD
+    fallback_providers: []
+    source_agency: International Monetary Fund
+    source_url: https://www.imf.org/en/Publications/WEO
+    licence: imf-terms
+    seasonal_adjustment: nsa
+    revisable: true
+    news_topic_tags: [TRADE & GLOBALISATION, GLOBAL ECONOMY]
+  consumer_confidence:
+    provider: dbnomics
+    # OECD composite consumer confidence indicator, percentage balance,
+    # SA. FRED/UMCSENT (U. Michigan) is not mirrored on DBnomics; using
+    # OECD's harmonised consumer-opinion-survey series instead, for
+    # consistency with gb/de/eu/ie. Confirmed live 2026-08-11.
+    provider_series_id: OECD/DSD_STES@DF_CS/USA.M.CCICP.PB._Z.Y._Z._Z.N
+    fallback_providers: []
+    source_agency: OECD (Consumer Opinion Surveys)
+    source_url: https://data-explorer.oecd.org/
+    licence: oecd-terms
+    seasonal_adjustment: sa
+    revisable: false
+    news_topic_tags: [MACROECONOMICS]
+  equity_index:
+    provider: dbnomics
+    # OECD share price index, monthly. FRED/SP500 is not mirrored on
+    # DBnomics; Stooq (kept as fallback) is currently bot-gated for
+    # non-browser clients (confirmed live 2026-08-11 -- see
+    # indicators/providers/stooq.py's docstring). Confirmed live
+    # 2026-08-11.
+    provider_series_id: OECD/DSD_STES@DF_FINMARK/USA.M.SHARE.IX._Z._Z._Z._Z.N
+    fallback_providers: [stooq]
+    source_agency: OECD (Financial Market Statistics)
+    source_url: https://data-explorer.oecd.org/
+    licence: oecd-terms
+    seasonal_adjustment: nsa
+    revisable: false
+    news_topic_tags: [GLOBAL ECONOMY]
+extras: []   # populated in Phase 4

@@ -1,0 +1,252 @@
+# Euro area (bloc) series -> provider mapping. Every core.yaml key must appear
+# below, either with a real provider mapping or `unavailable: true` +
+# `unavailable_reason`.
+#
+# Corrected 2026-08-11: the `FRED/...` codes originally here were invented
+# without checking against the live API and all 404'd (DBnomics has no
+# 'FRED' provider -- see indicators/providers/dbnomics.py's module
+# docstring). Replaced with direct Eurostat series (the euro-area aggregate
+# is not present in OECD's country-level datasets, unlike gb/de/ie) or OECD
+# series where OECD does carry an EA aggregate, each confirmed live
+# 2026-08-11. Eurostat's euro-area geo code varies per dataset/vintage
+# (EA, EA19, EA20, EA21 have all been seen live) -- each entry below notes
+# which one actually resolves for its dataset.
+country: eu
+series:
+  gdp_real:
+    provider: eurostat
+    # Real GDP, chain-linked volume (2020=100 base, million euro),
+    # quarterly, seasonally+calendar adjusted. geo=EA (Eurostat's
+    # moving-composition euro-area code, valid across vintages for this
+    # dataset -- unlike une_rt_m below, which needs a pinned EA21).
+    # Confirmed live 2026-08-11 against
+    # https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/namq_10_gdp/Q.CLV20_MEUR.SCA.B1GQ.EA?format=JSON.
+    provider_series_id: Eurostat/namq_10_gdp/Q.CLV20_MEUR.SCA.B1GQ.EA
+    fallback_providers: []
+    source_agency: Eurostat
+    source_url: https://ec.europa.eu/eurostat/web/national-accounts/data
+    licence: cc-by-4.0
+    seasonal_adjustment: sa
+    revisable: true
+    news_topic_tags: [EUROPE & ECB, MACROECONOMICS, GLOBAL ECONOMY]
+  cpi_headline:
+    provider: ecb
+    # ECB HICP flash/final annual rate, euro area. Confirmed live
+    # 2026-08-10 against
+    # https://data-api.ecb.europa.eu/service/data/ICP/M.U2.N.000000.4.ANR?format=jsondata.
+    provider_series_id: ECB/ICP/M.U2.N.000000.4.ANR
+    fallback_providers: [eurostat]
+    source_agency: Eurostat / European Central Bank
+    source_url: https://data.ecb.europa.eu/data/datasets/ICP
+    licence: ecb-terms
+    seasonal_adjustment: nsa
+    revisable: false
+    news_topic_tags: [EUROPE & ECB, MACROECONOMICS]
+  cpi_core:
+    provider: eurostat
+    # Eurostat HICP excluding energy & unprocessed food, euro-area
+    # aggregate. Corrected 2026-08-10: the previous key
+    # (M.CP-HI00XEF.EA20) 400'd against a live query -- prc_hicp_manr's
+    # real dimension order is freq.unit.coicop.geo (4 segments, not 3),
+    # and the coicop code for "excluding energy and unprocessed food" is
+    # TOT_X_NRG_FOOD_NP, confirmed against
+    # https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/prc_hicp_manr/M.RCH_A.TOT_X_NRG_FOOD_NP.EA20?format=JSON.
+    provider_series_id: Eurostat/prc_hicp_manr/M.RCH_A.TOT_X_NRG_FOOD_NP.EA20
+    fallback_providers: [ecb]
+    source_agency: Eurostat
+    source_url: https://ec.europa.eu/eurostat/web/hicp/data
+    licence: cc-by-4.0
+    seasonal_adjustment: nsa
+    revisable: false
+    news_topic_tags: [EUROPE & ECB, MACROECONOMICS]
+  policy_rate:
+    provider: ecb
+    provider_series_id: ECB/FM/D.U2.EUR.4F.KR.DFR.LEV   # ECB deposit facility rate -- confirmed live 2026-08-10, see ie.yaml note
+    fallback_providers: [dbnomics]
+    source_agency: European Central Bank
+    source_url: https://data.ecb.europa.eu/
+    licence: ecb-terms
+    seasonal_adjustment: nsa
+    revisable: false
+    news_topic_tags: [EUROPE & ECB, MACROECONOMICS]
+  unemployment_rate:
+    provider: eurostat
+    # Unemployment rate, total, monthly, SA. geo=EA21 -- this dataset's
+    # current euro-area code (its vintage rolled from EA20 to EA21 in
+    # 2026; EA/EA20 both 400 here, unlike namq_10_gdp above). Confirmed
+    # live 2026-08-11 against
+    # https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/une_rt_m/M.SA.TOTAL.PC_ACT.T.EA21?format=JSON.
+    provider_series_id: Eurostat/une_rt_m/M.SA.TOTAL.PC_ACT.T.EA21
+    fallback_providers: []
+    source_agency: Eurostat
+    source_url: https://ec.europa.eu/eurostat/web/lfs/data
+    licence: cc-by-4.0
+    seasonal_adjustment: sa
+    revisable: true
+    news_topic_tags: [EUROPE & ECB, INEQUALITY & LABOUR]
+  wages_nominal:
+    provider: dbnomics
+    # Earnings index, private sector, quarterly, SA. OECD hourly-earnings
+    # dataset does carry a euro-area (20 countries) aggregate. Confirmed
+    # live 2026-08-11.
+    provider_series_id: OECD/DSD_EAR@DF_HOU_EAR/EA20.EAR.IX.Y._Z.S1D.Q
+    fallback_providers: [eurostat]
+    source_agency: Eurostat
+    source_url: https://ec.europa.eu/eurostat/web/labour-market/data
+    licence: cc-by-4.0
+    seasonal_adjustment: sa
+    revisable: true
+    news_topic_tags: [EUROPE & ECB, INEQUALITY & LABOUR]
+  industrial_production:
+    provider: dbnomics
+    # Production volume index, industry excl. construction, monthly, SA.
+    # OECD short-term economic statistics does carry a euro-area (20
+    # countries) aggregate. Confirmed live 2026-08-11.
+    provider_series_id: OECD/DSD_STES@DF_INDSERV/EA20.M.PRVM.IX.BTE.Y._Z._Z.N
+    fallback_providers: [eurostat]
+    source_agency: Eurostat
+    source_url: https://ec.europa.eu/eurostat/web/short-term-business-statistics/data
+    licence: cc-by-4.0
+    seasonal_adjustment: sa
+    revisable: true
+    news_topic_tags: [EUROPE & ECB, MACROECONOMICS, GLOBAL ECONOMY]
+  retail_sales:
+    provider: dbnomics
+    # Retail trade volume index, monthly, calendar+seasonally adjusted.
+    # OECD short-term economic statistics does carry a euro-area (20
+    # countries) aggregate. Confirmed live 2026-08-11.
+    provider_series_id: OECD/DSD_STES@DF_INDSERV/EA20.M.TOVM.IX.G47.Y._Z._Z.N
+    fallback_providers: [eurostat]
+    source_agency: Eurostat
+    source_url: https://ec.europa.eu/eurostat/web/short-term-business-statistics/data
+    licence: cc-by-4.0
+    seasonal_adjustment: sa
+    revisable: true
+    news_topic_tags: [EUROPE & ECB, MACROECONOMICS]
+  govt_bond_10y:
+    provider: ecb
+    # ECB long-term government bond yield, euro-area convergence-criterion
+    # series. Confirmed live 2026-08-10 against
+    # https://data-api.ecb.europa.eu/service/data/IRS/M.U2.L.L40.CI.0000.EUR.N.Z?format=jsondata.
+    provider_series_id: ECB/IRS/M.U2.L.L40.CI.0000.EUR.N.Z
+    fallback_providers: [dbnomics]
+    source_agency: European Central Bank
+    source_url: https://data.ecb.europa.eu/
+    licence: ecb-terms
+    seasonal_adjustment: nsa
+    revisable: false
+    news_topic_tags: [EUROPE & ECB, MACROECONOMICS, GLOBAL ECONOMY]
+  fx_vs_usd:
+    provider: ecb
+    provider_series_id: ECB/EXR/D.USD.EUR.SP00.A   # ECB reference rate, EUR/USD, daily -- confirmed live 2026-08-10
+    fallback_providers: [stooq]
+    source_agency: European Central Bank
+    source_url: https://data.ecb.europa.eu/data/datasets/EXR
+    licence: ecb-terms
+    seasonal_adjustment: nsa
+    revisable: false
+    news_topic_tags: [EUROPE & ECB, GLOBAL ECONOMY, TRADE & GLOBALISATION]
+  house_prices:
+    provider: eurostat
+    # Eurostat house price index, euro-area aggregate. No single BIS
+    # "euro area" RPP line item exists the way there is per member state,
+    # so this uses Eurostat instead of the Q<ISO3>628BIS pattern used in
+    # us/gb/ie/de. Corrected 2026-08-10: the previous key
+    # (Q.INX_A_AVG.TOTAL.EA20) 400'd against a live query -- prc_hpi_q's
+    # real dimension order is freq.purchase.unit.geo (purchase and unit
+    # were swapped), and the unit code for "quarterly index, 2015=100" is
+    # I15_Q, not INX_A_AVG. Confirmed against
+    # https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/prc_hpi_q/Q.TOTAL.I15_Q.EA20?format=JSON.
+    provider_series_id: Eurostat/prc_hpi_q/Q.TOTAL.I15_Q.EA20
+    fallback_providers: []
+    source_agency: Eurostat
+    source_url: https://ec.europa.eu/eurostat/web/housing-price-statistics/data
+    licence: cc-by-4.0
+    seasonal_adjustment: nsa
+    revisable: true
+    news_topic_tags: [EUROPE & ECB, HOUSING & PROPERTY]
+  govt_debt_gdp:
+    provider: eurostat
+    # Corrected 2026-08-11: the previous key (dbnomics IMF/WEO:latest/163.*)
+    # 404'd -- DBnomics' current IMF WEO mirror (WEO:2025-04) has no
+    # euro-area aggregate entry in its weo-country dimension at all (checked
+    # dimensions_values_labels.weo-country via
+    # https://api.db.nomics.world/v22/series/IMF/WEO:latest?q=euro+area&observations=0&limit=5
+    # -- no "163"/"Euro area" among the 196 listed countries). Switched to
+    # Eurostat's EDP government debt/deficit dataset instead, which does
+    # carry a euro-area aggregate. gov_10dd_edpt1's dimension order is
+    # freq.unit.sector.na_item.geo (confirmed via the dataset's own
+    # datastructure); GD = "Government consolidated gross debt", S13 =
+    # "General government", EA20 = current euro-area composition.
+    # Confirmed live 2026-08-11 against
+    # https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/gov_10dd_edpt1/A.PC_GDP.S13.GD.EA20?format=JSON.
+    provider_series_id: Eurostat/gov_10dd_edpt1/A.PC_GDP.S13.GD.EA20
+    fallback_providers: []
+    source_agency: Eurostat
+    source_url: https://ec.europa.eu/eurostat/web/government-finance-statistics/data
+    licence: cc-by-4.0
+    seasonal_adjustment: nsa
+    revisable: true
+    news_topic_tags: [EUROPE & ECB, MACROECONOMICS]
+  budget_balance_gdp:
+    provider: eurostat
+    # Corrected 2026-08-11: same DBnomics IMF/WEO euro-area-aggregate gap as
+    # govt_debt_gdp above -- see that entry's note. Same gov_10dd_edpt1
+    # dataset, na_item=B9 ("Net lending (+)/net borrowing (-)"). Confirmed
+    # live 2026-08-11 against
+    # https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/gov_10dd_edpt1/A.PC_GDP.S13.B9.EA20?format=JSON.
+    provider_series_id: Eurostat/gov_10dd_edpt1/A.PC_GDP.S13.B9.EA20
+    fallback_providers: []
+    source_agency: Eurostat
+    source_url: https://ec.europa.eu/eurostat/web/government-finance-statistics/data
+    licence: cc-by-4.0
+    seasonal_adjustment: nsa
+    revisable: true
+    news_topic_tags: [EUROPE & ECB, MACROECONOMICS]
+  current_account_gdp:
+    unavailable: true
+    unavailable_reason: >-
+      No working series id found as of 2026-08-10. The previous key
+      (ECB/BP6/Q.N.I9.W1.S1.S1.T.B.CA._Z._Z._Z.EUR._T._X.N) also mismatched
+      this indicator's own core.yaml definition (unit: percent_gdp,
+      frequency: A) -- that BP6 key is a quarterly EUR-level flow, not an
+      annual %-of-GDP ratio -- and returned 404 (no series) regardless.
+      IMF WEO (the annual %-of-GDP source used for this indicator in every
+      other active country) has no euro-area aggregate entry in DBnomics'
+      current mirror, and a Eurostat tipsbp20/current-account dataset guess
+      also 400'd. Revisit if ECB/Eurostat publish a confirmable euro-area
+      annual current-account-%GDP series.
+    news_topic_tags: [EUROPE & ECB, TRADE & GLOBALISATION, GLOBAL ECONOMY]
+  consumer_confidence:
+    provider: eurostat
+    # Eurostat/DG ECFIN Economic Sentiment Indicator, consumer confidence
+    # component, euro area. Corrected 2026-08-10: the previous key
+    # (M.BS-CSMCI.BAL.EA20) 400'd against a live query -- ei_bsco_m's real
+    # dimension order is freq.indic.s_adj.unit.geo (5 segments, an s_adj
+    # dimension was missing), confirmed against
+    # https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/ei_bsco_m/M.BS-CSMCI.SA.BAL.EA20?format=JSON.
+    provider_series_id: Eurostat/ei_bsco_m/M.BS-CSMCI.SA.BAL.EA20
+    fallback_providers: []
+    source_agency: European Commission (DG ECFIN)
+    source_url: https://ec.europa.eu/economy_finance/db_indicators/surveys/index_en.htm
+    licence: cc-by-4.0
+    seasonal_adjustment: sa
+    revisable: false
+    news_topic_tags: [EUROPE & ECB, MACROECONOMICS]
+  equity_index:
+    provider: dbnomics
+    # OECD share price index, monthly, euro-area (20 countries) aggregate.
+    # Stooq (the only daily, no-key source) is bot-gated for non-browser
+    # clients as of this writing (confirmed live 2026-08-11, see
+    # indicators/providers/stooq.py's docstring) -- kept as a fallback in
+    # case that changes; the ticker itself remains unverified. Confirmed
+    # live 2026-08-11.
+    provider_series_id: OECD/DSD_STES@DF_FINMARK/EA20.M.SHARE.IX._Z._Z._Z._Z.N
+    fallback_providers: [stooq]
+    source_agency: OECD (Financial Market Statistics)
+    source_url: https://data-explorer.oecd.org/
+    licence: oecd-terms
+    seasonal_adjustment: nsa
+    revisable: false
+    news_topic_tags: [EUROPE & ECB, GLOBAL ECONOMY]
+extras: []   # populated in Phase 4

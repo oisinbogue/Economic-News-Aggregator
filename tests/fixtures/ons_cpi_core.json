@@ -1,0 +1,36 @@
+{
+  "years": [],
+  "quarters": [],
+  "months": [
+    {
+      "date": "2026 APR",
+      "value": "2.5",
+      "label": "2026 APR",
+      "year": "2026",
+      "month": "April",
+      "quarter": ""
+    },
+    {
+      "date": "2026 MAY",
+      "value": "",
+      "label": "2026 MAY",
+      "year": "2026",
+      "month": "May",
+      "quarter": ""
+    },
+    {
+      "date": "2026 JUN",
+      "value": "2.6",
+      "label": "2026 JUN",
+      "year": "2026",
+      "month": "June",
+      "quarter": ""
+    }
+  ],
+  "description": {
+    "title": "CPI 12mth: Excluding Energy, food, alcoholic beverages & tobacco 2015=100",
+    "cdid": "DKO8",
+    "datasetId": "MM23",
+    "unit": "%"
+  }
+}

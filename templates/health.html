@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}Source health — {{ site.title }}{% endblock %}
+{% block description %}Live status dashboard for the RSS feeds powering {{ site.title }}: healthy, degraded, inactive, and muted sources.{% endblock %}
 
 {% block content %}
 <h1 class="section-title">Source health</h1>
@@ -37,31 +38,104 @@
   a human turned it off deliberately (config/feeds.yaml <code>active: false</code>) and it's
   excluded from auto-recovery entirely, so it stays off until someone flips that flag back.
 </p>
+
 {% if feeds %}
+{% set healthy_count = feeds | selectattr("status", "equalto", "healthy") | list | length %}
+{% set degraded_count = feeds | selectattr("status", "equalto", "degraded") | list | length %}
+{% set inactive_count = feeds | selectattr("status", "equalto", "inactive") | list | length %}
+{% set muted_count = feeds | selectattr("status", "equalto", "muted") | list | length %}
+{% set total_articles = feeds | sum(attribute="article_count") %}
+{% set silent_count = feeds | selectattr("status", "equalto", "healthy") | selectattr("article_count", "equalto", 0) | list | length %}
+
+<div class="health-summary-grid">
+  <div class="health-summary-card">
+    <span class="status-stat-value">{{ healthy_count }}</span>
+    <span class="status-stat-label">Healthy</span>
+  </div>
+  <div class="health-summary-card">
+    <span class="status-stat-value">{{ degraded_count }}</span>
+    <span class="status-stat-label">Degraded</span>
+  </div>
+  <div class="health-summary-card">
+    <span class="status-stat-value">{{ inactive_count }}</span>
+    <span class="status-stat-label">Inactive</span>
+  </div>
+  <div class="health-summary-card">
+    <span class="status-stat-value">{{ muted_count }}</span>
+    <span class="status-stat-label">Muted</span>
+  </div>
+  <div class="health-summary-card">
+    <span class="status-stat-value">{{ total_articles }}</span>
+    <span class="status-stat-label">Total articles</span>
+  </div>
+  <div class="health-summary-card{% if silent_count > 0 %} health-summary-card-warn{% endif %}">
+    <span class="status-stat-value">{{ silent_count }}</span>
+    <span class="status-stat-label">Healthy but silent</span>
+  </div>
+</div>
+
+<div class="health-controls">
+  <input type="search" id="health-filter-text" class="health-filter-text" placeholder="Filter by feed, country, region, error...">
+  <select id="health-filter-status" class="filter-select" data-facet="status">
+    <option value="">All statuses</option>
+    <option value="healthy">Healthy</option>
+    <option value="degraded">Degraded</option>
+    <option value="inactive">Inactive</option>
+    <option value="muted">Muted</option>
+  </select>
+  <select id="health-filter-region" class="filter-select" data-facet="region">
+    <option value="">All regions</option>
+    {% for region in feeds | map(attribute="region") | select | unique | sort %}
+    <option value="{{ region }}">{{ region }}</option>
+    {% endfor %}
+  </select>
+  <span class="health-visible-count" id="health-visible-count"></span>
+</div>
+
 <div class="health-table-wrap">
-  <table class="health-table">
+  <table class="health-table" id="health-table">
     <thead>
       <tr>
-        <th>Status</th>
-        <th>Feed</th>
-        <th>Country</th>
-        <th>Articles</th>
-        <th>Last article</th>
-        <th>Failure streak</th>
-        <th>Last success</th>
-        <th>Last attempt</th>
-        <th>Last error</th>
-        <th>Next recovery check</th>
+        <th data-sort="status" data-sort-type="text">Status</th>
+        <th data-sort="name" data-sort-type="text">Feed</th>
+        <th data-sort="region" data-sort-type="text">Region</th>
+        <th data-sort="country" data-sort-type="text">Country</th>
+        <th data-sort="article_count" data-sort-type="number">Articles</th>
+        <th data-sort="last_published" data-sort-type="date">Last published</th>
+        <th data-sort="last_fetched" data-sort-type="date">Last fetched</th>
+        <th data-sort="consecutive_failures" data-sort-type="number">Failure streak</th>
+        <th data-sort="last_success" data-sort-type="date">Last success</th>
+        <th data-sort="last_attempt" data-sort-type="date">Last attempt</th>
+        <th data-sort="last_error_type" data-sort-type="text">Last error</th>
+        <th data-sort="next_recovery_check" data-sort-type="text">Next recovery check</th>
       </tr>
     </thead>
     <tbody>
       {% for f in feeds %}
-      <tr{% if f.status == "healthy" and f.article_count == 0 %} class="health-row-silent"{% endif %}>
+      <tr{% if f.status == "healthy" and f.article_count == 0 %} class="health-row-silent"{% endif %}
+        data-status="{{ f.status }}"
+        data-region="{{ f.region or '' }}"
+        data-filter-text="{{ (f.name ~ ' ' ~ (f.country or '') ~ ' ' ~ (f.region or '') ~ ' ' ~ (f.last_error_type or '')) | lower }}"
+        data-status-sort="{{ f.status }}"
+        data-name-sort="{{ f.name | lower }}"
+        data-region-sort="{{ (f.region or '') | lower }}"
+        data-country-sort="{{ (f.country or '') | lower }}"
+        data-article_count-sort="{{ f.article_count }}"
+        data-last_published-sort="{{ f.last_published or '' }}"
+        data-last_fetched-sort="{{ f.last_fetched or '' }}"
+        data-consecutive_failures-sort="{{ f.consecutive_failures }}"
+        data-last_success-sort="{{ f.last_success or '' }}"
+        data-last_attempt-sort="{{ f.last_attempt or '' }}"
+        data-last_error_type-sort="{{ (f.last_error_type or '') | lower }}"
+        data-next_recovery_check-sort="{{ (f.next_recovery_check or '') | lower }}"
+      >
         <td><span class="health-badge health-{{ f.status }}">{{ f.status }}</span></td>
         <td>{{ f.name }}</td>
+        <td>{{ f.region or "" }}</td>
         <td>{{ f.country or "" }}</td>
         <td>{{ f.article_count }}</td>
-        <td>{{ f.last_article_display or "never" }}</td>
+        <td>{{ f.last_published_display or "never" }}</td>
+        <td>{{ f.last_fetched_display or "never" }}</td>
         <td>{{ f.consecutive_failures }}</td>
         <td>{{ f.last_success_display or "never" }}</td>
         <td>{{ f.last_attempt_display or "never" }}</td>
@@ -71,6 +145,7 @@
       {% endfor %}
     </tbody>
   </table>
+  <p class="empty-note health-no-matches" id="health-no-matches" hidden>No feeds match the current filters.</p>
 </div>
 {% else %}
 <p class="empty-note">No feeds configured yet.</p>

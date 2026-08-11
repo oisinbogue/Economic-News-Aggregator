@@ -290,8 +290,8 @@ async def extract_article_page(client: httpx.AsyncClient, url: str, timeout: flo
 
 INSERT_ARTICLE_SQL = """
     INSERT INTO articles
-        (url_hash, feed_id, title, url, published, fetched, raw_text, image, processed_status)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'fetched')
+        (url_hash, feed_id, title, url, published, fetched, fetch_run_id, raw_text, image, processed_status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'fetched')
     ON CONFLICT(url_hash) DO NOTHING
 """
 
@@ -351,6 +351,7 @@ async def process_feed(
     max_articles_per_feed: int,
     existing_hashes: set[str],
     write_queue: "asyncio.Queue[tuple | None]",
+    run_id: int,
 ) -> None:
     async with semaphore:
         now = datetime.now(timezone.utc).isoformat()
@@ -465,7 +466,7 @@ async def process_feed(
             fetched_at = datetime.now(timezone.utc).isoformat()
 
             await write_queue.put(
-                (url_hash, feed["id"], title, url, published, fetched_at, raw_text, image)
+                (url_hash, feed["id"], title, url, published, fetched_at, run_id, raw_text, image)
             )
 
             async with stats_lock:
@@ -481,6 +482,15 @@ async def fetch_all(
         datetime.now(timezone.utc) - timedelta(hours=recovery_interval_hours)
     ).isoformat()
     with get_connection() as conn:
+        # Opened before anything else so every article this run inserts --
+        # even one written moments before a later crash -- carries a real
+        # fetch_run_id. See the fetch_runs table comment in pipeline.db for
+        # why this exists (pipeline.build's "Just In" section) and why a
+        # crash simply leaves `finished` NULL rather than needing cleanup.
+        run_id = conn.execute(
+            "INSERT INTO fetch_runs (started) VALUES (?)",
+            (datetime.now(timezone.utc).isoformat(),),
+        ).lastrowid
         # ORDER BY RANDOM() is load-bearing, not cosmetic. Without it sqlite
         # returns feeds in rowid order, which is config/feeds.yaml order, so
         # the semaphore admits the lowest-id feeds first every single run and
@@ -517,6 +527,7 @@ async def fetch_all(
 
     stats = RunStats(feeds_tried=len(feeds))
     if not feeds:
+        _close_fetch_run(run_id)
         return stats
 
     semaphore = asyncio.Semaphore(concurrency)
@@ -533,7 +544,7 @@ async def fetch_all(
                 client, semaphore, feed, timeout, stats, stats_lock,
                 articles_remaining, articles_remaining_lock,
                 max_articles_per_feed,
-                existing_hashes, write_queue,
+                existing_hashes, write_queue, run_id,
             )
             for feed in feeds
         ]
@@ -542,7 +553,22 @@ async def fetch_all(
     await write_queue.put(None)
     await writer_task
 
+    # Only reached once every article this run wrote has been committed by
+    # db_writer -- an exception anywhere above (including inside gather's
+    # tasks, which propagates once the offending task finishes) skips this
+    # and leaves `finished` NULL, an honest record of an incomplete run
+    # rather than one this function tries to paper over.
+    _close_fetch_run(run_id)
+
     return stats
+
+
+def _close_fetch_run(run_id: int) -> None:
+    with get_connection() as conn:
+        conn.execute(
+            "UPDATE fetch_runs SET finished = ? WHERE id = ?",
+            (datetime.now(timezone.utc).isoformat(), run_id),
+        )
 
 
 def main() -> RunStats:

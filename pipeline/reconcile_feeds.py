@@ -76,9 +76,9 @@ def load_feeds_yaml(path) -> list[dict]:
     with open(path, "r", encoding="utf-8") as f:
         data = yaml.safe_load(f) or {}
     feeds = []
-    for region_feeds in (data.get("regions") or {}).values():
+    for region, region_feeds in (data.get("regions") or {}).items():
         for row in region_feeds or []:
-            feeds.append(row)
+            feeds.append({**row, "region": region})
     return feeds
 
 
@@ -99,6 +99,7 @@ def reconcile(feeds: list[dict]) -> ReconcileStats:
 
             name = row.get("name", "")
             country = row.get("country", "")
+            region = row.get("region", "")
             language = row.get("language", "")
             topic_hint = row.get("topic_hint", "")
             yaml_active = 1 if row.get("active", True) else 0
@@ -106,10 +107,10 @@ def reconcile(feeds: list[dict]) -> ReconcileStats:
             if url not in existing:
                 conn.execute(
                     """
-                    INSERT INTO feeds (url, name, country, language, topic_hint, active, deactivated_reason)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO feeds (url, name, country, region, language, topic_hint, active, deactivated_reason)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                     """,
-                    (url, name, country, language, topic_hint, yaml_active, None if yaml_active else "manual"),
+                    (url, name, country, region, language, topic_hint, yaml_active, None if yaml_active else "manual"),
                 )
                 existing[url] = {"active": yaml_active, "deactivated_reason": None if yaml_active else "manual"}
                 stats.inserted += 1
@@ -123,11 +124,11 @@ def reconcile(feeds: list[dict]) -> ReconcileStats:
                         conn.execute(
                             """
                             UPDATE feeds
-                            SET name = ?, country = ?, language = ?, topic_hint = ?,
+                            SET name = ?, country = ?, region = ?, language = ?, topic_hint = ?,
                                 active = 1, deactivated_reason = NULL
                             WHERE url = ?
                             """,
-                            (name, country, language, topic_hint, url),
+                            (name, country, region, language, topic_hint, url),
                         )
                     else:
                         # Leave active/deactivated_reason alone -- owned by
@@ -136,20 +137,20 @@ def reconcile(feeds: list[dict]) -> ReconcileStats:
                         conn.execute(
                             """
                             UPDATE feeds
-                            SET name = ?, country = ?, language = ?, topic_hint = ?
+                            SET name = ?, country = ?, region = ?, language = ?, topic_hint = ?
                             WHERE url = ?
                             """,
-                            (name, country, language, topic_hint, url),
+                            (name, country, region, language, topic_hint, url),
                         )
                 else:
                     conn.execute(
                         """
                         UPDATE feeds
-                        SET name = ?, country = ?, language = ?, topic_hint = ?,
+                        SET name = ?, country = ?, region = ?, language = ?, topic_hint = ?,
                             active = 0, deactivated_reason = 'manual'
                         WHERE url = ?
                         """,
-                        (name, country, language, topic_hint, url),
+                        (name, country, region, language, topic_hint, url),
                     )
                 stats.updated += 1
 
