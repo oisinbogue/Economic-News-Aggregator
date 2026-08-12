@@ -6,10 +6,11 @@ for the original design rationale and the full `indicators.db` schema; this
 document is the day-to-day "how do I add a country / indicator / provider"
 guide.
 
-**Status:** Phase 1 (foundation) + Phase 2 (site output) + most of Phase 3
+**Status:** Phase 1 (foundation) + Phase 2 (site output) + Phase 3 complete
 (release calendar, release-aware fetch, rate-limit safety, revision
-logging -- the `indicators.yml` scheduled workflow itself is still a TODO).
-Five countries: US, UK, Ireland, EU (euro area), Germany. No country extras
+logging, the scheduled `indicators.yml` workflow and its db backup/restore
+-- see "Operations" below). Five countries: US, UK, Ireland, EU (euro area),
+Germany. No country extras
 yet (Phase 4), no countries beyond the five above (Phase 5+). The
 indicators subsystem is a separate failure domain from the news pipeline --
 separate package, separate db file (`data/indicators.db`), separate GitHub
@@ -356,6 +357,114 @@ Phase 3 TODO.
 itself at the start of every run, so running `indicators.calendar`
 standalone is only needed to inspect/refresh the `releases` table without
 also fetching.
+
+---
+
+## Operations
+
+### What runs when
+
+`.github/workflows/indicators.yml` is the scheduled workflow -- a separate
+failure domain from `pipeline.yml` (own concurrency group `indicators-db`,
+own db file, own release tag). One job, two cron triggers, distinguished at
+runtime via the `github.event.schedule` context value:
+
+| Tier | Cron | What runs |
+|---|---|---|
+| **quick** | `8 2,5,8,11,14,17,20,23 * * *` (every 3h) | config validate -> db sync -> `indicators.fetch` (incremental) only |
+| **full** | `38 3,15 * * *` (twice daily) | everything quick does, plus `indicators.transform`, `indicators.build`, `indicators.export`, and publishing the rendered site output |
+
+Both tiers persist `data/indicators.db` (cache + release backup) every run,
+so market data fetched by a "quick" run is never lost before the next
+"full" run picks it up. The quick tier skips rebuilding the site because
+`indicators.fetch`'s own due-for-refresh check (see "Release-aware
+fetching" above) already limits what actually gets refetched on a
+high-frequency schedule -- rebuilding+republishing HTML/JSON 8x/day for
+data that mostly didn't change would be wasted work.
+
+A `workflow_dispatch` (manual) run always takes the "full" path
+(`github.event.schedule` is unset for manual runs).
+
+**Site publishing:** `pipeline.yml` deploys to GitHub Pages; `indicators.yml`
+never calls `deploy-pages` itself (to avoid the two workflows racing on the
+same Pages environment). Instead, `indicators.yml`'s "full" tier caches its
+rendered `site/indicators/` output under a uniquely-keyed `actions/cache`
+entry (`indicators-site-<run_id>`), and `pipeline.yml` restores the newest
+such entry into `site/indicators/` right after `python -m pipeline.build`
+(which clears everything under `site/` except `archive/`/`story/`) and
+before it runs Pagefind / uploads the Pages artifact. See the comments on
+both workflows' relevant steps for the full reasoning. Net effect: the
+published indicators section is only ever as stale as the last successful
+`indicators.yml` "full" run, independent of when `pipeline.yml` last ran.
+
+### Triggering a manual backfill
+
+`.github/workflows/indicators-backfill.yml` (`workflow_dispatch` only) runs
+`python -m indicators.fetch --backfill` -- a full historical pull for every
+active series, ignoring the due-for-refresh check. Use it to (re)populate
+`indicators.db` from scratch, or to force-refetch series the incremental
+check has been skipping. It does not persist the db to cache/Releases
+itself; run (or wait for) `indicators.yml` afterwards to bank the result,
+or run `python -m indicators.backup_verify --repo <owner>/<repo> --write-counts ...`
+and the release-upload steps manually if you need it banked immediately.
+
+An on-demand *incremental* run (not a full backfill) is just
+`indicators.yml`'s own `workflow_dispatch` trigger from the Actions tab --
+it runs the full tier (fetch + transform + build + export + publish).
+
+### Restoring `indicators.db` from a Release asset
+
+The durable copy of record lives on the `indicators-db-latest` GitHub
+Release (separate from the news pipeline's `db-latest`), as gzip snapshots
+named `indicators.db.<run_id>.gz` -- newest 3 kept, older ones pruned
+best-effort. To restore locally:
+
+```bash
+repo="<owner>/<repo>"
+latest=$(gh api "repos/$repo/releases/tags/indicators-db-latest" --jq \
+  '[.assets[] | select(.name | startswith("indicators.db."))] | sort_by(.created_at) | last | .name')
+gh release download indicators-db-latest --repo "$repo" --pattern "$latest" --output data/indicators.db.gz
+gunzip data/indicators.db.gz
+python -m indicators.backup_verify --repo "$repo"   # confirms integrity_check + row counts
+```
+
+`.github/workflows/backup-restore-test.yml`'s `indicators-restore-test` job
+runs this same check monthly on a fresh runner (read-only against the
+release -- it never uploads, deletes, or overwrites a snapshot asset) to
+prove the backup is actually restorable, not just uploaded.
+
+### What to check first when a run fails
+
+1. **`indicators.yml` failed at "Validate indicators config"** -- the only
+   step allowed to hard-fail the whole run. Run `python -m indicators.config`
+   locally; it prints every problem string (missing series entry, unknown
+   `news_topic_tags`, etc.). Fix the YAML and re-run; nothing downstream
+   ran, so there's no partial state to clean up.
+2. **A specific series shows stale/missing data on the site, but the run
+   went green** -- this is by design, not a failure: a provider error or an
+   empty response for one series is logged to `fetch_log` (`status='error'`
+   or `'stale'`) and the run continues (INDICATORS_BRIEF.md §8 "never fails
+   the build"). Query `fetch_log` for that `series_id`, newest first, for
+   the actual provider error.
+3. **"Verify indicators db integrity before backup" failed** -- either
+   `PRAGMA integrity_check` found real corruption, or a table's row count
+   dropped more than `backup.max_row_count_drop_fraction` (config.yaml,
+   shared with the news pipeline's equivalent check) vs. the previous
+   snapshot. A GitHub Issue labelled `indicators-backup-integrity-failure`
+   is filed automatically -- the backup step is skipped, so no bad snapshot
+   gets banked on top of a good one.
+4. **The indicators nav section is missing or visibly stale on the live
+   site** -- check whether `indicators.yml`'s most recent "full" tier run
+   actually reached its "Cache rendered indicators site output" step (a
+   failure anywhere earlier in that run skips it). `pipeline.yml`'s next
+   run will pick up the most recent successful one regardless of when its
+   own run happens -- this is expected eventual consistency, not a bug,
+   per the ordering note in both workflows' comments.
+5. **Cache miss on `indicators-db-` and no releases exist yet** -- only
+   expected on the very first run ever (or if the `indicators-db-latest`
+   release was deleted). `indicators.fetch` starts from an empty db in this
+   case; run `indicators-backfill.yml` to populate it in one shot rather
+   than waiting for incremental due-checks to fill in history over time.
 
 ---
 

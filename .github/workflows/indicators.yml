@@ -1,0 +1,257 @@
+name: Indicators
+
+# Scheduled automation for the indicators subsystem (INDICATORS_BRIEF.md
+# Phase 3 / §8, INDICATORS.md). Deliberately a SEPARATE workflow from
+# pipeline.yml -- separate cron triggers, separate concurrency group,
+# separate db file (data/indicators.db), separate release tag
+# (indicators-db-latest vs. db-latest). A broken indicator fetch must never
+# block a news run, and vice versa (INDICATORS_BRIEF.md §2) -- the only
+# thing this workflow shares with pipeline.yml is a read of a cache pipeline
+# .yml also reads (see the "full tier" site-output cache step below), never
+# a write either one depends on the other to have made.
+#
+# Tiered schedule, one job, two cron triggers distinguished at runtime via
+# `github.event.schedule` (the exact cron string that fired this run --
+# GitHub sets this only for schedule-triggered events):
+#   - "quick" tier (high-frequency): runs config validate -> db sync ->
+#     incremental fetch only. Cheap because indicators.fetch's own
+#     due-for-refresh check (INDICATORS.md "Release-aware fetching") already
+#     skips any series that isn't due -- a quarterly GDP print won't
+#     actually be refetched just because this job runs every 3 hours, only
+#     daily/undated series (FX, yields, equity indices) will typically have
+#     anything to do. This tier deliberately does NOT rebuild the site --
+#     see "full" below for why.
+#   - "full" tier (twice daily): everything "quick" does, plus
+#     indicators.transform (recompute derived series -- misery_index,
+#     real_wage_growth, etc.), indicators.build + indicators.export (render
+#     the /indicators/ HTML + JSON), and publishing that rendered output for
+#     pipeline.yml to pick up. Rebuilding/publishing the site on every
+#     "quick" run would mean up to 8 site-output cache writes a day for
+#     data that mostly didn't change -- wasted work, and more chances for
+#     pipeline.yml's Pages deploy to pick up a half-updated intermediate
+#     state.
+#   - workflow_dispatch (manual): github.event.schedule is unset for a
+#     manually-triggered run, so it always takes the "full" path -- the
+#     safe default for an on-demand run. The pre-existing
+#     indicators-backfill.yml (full historical pull, ignoring the
+#     due-for-refresh check entirely) remains separate and untouched; this
+#     workflow's manual trigger is for an on-demand *incremental* run, not
+#     a backfill.
+#
+# Cron minutes/hours are deliberately offset from both :00 (GitHub's
+# scheduler queue is most congested there -- see pipeline.yml's own comment
+# on this) and from pipeline.yml's "13 6,9,12,15,18,21 * * *" slots, so
+# neither workflow's runs pile up against the other's.
+on:
+  schedule:
+    - cron: "8 2,5,8,11,14,17,20,23 * * *"  # quick tier: every 3h, offset from pipeline.yml and :00
+    - cron: "38 3,15 * * *"                  # full tier: twice daily
+  workflow_dispatch: {}
+
+# Never let two runs touch the cached indicators db at once. A distinct
+# group name from pipeline.yml's "pipeline-db" so the two workflows never
+# serialise against each other -- this is the "separate failure domain"
+# requirement (INDICATORS_BRIEF.md §2) applied to scheduling, not just code.
+concurrency:
+  group: indicators-db
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Determine run tier
+        id: tier
+        run: |
+          # See the workflow-level comment above for why these two exact
+          # cron strings (and only these) select "quick" -- anything else
+          # (the "full" cron, or an unset schedule on workflow_dispatch)
+          # defaults to the safe/full path.
+          if [ "${{ github.event.schedule }}" = "8 2,5,8,11,14,17,20,23 * * *" ]; then
+            echo "full=false" >> "$GITHUB_OUTPUT"
+            echo "Tier: quick (fetch only)"
+          else
+            echo "full=true" >> "$GITHUB_OUTPUT"
+            echo "Tier: full (fetch + transform + build + export)"
+          fi
+
+      - name: Restore indicators db from cache
+        uses: actions/cache/restore@v4
+        with:
+          path: data/indicators.db
+          key: indicators-db-${{ github.run_id }}
+          restore-keys: |
+            indicators-db-
+
+      # Same rationale as pipeline.yml's matching step: actions/cache is
+      # best-effort (7-day LRU, 10GB/repo cap) and can be evicted with no
+      # warning. The durable copy of record is a compressed snapshot on the
+      # "indicators-db-latest" release, refreshed at the end of every run.
+      # Only fall back to it if the cache didn't have the db at all.
+      - name: Restore indicators db from durable backup (cache miss only)
+        if: ${{ !hashFiles('data/indicators.db') }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "No cached indicators db found -- trying durable backup from the indicators-db-latest release"
+          repo="${{ github.repository }}"
+          latest=$(gh api "repos/$repo/releases/tags/indicators-db-latest" --jq \
+            '[.assets[] | select(.name | startswith("indicators.db."))] | sort_by(.created_at) | last | .name' \
+            2>/dev/null || echo null)
+          if [ -n "$latest" ] && [ "$latest" != "null" ]; then
+            gh release download indicators-db-latest --repo "$repo" --pattern "$latest" --output data/indicators.db.gz --clobber
+            gunzip -f data/indicators.db.gz
+            echo "Restored data/indicators.db from GitHub Release asset $latest"
+          else
+            echo "No durable backup found either -- starting fresh (first run)"
+          fi
+
+      # Only step allowed to hard-fail the run (INDICATORS_BRIEF.md §8:
+      # "Only a config-validation error should hard-fail"). Every step after
+      # this one is written to degrade gracefully around a bad provider
+      # response, a missed release, etc.
+      - name: Validate indicators config
+        run: python -m indicators.config
+
+      - name: Initialise schema + sync series from config
+        run: python -m indicators.db
+
+      - name: Fetch due series (incremental)
+        run: python -m indicators.fetch
+
+      - name: Compute derived series
+        if: steps.tier.outputs.full == 'true'
+        run: python -m indicators.transform
+
+      - name: Save indicators db to cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: data/indicators.db
+          key: indicators-db-${{ github.run_id }}
+
+      # Twin of pipeline.yml's "Verify database integrity before backup" --
+      # see indicators/backup_verify.py's docstring. Runs even if an earlier
+      # step failed (matches the backup step it guards) so a mid-run crash
+      # still gets checked before anything is banked.
+      - name: Verify indicators db integrity before backup
+        id: verify
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ ! -f data/indicators.db ]; then
+            echo "No indicators db present -- nothing to verify or back up"
+            exit 0
+          fi
+          python -m indicators.backup_verify --repo "${{ github.repository }}" \
+            --write-counts data/indicators_backup_counts.json
+
+      # Durable copy of record -- see the restore step above. Only runs if
+      # verification above passed (or there was no db to verify).
+      - name: Back up indicators db to GitHub Releases
+        if: always() && steps.verify.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ ! -f data/indicators.db ]; then
+            echo "No indicators db present -- nothing to back up"
+            exit 0
+          fi
+          gzip -kf data/indicators.db
+
+          repo="${{ github.repository }}"
+          asset_name="indicators.db.${{ github.run_id }}.gz"
+          counts_asset_name="indicators.counts.${{ github.run_id }}.json"
+          cp data/indicators.db.gz "data/$asset_name"
+          cp data/indicators_backup_counts.json "data/$counts_asset_name"
+
+          if ! gh release view indicators-db-latest --repo "$repo" >/dev/null 2>&1; then
+            gh release create indicators-db-latest \
+              --repo "$repo" \
+              --title "Indicators database (automated rolling backup)" \
+              --notes "Durable backup of data/indicators.db -- one gzip snapshot per run, older ones pruned. Not a project release -- see INDICATORS.md. Separate from the news pipeline's db-latest release." \
+              --prerelease
+          fi
+
+          # Uniquely-named upload, never overwritten in place -- same reason
+          # as pipeline.yml's matching step: a delete-then-replace (or
+          # upload-then-rename) can leave the release with zero usable
+          # backups if any step in the sequence fails partway through.
+          gh release upload indicators-db-latest "data/$asset_name" "data/$counts_asset_name" --repo "$repo" --clobber
+
+          # Best-effort prune: keep only the newest 3 db snapshots (and
+          # their matching counts files). Failures here are non-fatal -- a
+          # good backup already exists by this point.
+          (
+            gh api "repos/$repo/releases/tags/indicators-db-latest" --jq \
+              '[.assets[] | select(.name | startswith("indicators.db."))] | sort_by(.created_at) | reverse | .[3:] | .[].id' \
+              | while read -r id; do gh api -X DELETE "repos/$repo/releases/assets/$id" || true; done
+            gh api "repos/$repo/releases/tags/indicators-db-latest" --jq \
+              '[.assets[] | select(.name | startswith("indicators.counts."))] | sort_by(.created_at) | reverse | .[3:] | .[].id' \
+              | while read -r id; do gh api -X DELETE "repos/$repo/releases/assets/$id" || true; done
+          ) || echo "Prune of old indicators backup snapshots failed -- ignoring, not fatal"
+
+      - name: Build indicator pages
+        if: steps.tier.outputs.full == 'true'
+        run: python -m indicators.build
+
+      - name: Write indicator exports (manifest.json, per-series JSON + CSV)
+        if: steps.tier.outputs.full == 'true'
+        run: python -m indicators.export
+
+      # ---- Handoff to pipeline.yml's Pages deploy ----
+      #
+      # pipeline.yml's Pages deploy is the only place either workflow calls
+      # actions/deploy-pages -- having indicators.yml deploy too would race
+      # the two workflows against the same GitHub Pages environment (the
+      # `github-pages` deployment environment only allows one deployment in
+      # flight at a time; a second concurrent deploy-pages call queues or
+      # cancels the other rather than merging outputs). So indicators.yml
+      # never deploys; it only publishes its rendered site/indicators/
+      # output to a place pipeline.yml can pick it up from.
+      #
+      # That place is an actions/cache entry, not a git commit: site/ is
+      # gitignored (generated output, same as the news pipeline's site/),
+      # and committing rendered HTML/JSON here would fight that convention
+      # and bloat history with every run. A uniquely-keyed cache entry
+      # (mirroring the db backup scheme above) plus a prefix restore-keys
+      # fallback lets pipeline.yml restore "whatever indicators.yml most
+      # recently rendered" without either workflow needing to know when the
+      # other last ran.
+      #
+      # Ordering this depends on: pipeline.build.render_site() clears
+      # everything under site/ except archive/ and story/ before writing
+      # the news site, which would delete indicators/ if it ran afterwards
+      # (see indicators/build.py's module docstring). pipeline.yml restores
+      # this cache entry into site/indicators/ *after* that clear and
+      # *before* it runs Pagefind / uploads the Pages artifact -- see the
+      # "Restore indicators output" step added there. If no such cache
+      # entry exists yet (first-ever indicators.yml run hasn't happened, or
+      # this run's build/export was skipped/failed), pipeline.yml simply
+      # publishes without an indicators/ directory that deploy -- the nav
+      # link goes briefly missing/404s rather than the whole news site
+      # failing to build, which is the acceptable-degradation direction
+      # INDICATORS_BRIEF.md §2 asks for. Because indicators.yml runs 2-8x/
+      # day and pipeline.yml runs 6x/day, in steady state pipeline.yml
+      # almost always finds a cache entry no more than a few hours stale.
+      - name: Cache rendered indicators site output for pipeline.yml
+        if: steps.tier.outputs.full == 'true' && steps.verify.outcome == 'success'
+        uses: actions/cache/save@v4
+        with:
+          path: site/indicators
+          key: indicators-site-${{ github.run_id }}

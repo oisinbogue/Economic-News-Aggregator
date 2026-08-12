@@ -143,6 +143,28 @@ jobs:
       - name: Write exports (CSV, latest.json, feed.xml)
         run: python -m pipeline.export
 
+      # Restores whatever indicators.yml (a separate workflow, separate
+      # failure domain -- see .github/workflows/indicators.yml's "Handoff
+      # to pipeline.yml's Pages deploy" comment) most recently rendered to
+      # site/indicators/. Must run after "Build static site" above, since
+      # pipeline.build.render_site() clears everything under site/ except
+      # archive/ and story/ and would delete indicators/ if this ran first;
+      # must run before Pagefind/the Pages upload below so the indicator
+      # series pages get indexed and deployed. Best-effort: if
+      # indicators.yml hasn't produced a cache entry yet (or the newest one
+      # aged out of the 7-day LRU), this is a silent no-op and the news
+      # site still builds and deploys normally, just without an
+      # indicators/ directory that run -- reading a cache indicators.yml
+      # wrote is the only thing these two workflows share; neither can
+      # break the other's run.
+      - name: Restore indicators output (rendered by indicators.yml)
+        uses: actions/cache/restore@v4
+        with:
+          path: site/indicators
+          key: indicators-site-not-a-real-key-${{ github.run_id }}
+          restore-keys: |
+            indicators-site-
+
       # Indexes the rendered HTML in site/ -- must run after the build and
       # export steps, before the Pages artifact is packaged, so site/pagefind
       # (JS + sharded index chunks) rides along in the upload below.

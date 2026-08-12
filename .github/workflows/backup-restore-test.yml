@@ -1,24 +1,30 @@
 name: Backup restore test
 
-# Proves the durable backup is actually restorable, not just uploaded.
-# pipeline.yml's own verify step (pipeline/backup_verify.py) only ever
-# checks the *live* db before upload -- it can't catch a snapshot that was
-# corrupted in transit, or a gzip that doesn't actually unpack. This
-# workflow downloads the newest "db-latest" release snapshot onto a fresh
-# runner (no actions/cache, no reuse of a possibly-stale local checkout)
-# and runs the same integrity_check + row-count checks against it.
+# Proves the durable backups are actually restorable, not just uploaded.
+# pipeline.yml's and indicators.yml's own verify steps (pipeline/
+# backup_verify.py, indicators/backup_verify.py) only ever check the *live*
+# db before upload -- they can't catch a snapshot that was corrupted in
+# transit, or a gzip that doesn't actually unpack. This workflow downloads
+# the newest release snapshot for each db onto a fresh runner (no
+# actions/cache, no reuse of a possibly-stale local checkout) and runs the
+# same integrity_check + row-count checks against it.
 #
-# Read-only against the release: never uploads, deletes, or otherwise
+# Two independent jobs, one per db/release tag, so a corrupt/missing
+# indicators.db snapshot can never mask (or be masked by) a problem with
+# aggregator.db's -- same separate-failure-domain rule as pipeline.yml vs.
+# indicators.yml themselves.
+#
+# Read-only against both releases: never uploads, deletes, or otherwise
 # touches the snapshot assets, so it can't violate the "never overwritten
 # in place" guarantee those assets rely on.
 on:
   schedule:
-    - cron: "0 5 1 * *"  # first of the month, well clear of pipeline.yml's own cron slots
+    - cron: "0 5 1 * *"  # first of the month, well clear of pipeline.yml's and indicators.yml's own cron slots
   workflow_dispatch: {}
 
 permissions:
   contents: read
-  issues: write  # only used if pipeline.backup_verify needs to file/reuse an alert issue
+  issues: write  # only used if a backup_verify module needs to file/reuse an alert issue
 
 jobs:
   restore-test:
@@ -55,3 +61,38 @@ jobs:
 
       - name: Verify restored snapshot (integrity + row-count checks)
         run: python -m pipeline.backup_verify --repo "${{ github.repository }}"
+
+  indicators-restore-test:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Download newest snapshot from indicators-db-latest release
+        run: |
+          repo="${{ github.repository }}"
+          latest=$(gh api "repos/$repo/releases/tags/indicators-db-latest" --jq \
+            '[.assets[] | select(.name | startswith("indicators.db."))] | sort_by(.created_at) | last | .name')
+          if [ -z "$latest" ] || [ "$latest" = "null" ]; then
+            echo "No snapshot found on the indicators-db-latest release -- nothing to restore-test."
+            echo "## Indicators backup restore test" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "**Result:** FAIL -- no snapshot asset found on indicators-db-latest" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          echo "Restoring $latest"
+          mkdir -p data
+          gh release download indicators-db-latest --repo "$repo" --pattern "$latest" --output data/indicators.db.gz --clobber
+          gunzip -f data/indicators.db.gz
+
+      - name: Verify restored snapshot (integrity + row-count checks)
+        run: python -m indicators.backup_verify --repo "${{ github.repository }}"

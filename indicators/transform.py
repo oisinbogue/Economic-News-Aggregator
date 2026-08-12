@@ -23,6 +23,7 @@ the leap-day fallback in `_subtract_years()`.
 from __future__ import annotations
 
 import json
+import sys
 from dataclasses import dataclass
 from datetime import date, timedelta
 from datetime import datetime, timezone
@@ -382,3 +383,37 @@ def compute_derived(series_id: str, conn) -> int:
     before = conn.total_changes
     conn.executemany(INSERT_OBSERVATION_SQL, rows)
     return conn.total_changes - before
+
+
+def compute_all_derived(conn) -> dict[str, int]:
+    """Runs `compute_derived()` for every active is_derived=1 series.
+
+    Must run after `indicators.fetch` -- component series need fresh
+    observations already written, same ordering
+    `tests/test_indicators_build.py`'s smoke test exercises. Returns
+    {series_id: rows_written}, including entries where compute_derived()
+    skipped (0 rows written) so a caller can tell which derived series
+    produced nothing this run without re-deriving why.
+    """
+    series_ids = [
+        row["series_id"]
+        for row in conn.execute("SELECT series_id FROM series WHERE is_derived = 1 AND active = 1")
+    ]
+    return {series_id: compute_derived(series_id, conn) for series_id in series_ids}
+
+
+def main() -> dict[str, int]:
+    from indicators.db import get_connection, init_db
+
+    init_db()
+    with get_connection() as conn:
+        results = compute_all_derived(conn)
+
+    total_new = sum(results.values())
+    print(f"Computed {len(results)} derived series, {total_new} new observation(s) written.")
+    sys.stdout.flush()
+    return results
+
+
+if __name__ == "__main__":
+    main()
