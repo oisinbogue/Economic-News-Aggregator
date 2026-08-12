@@ -109,15 +109,18 @@ jobs:
         run: |
           echo "No cached indicators db found -- trying durable backup from the indicators-db-latest release"
           repo="${{ github.repository }}"
-          latest=$(gh api "repos/$repo/releases/tags/indicators-db-latest" --jq \
-            '[.assets[] | select(.name | startswith("indicators.db."))] | sort_by(.created_at) | last | .name' \
-            2>/dev/null || echo null)
-          if [ -n "$latest" ] && [ "$latest" != "null" ]; then
-            gh release download indicators-db-latest --repo "$repo" --pattern "$latest" --output data/indicators.db.gz --clobber
-            gunzip -f data/indicators.db.gz
-            echo "Restored data/indicators.db from GitHub Release asset $latest"
+          if gh release view indicators-db-latest --repo "$repo" >/dev/null 2>&1; then
+            latest=$(gh api "repos/$repo/releases/tags/indicators-db-latest" --jq \
+              '[.assets[] | select(.name | startswith("indicators.db."))] | sort_by(.created_at) | last | .name')
+            if [ -n "$latest" ] && [ "$latest" != "null" ]; then
+              gh release download indicators-db-latest --repo "$repo" --pattern "$latest" --output data/indicators.db.gz --clobber
+              gunzip -f data/indicators.db.gz
+              echo "Restored data/indicators.db from GitHub Release asset $latest"
+            else
+              echo "Release exists but has no db asset yet -- starting fresh (first run)"
+            fi
           else
-            echo "No durable backup found either -- starting fresh (first run)"
+            echo "No durable backup release found -- starting fresh (first run)"
           fi
 
       # Only step allowed to hard-fail the run (INDICATORS_BRIEF.md §8:
