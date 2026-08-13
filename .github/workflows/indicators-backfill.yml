@@ -39,4 +39,6 @@ jobs:
         run: python -m indicators.db
 
       - name: Backfill full history for every active series
+        env:
+          BLS_API_KEY: ${{ secrets.BLS_API_KEY }}
         run: python -m indicators.fetch --backfill

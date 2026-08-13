@@ -122,9 +122,15 @@ as a real provider mapping (above) or as an explicit unavailable marker:
 `series` table (`active = 0`, `unavailable_reason` set) rather than
 skipping it, so the gap is visible in the db, not silently missing.
 
-**Providers implemented:** `dbnomics`, `ecb`, `eurostat`, `ons`, `boe`, and
-`stooq` (`indicators/providers/*.py`), covering every provider referenced
-across the five Phase-1 countries' `series/*.yaml`. Every one of them
+**Providers implemented:** `dbnomics`, `ecb`, `eurostat`, `ons`, `boe`,
+`stooq`, and `bls` (`indicators/providers/*.py`), covering every provider
+referenced across the five Phase-1 countries' `series/*.yaml`. `bls` (US
+Bureau of Labor Statistics public API) was added 2026-08-13 to migrate
+`us.cpi_headline`/`cpi_core`/`unemployment_rate`/`wages_nominal` off a
+DBnomics mirror that had stopped tracking upstream (frozen at Jan 2025)
+-- see `indicators/providers/bls.py`'s module docstring for the API's
+unregistered-tier quota constraints and the optional `BLS_API_KEY`.
+Every one of them
 routes its HTTP call through `indicators/http.py`'s `get()` rather than
 calling `httpx` directly -- see "Rate-limit safety" below. A `provider`
 value in config with no matching module still degrades gracefully: `fetch.py`

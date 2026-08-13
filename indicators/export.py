@@ -54,8 +54,14 @@ SPARKLINE_POINTS = 40
 # staleness rule below. Approximate by construction (a "month" is not 30
 # days) -- the 1.5x multiplier absorbs the slack, and nothing else depends
 # on these numbers.
+#
+# "D" is 4 days rather than 1: a literal daily interval makes every
+# market-data series (policy rates, bond yields, FX) flag stale across any
+# normal weekend, since 1 day x 1.5 = 1.5 days and Friday-to-Monday alone is
+# 3. 4 days x 1.5 = 6, which absorbs a weekend plus a one-day holiday
+# without masking a series that's actually stopped updating.
 FREQUENCY_INTERVAL: dict[str, timedelta] = {
-    "D": timedelta(days=1),
+    "D": timedelta(days=4),
     "W": timedelta(days=7),
     "M": timedelta(days=31),
     "Q": timedelta(days=92),

@@ -36,7 +36,7 @@ import indicators.config as config_mod
 import indicators.db as db_mod
 import indicators.fetch as fetch_mod
 import indicators.transform as transform_mod
-from indicators.providers import boe, dbnomics, ecb, eurostat, ons, stooq
+from indicators.providers import bls, boe, dbnomics, ecb, eurostat, ons, stooq
 
 
 def _synthetic_dbnomics_payload() -> dict:
@@ -72,6 +72,10 @@ _EUROSTAT_PAYLOAD = {
 _ONS_PAYLOAD = {"months": [{"year": "2024", "month": "January", "value": "100.0"}]}
 _BOE_CSV = "DATE,IUMBEDR\n31 Jan 2024,4.5\n"
 _STOOQ_CSV = "Date,Open,High,Low,Close,Volume\n2024-01-31,100,101,99,100.5,1000\n"
+_BLS_PAYLOAD = {
+    "status": "REQUEST_SUCCEEDED",
+    "Results": {"series": [{"data": [{"year": "2024", "period": "M01", "value": "100.0", "footnotes": [{}]}]}]},
+}
 
 
 def _install_all_provider_mocks(monkeypatch) -> None:
@@ -105,6 +109,8 @@ def _install_all_provider_mocks(monkeypatch) -> None:
             return httpx.Response(200, text=_BOE_CSV)
         if host == "stooq.com":
             return httpx.Response(200, text=_STOOQ_CSV)
+        if host == "api.bls.gov":
+            return httpx.Response(200, json=_BLS_PAYLOAD)
         raise AssertionError(f"unexpected live request in test: {request.url}")
 
     real_client = httpx.AsyncClient
@@ -118,7 +124,7 @@ def _install_all_provider_mocks(monkeypatch) -> None:
     # (see docstring above); setting it via any one of them would suffice,
     # but naming every provider explicitly documents which modules this
     # covers and survives a future provider being renamed/split.
-    for module in (dbnomics, ecb, eurostat, ons, boe, stooq):
+    for module in (dbnomics, ecb, eurostat, ons, boe, stooq, bls):
         monkeypatch.setattr(module.httpx, "AsyncClient", factory)
 
 

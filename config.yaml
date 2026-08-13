@@ -179,6 +179,7 @@ indicators:
     ons: 2
     boe: 1
     stooq: 2
+    bls: 2
   provider_delay_seconds:
     dbnomics: 0.2
     ecb: 0.5
@@ -186,3 +187,12 @@ indicators:
     ons: 0.5
     boe: 1.0
     stooq: 0.5
+    # BLS is deliberately the slowest/lowest-concurrency provider here: its
+    # unregistered daily quota is only 25 requests total (see
+    # indicators/providers/bls.py), not a per-second rate limit, so the
+    # scarce resource is request *count* across the whole day rather than
+    # burst speed -- kept low/slow so incremental runs don't eat the quota
+    # needlessly even though nothing here throttles the daily total itself
+    # (that's handled by _is_due_for_refresh_release_aware()'s ~10-day
+    # far-from-release interval keeping BLS series off most runs).
+    bls: 1.0

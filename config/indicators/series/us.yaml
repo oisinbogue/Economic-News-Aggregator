@@ -25,11 +25,13 @@ series:
     revisable: true
     news_topic_tags: [MACROECONOMICS, GLOBAL ECONOMY]
   cpi_headline:
-    provider: dbnomics
-    # CPI-U, all items, SA. BLS series id CUSR0000SA0 under DBnomics'
-    # BLS/cu dataset. Confirmed live 2026-08-11.
-    provider_series_id: BLS/cu/CUSR0000SA0
-    fallback_providers: []
+    provider: bls
+    # CPI-U, all items, SA. Migrated 2026-08-13 off the DBnomics BLS/cu
+    # mirror (frozen at Jan 2025, ~559 days stale) direct to the BLS
+    # public API, which returns data through July 2026 -- see
+    # indicators/providers/bls.py's module docstring.
+    provider_series_id: CUSR0000SA0
+    fallback_providers: [dbnomics]
     source_agency: Bureau of Labor Statistics
     source_url: https://www.bls.gov/cpi/
     licence: public-domain
@@ -39,10 +41,12 @@ series:
     revisable: true
     news_topic_tags: [MACROECONOMICS]
   cpi_core:
-    provider: dbnomics
-    # CPI-U less food & energy, SA. Confirmed live 2026-08-11.
-    provider_series_id: BLS/cu/CUSR0000SA0L1E
-    fallback_providers: []
+    provider: bls
+    # CPI-U less food & energy, SA. Migrated 2026-08-13 off the DBnomics
+    # BLS/cu mirror (frozen at Jan 2025) direct to the BLS public API --
+    # see cpi_headline above and indicators/providers/bls.py.
+    provider_series_id: CUSR0000SA0L1E
+    fallback_providers: [dbnomics]
     source_agency: Bureau of Labor Statistics
     source_url: https://www.bls.gov/cpi/
     licence: public-domain
@@ -66,11 +70,12 @@ series:
     revisable: false
     news_topic_tags: [MACROECONOMICS]
   unemployment_rate:
-    provider: dbnomics
-    # Unemployment rate, 16+, SA. BLS series id LNS14000000 under
-    # DBnomics' BLS/ln dataset. Confirmed live 2026-08-11.
-    provider_series_id: BLS/ln/LNS14000000
-    fallback_providers: []
+    provider: bls
+    # Unemployment rate, 16+, SA. Migrated 2026-08-13 off the DBnomics
+    # BLS/ln mirror (frozen at Jan 2025) direct to the BLS public API --
+    # see cpi_headline above and indicators/providers/bls.py.
+    provider_series_id: LNS14000000
+    fallback_providers: [dbnomics]
     source_agency: Bureau of Labor Statistics
     source_url: https://www.bls.gov/cps/
     licence: public-domain
@@ -80,11 +85,13 @@ series:
     revisable: true
     news_topic_tags: [INEQUALITY & LABOUR]
   wages_nominal:
-    provider: dbnomics
-    # Avg hourly earnings, all employees, total private, SA. BLS series id
-    # CES0500000003 under DBnomics' BLS/ce dataset. Confirmed live 2026-08-11.
-    provider_series_id: BLS/ce/CES0500000003
-    fallback_providers: []
+    provider: bls
+    # Avg hourly earnings, all employees, total private, SA. Migrated
+    # 2026-08-13 off the DBnomics BLS/ce mirror (frozen at Jan 2025)
+    # direct to the BLS public API -- see cpi_headline above and
+    # indicators/providers/bls.py.
+    provider_series_id: CES0500000003
+    fallback_providers: [dbnomics]
     source_agency: Bureau of Labor Statistics
     source_url: https://www.bls.gov/ces/
     licence: public-domain

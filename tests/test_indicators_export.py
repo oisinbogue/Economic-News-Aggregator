@@ -232,15 +232,16 @@ def test_stale_flag_for_a_series_with_an_old_last_observation(populated, tmp_pat
 @pytest.mark.parametrize(
     "frequency, days_since_period_end, expected_stale",
     [
-        # interval x 1.5: M is 31d -> 46.5d, Q is 92d -> 138d, A is 366d -> 549d
+        # interval x 1.5: M is 31d -> 46.5d, Q is 92d -> 138d, A is 366d -> 549d,
+        # D is 4d -> 6d
         ("M", 40, False),
         ("M", 60, True),
         ("Q", 100, False),
         ("Q", 200, True),
         ("A", 400, False),
         ("A", 600, True),
-        ("D", 1, False),
-        ("D", 3, True),
+        ("D", 4, False),
+        ("D", 7, True),
     ],
 )
 def test_stale_rule_is_one_and_a_half_expected_intervals(frequency, days_since_period_end, expected_stale):

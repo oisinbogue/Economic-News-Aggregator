@@ -134,6 +134,8 @@ jobs:
         run: python -m indicators.db
 
       - name: Fetch due series (incremental)
+        env:
+          BLS_API_KEY: ${{ secrets.BLS_API_KEY }}
         run: python -m indicators.fetch
 
       - name: Compute derived series
