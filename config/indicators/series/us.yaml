@@ -115,14 +115,16 @@ series:
     revisable: true
     news_topic_tags: [MACROECONOMICS, GLOBAL ECONOMY]
   retail_sales:
-    provider: dbnomics
+    provider: oecd
     # Retail trade volume index, monthly, calendar+seasonally adjusted.
     # No US Census retail-sales series is mirrored on DBnomics; using
     # OECD's short-term economic statistics retail-trade-volume series
     # instead (same dataset used for gb/ie/de/eu, for consistency).
     # Confirmed live 2026-08-11.
+    # Migrated 2026-08-13 off DBnomics' OECD mirror (systemically 74-135 days
+    # behind) direct to the OECD SDMX API -- see indicators/providers/oecd.py.
     provider_series_id: OECD/DSD_STES@DF_INDSERV/USA.M.TOVM.IX.G47.Y._Z._Z.N
-    fallback_providers: []
+    fallback_providers: [dbnomics]
     source_agency: OECD (Short-Term Economic Statistics)
     source_url: https://data-explorer.oecd.org/
     licence: oecd-terms
@@ -201,13 +203,15 @@ series:
     revisable: true
     news_topic_tags: [TRADE & GLOBALISATION, GLOBAL ECONOMY]
   consumer_confidence:
-    provider: dbnomics
+    provider: oecd
     # OECD composite consumer confidence indicator, percentage balance,
     # SA. FRED/UMCSENT (U. Michigan) is not mirrored on DBnomics; using
     # OECD's harmonised consumer-opinion-survey series instead, for
     # consistency with gb/de/eu/ie. Confirmed live 2026-08-11.
+    # Migrated 2026-08-13 off DBnomics' OECD mirror (systemically 74-135 days
+    # behind) direct to the OECD SDMX API -- see indicators/providers/oecd.py.
     provider_series_id: OECD/DSD_STES@DF_CS/USA.M.CCICP.PB._Z.Y._Z._Z.N
-    fallback_providers: []
+    fallback_providers: [dbnomics]
     source_agency: OECD (Consumer Opinion Surveys)
     source_url: https://data-explorer.oecd.org/
     licence: oecd-terms
@@ -216,14 +220,16 @@ series:
     revisable: false
     news_topic_tags: [MACROECONOMICS]
   equity_index:
-    provider: dbnomics
+    provider: oecd
     # OECD share price index, monthly. FRED/SP500 is not mirrored on
     # DBnomics; Stooq (kept as fallback) is currently bot-gated for
     # non-browser clients (confirmed live 2026-08-11 -- see
     # indicators/providers/stooq.py's docstring). Confirmed live
     # 2026-08-11.
+    # Migrated 2026-08-13 off DBnomics' OECD mirror (systemically 74-135 days
+    # behind) direct to the OECD SDMX API -- see indicators/providers/oecd.py.
     provider_series_id: OECD/DSD_STES@DF_FINMARK/USA.M.SHARE.IX._Z._Z._Z._Z.N
-    fallback_providers: [stooq]
+    fallback_providers: [stooq, dbnomics]
     source_agency: OECD (Financial Market Statistics)
     source_url: https://data-explorer.oecd.org/
     licence: oecd-terms

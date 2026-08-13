@@ -164,6 +164,7 @@ indicators:
   ons_base_url: https://api.ons.gov.uk/v1/data
   boe_base_url: https://www.bankofengland.co.uk/boeapps/iadb/fromshowcolumns.asp
   bis_base_url: https://stats.bis.org/api/v2/data/dataflow
+  oecd_base_url: https://sdmx.oecd.org/public/rest/data
   fetch_concurrency: 5
   fetch_timeout_seconds: 20
   # Rate-limit safety (INDICATORS_BRIEF.md §8): per-provider concurrency cap
@@ -182,6 +183,9 @@ indicators:
     stooq: 2
     bls: 2
     bis: 2
+    # oecd: 1, not the usual 2-3 -- see provider_delay_seconds below, its
+    # rate limiting is stricter than every other provider tested here.
+    oecd: 1
   provider_delay_seconds:
     dbnomics: 0.2
     ecb: 0.5
@@ -199,3 +203,17 @@ indicators:
     # far-from-release interval keeping BLS series off most runs).
     bls: 1.0
     bis: 0.5
+    # OECD's sdmx.oecd.org rate limiting is meaningfully stricter than every
+    # other provider tested here -- confirmed live 2026-08-13: a burst of
+    # ~15-20 requests a few seconds apart started 429ing, and the block
+    # persisted well beyond indicators/http.py's own backoff window (up to
+    # ~15s across 4 retries) -- a 6s gap between individual requests still
+    # 429'd after that burst, recovering only after roughly a minute of no
+    # requests at all. concurrency=1 (serialize, never parallel) and a 3s
+    # delay are deliberately conservative given that; a real incremental
+    # run touches far fewer OECD series at once than the ~24 hit during
+    # this investigation, so this is unlikely to matter in practice except
+    # during --backfill, which is expected to run at a leisurely pace
+    # anyway (INDICATORS_BRIEF.md §8: idempotent, not time-sensitive).
+    oecd: 3.0
+    oecd: 0.5

@@ -70,11 +70,13 @@ series:
     notes: Germany uses the euro-area ECB policy rate; there is no separate Bundesbank rate.
     news_topic_tags: [EUROPE & ECB, MACROECONOMICS]
   unemployment_rate:
-    provider: dbnomics
+    provider: oecd
     # Monthly unemployment rate, 15+, SA. OECD infra-annual labour force
     # statistics. Confirmed live 2026-08-11.
+    # Migrated 2026-08-13 off DBnomics' OECD mirror (systemically 74-135 days
+    # behind) direct to the OECD SDMX API -- see indicators/providers/oecd.py.
     provider_series_id: OECD/DSD_LFS@DF_IALFS_UNE_M/DEU.UNE_LF_M.PT_LF_SUB._Z.Y._T.Y_GE15._Z.M
-    fallback_providers: [destatis]
+    fallback_providers: [destatis, dbnomics]
     source_agency: Federal Employment Agency (Bundesagentur für Arbeit) / Destatis
     source_url: https://www.destatis.de/EN/Themes/Labour/Labour-Market/_node.html
     licence: destatis-terms
@@ -83,11 +85,13 @@ series:
     revisable: true
     news_topic_tags: [EUROPE & ECB, INEQUALITY & LABOUR]
   wages_nominal:
-    provider: dbnomics
+    provider: oecd
     # Earnings index, private sector, quarterly, SA. OECD hourly-earnings
     # dataset. Confirmed live 2026-08-11.
+    # Migrated 2026-08-13 off DBnomics' OECD mirror (systemically 74-135 days
+    # behind) direct to the OECD SDMX API -- see indicators/providers/oecd.py.
     provider_series_id: OECD/DSD_EAR@DF_HOU_EAR/DEU.EAR.IX.Y._Z.S1D.Q
-    fallback_providers: [destatis]
+    fallback_providers: [destatis, dbnomics]
     source_agency: Destatis
     source_url: https://www.destatis.de/EN/Themes/Labour/Earnings/_node.html
     licence: destatis-terms
@@ -96,11 +100,13 @@ series:
     revisable: true
     news_topic_tags: [EUROPE & ECB, INEQUALITY & LABOUR]
   industrial_production:
-    provider: dbnomics
+    provider: oecd
     # Production volume index, industry excl. construction, monthly, SA.
     # OECD short-term economic statistics. Confirmed live 2026-08-11.
+    # Migrated 2026-08-13 off DBnomics' OECD mirror (systemically 74-135 days
+    # behind) direct to the OECD SDMX API -- see indicators/providers/oecd.py.
     provider_series_id: OECD/DSD_STES@DF_INDSERV/DEU.M.PRVM.IX.BTE.Y._Z._Z.N
-    fallback_providers: [destatis]
+    fallback_providers: [destatis, dbnomics]
     source_agency: Destatis
     source_url: https://www.destatis.de/EN/Themes/Economy/Short-Term-Indicators/_node.html
     licence: destatis-terms
@@ -109,11 +115,13 @@ series:
     revisable: true
     news_topic_tags: [EUROPE & ECB, MACROECONOMICS, GLOBAL ECONOMY]
   retail_sales:
-    provider: dbnomics
+    provider: oecd
     # Retail trade volume index, monthly, calendar+seasonally adjusted.
     # OECD short-term economic statistics. Confirmed live 2026-08-11.
+    # Migrated 2026-08-13 off DBnomics' OECD mirror (systemically 74-135 days
+    # behind) direct to the OECD SDMX API -- see indicators/providers/oecd.py.
     provider_series_id: OECD/DSD_STES@DF_INDSERV/DEU.M.TOVM.IX.G47.Y._Z._Z.N
-    fallback_providers: [destatis]
+    fallback_providers: [destatis, dbnomics]
     source_agency: Destatis
     source_url: https://www.destatis.de/EN/Themes/Economy/Short-Term-Indicators/_node.html
     licence: destatis-terms
@@ -122,11 +130,13 @@ series:
     revisable: true
     news_topic_tags: [EUROPE & ECB, MACROECONOMICS]
   govt_bond_10y:
-    provider: dbnomics
+    provider: oecd
     # Long-term (10y) government bond (Bund) yield, monthly. OECD
     # financial market statistics. Confirmed live 2026-08-11.
+    # Migrated 2026-08-13 off DBnomics' OECD mirror (systemically 74-135 days
+    # behind) direct to the OECD SDMX API -- see indicators/providers/oecd.py.
     provider_series_id: OECD/DSD_STES@DF_FINMARK/DEU.M.IRLT.PA._Z._Z._Z._Z.N
-    fallback_providers: []
+    fallback_providers: [dbnomics]
     source_agency: Deutsche Bundesbank
     source_url: https://www.bundesbank.de/en/statistics
     licence: bundesbank-terms
@@ -196,11 +206,13 @@ series:
     revisable: true
     news_topic_tags: [EUROPE & ECB, TRADE & GLOBALISATION, GLOBAL ECONOMY]
   consumer_confidence:
-    provider: dbnomics
+    provider: oecd
     # OECD composite consumer confidence indicator, percentage balance,
     # SA. Confirmed live 2026-08-11.
+    # Migrated 2026-08-13 off DBnomics' OECD mirror (systemically 74-135 days
+    # behind) direct to the OECD SDMX API -- see indicators/providers/oecd.py.
     provider_series_id: OECD/DSD_STES@DF_CS/DEU.M.CCICP.PB._Z.Y._Z._Z.N
-    fallback_providers: [destatis]
+    fallback_providers: [destatis, dbnomics]
     source_agency: OECD (Consumer Opinion Surveys)
     source_url: https://data-explorer.oecd.org/
     licence: oecd-terms
@@ -209,15 +221,17 @@ series:
     revisable: false
     news_topic_tags: [EUROPE & ECB, MACROECONOMICS]
   equity_index:
-    provider: dbnomics
+    provider: oecd
     # OECD share price index, monthly, for the DAX market. Stooq (the
     # only daily, no-key source) is bot-gated for non-browser clients as
     # of this writing (confirmed live 2026-08-11, see
     # indicators/providers/stooq.py's docstring) -- kept as a fallback in
     # case that changes; the ticker itself remains unverified. Confirmed
     # live 2026-08-11.
+    # Migrated 2026-08-13 off DBnomics' OECD mirror (systemically 74-135 days
+    # behind) direct to the OECD SDMX API -- see indicators/providers/oecd.py.
     provider_series_id: OECD/DSD_STES@DF_FINMARK/DEU.M.SHARE.IX._Z._Z._Z._Z.N
-    fallback_providers: [stooq]
+    fallback_providers: [stooq, dbnomics]
     source_agency: OECD (Financial Market Statistics)
     source_url: https://data-explorer.oecd.org/
     licence: oecd-terms

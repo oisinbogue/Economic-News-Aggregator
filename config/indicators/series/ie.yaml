@@ -77,11 +77,13 @@ series:
     notes: Ireland uses the euro-area ECB policy rate; there is no separate Irish central bank rate.
     news_topic_tags: [IRELAND, EUROPE & ECB, MACROECONOMICS]
   unemployment_rate:
-    provider: dbnomics
+    provider: oecd
     # Monthly unemployment rate, 15+, SA. OECD infra-annual labour force
     # statistics. Confirmed live 2026-08-11.
+    # Migrated 2026-08-13 off DBnomics' OECD mirror (systemically 74-135 days
+    # behind) direct to the OECD SDMX API -- see indicators/providers/oecd.py.
     provider_series_id: OECD/DSD_LFS@DF_IALFS_UNE_M/IRL.UNE_LF_M.PT_LF_SUB._Z.Y._T.Y_GE15._Z.M
-    fallback_providers: [cso]
+    fallback_providers: [cso, dbnomics]
     source_agency: Central Statistics Office Ireland
     source_url: https://www.cso.ie/en/statistics/labourmarket/
     licence: cc-by-4.0
@@ -90,14 +92,16 @@ series:
     revisable: true
     news_topic_tags: [IRELAND, INEQUALITY & LABOUR]
   wages_nominal:
-    provider: dbnomics
+    provider: oecd
     # Earnings index, manufacturing, quarterly, SA -- OECD's hourly-earnings
     # dataset has no "total economy, private sector" breakdown for Ireland
     # the way it does for gb/de/eu (only Manufacturing); confirmed live
     # 2026-08-11 this is the best available whole-economy proxy on
     # DBnomics.
+    # Migrated 2026-08-13 off DBnomics' OECD mirror (systemically 74-135 days
+    # behind) direct to the OECD SDMX API -- see indicators/providers/oecd.py.
     provider_series_id: OECD/DSD_EAR@DF_HOU_EAR/IRL.EAR.IX.Y.C.S1.Q
-    fallback_providers: [cso]
+    fallback_providers: [cso, dbnomics]
     source_agency: Central Statistics Office Ireland
     source_url: https://www.cso.ie/en/statistics/earthlyandlabourcosts/
     licence: cc-by-4.0
@@ -107,11 +111,13 @@ series:
     notes: OECD earnings index for Ireland only breaks out Manufacturing, not the whole economy; treat as a proxy.
     news_topic_tags: [IRELAND, INEQUALITY & LABOUR]
   industrial_production:
-    provider: dbnomics
+    provider: oecd
     # Production volume index, industry excl. construction, monthly, SA.
     # OECD short-term economic statistics. Confirmed live 2026-08-11.
+    # Migrated 2026-08-13 off DBnomics' OECD mirror (systemically 74-135 days
+    # behind) direct to the OECD SDMX API -- see indicators/providers/oecd.py.
     provider_series_id: OECD/DSD_STES@DF_INDSERV/IRL.M.PRVM.IX.BTE.Y._Z._Z.N
-    fallback_providers: [cso]
+    fallback_providers: [cso, dbnomics]
     source_agency: Central Statistics Office Ireland
     source_url: https://www.cso.ie/en/statistics/industry/industrialproduction/
     licence: cc-by-4.0
@@ -121,11 +127,13 @@ series:
     notes: Also distorted by multinational contract-manufacturing swings; see gdp_real note.
     news_topic_tags: [IRELAND, MACROECONOMICS]
   retail_sales:
-    provider: dbnomics
+    provider: oecd
     # Retail trade volume index, monthly, calendar+seasonally adjusted.
     # OECD short-term economic statistics. Confirmed live 2026-08-11.
+    # Migrated 2026-08-13 off DBnomics' OECD mirror (systemically 74-135 days
+    # behind) direct to the OECD SDMX API -- see indicators/providers/oecd.py.
     provider_series_id: OECD/DSD_STES@DF_INDSERV/IRL.M.TOVM.IX.G47.Y._Z._Z.N
-    fallback_providers: [cso]
+    fallback_providers: [cso, dbnomics]
     source_agency: Central Statistics Office Ireland
     source_url: https://www.cso.ie/en/statistics/services/retailsalesindex/
     licence: cc-by-4.0
@@ -134,11 +142,13 @@ series:
     revisable: true
     news_topic_tags: [IRELAND, MACROECONOMICS]
   govt_bond_10y:
-    provider: dbnomics
+    provider: oecd
     # Long-term (10y) government bond yield, monthly. OECD financial
     # market statistics. Confirmed live 2026-08-11.
+    # Migrated 2026-08-13 off DBnomics' OECD mirror (systemically 74-135 days
+    # behind) direct to the OECD SDMX API -- see indicators/providers/oecd.py.
     provider_series_id: OECD/DSD_STES@DF_FINMARK/IRL.M.IRLT.PA._Z._Z._Z._Z.N
-    fallback_providers: []
+    fallback_providers: [dbnomics]
     source_agency: National Treasury Management Agency
     source_url: https://www.ntma.ie/
     licence: cc-by-4.0
@@ -209,13 +219,15 @@ series:
     revisable: true
     news_topic_tags: [IRELAND, TRADE & GLOBALISATION, GLOBAL ECONOMY]
   consumer_confidence:
-    provider: dbnomics
+    provider: oecd
     # Corrected 2026-08-11: OECD's composite consumer confidence indicator
     # (percentage balance, SA) does in fact cover Ireland -- the earlier
     # `unavailable` marker was based only on checking DBnomics/CSO PxStat
     # directly, not OECD's harmonised series. Confirmed live 2026-08-11.
+    # Migrated 2026-08-13 off DBnomics' OECD mirror (systemically 74-135 days
+    # behind) direct to the OECD SDMX API -- see indicators/providers/oecd.py.
     provider_series_id: OECD/DSD_STES@DF_CS/IRL.M.CCICP.PB._Z.Y._Z._Z.N
-    fallback_providers: []
+    fallback_providers: [dbnomics]
     source_agency: OECD (Consumer Opinion Surveys)
     source_url: https://data-explorer.oecd.org/
     licence: oecd-terms
@@ -224,15 +236,17 @@ series:
     revisable: false
     news_topic_tags: [IRELAND, MACROECONOMICS]
   equity_index:
-    provider: dbnomics
+    provider: oecd
     # OECD share price index, monthly, for the ISEQ market. Stooq (the
     # only daily, no-key source) is bot-gated for non-browser clients as
     # of this writing (confirmed live 2026-08-11, see
     # indicators/providers/stooq.py's docstring) -- kept as a fallback in
     # case that changes; the ticker itself remains unverified. Confirmed
     # live 2026-08-11.
+    # Migrated 2026-08-13 off DBnomics' OECD mirror (systemically 74-135 days
+    # behind) direct to the OECD SDMX API -- see indicators/providers/oecd.py.
     provider_series_id: OECD/DSD_STES@DF_FINMARK/IRL.M.SHARE.IX._Z._Z._Z._Z.N
-    fallback_providers: [stooq]
+    fallback_providers: [stooq, dbnomics]
     source_agency: OECD (Financial Market Statistics)
     source_url: https://data-explorer.oecd.org/
     licence: oecd-terms

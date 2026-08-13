@@ -94,12 +94,14 @@ series:
     revisable: true
     news_topic_tags: [EUROPE & ECB, INEQUALITY & LABOUR]
   wages_nominal:
-    provider: dbnomics
+    provider: oecd
     # Earnings index, private sector, quarterly, SA. OECD hourly-earnings
     # dataset does carry a euro-area (20 countries) aggregate. Confirmed
     # live 2026-08-11.
+    # Migrated 2026-08-13 off DBnomics' OECD mirror (systemically 74-135 days
+    # behind) direct to the OECD SDMX API -- see indicators/providers/oecd.py.
     provider_series_id: OECD/DSD_EAR@DF_HOU_EAR/EA20.EAR.IX.Y._Z.S1D.Q
-    fallback_providers: [eurostat]
+    fallback_providers: [eurostat, dbnomics]
     source_agency: Eurostat
     source_url: https://ec.europa.eu/eurostat/web/labour-market/data
     licence: cc-by-4.0
@@ -108,12 +110,14 @@ series:
     revisable: true
     news_topic_tags: [EUROPE & ECB, INEQUALITY & LABOUR]
   industrial_production:
-    provider: dbnomics
+    provider: oecd
     # Production volume index, industry excl. construction, monthly, SA.
     # OECD short-term economic statistics does carry a euro-area (20
     # countries) aggregate. Confirmed live 2026-08-11.
+    # Migrated 2026-08-13 off DBnomics' OECD mirror (systemically 74-135 days
+    # behind) direct to the OECD SDMX API -- see indicators/providers/oecd.py.
     provider_series_id: OECD/DSD_STES@DF_INDSERV/EA20.M.PRVM.IX.BTE.Y._Z._Z.N
-    fallback_providers: [eurostat]
+    fallback_providers: [eurostat, dbnomics]
     source_agency: Eurostat
     source_url: https://ec.europa.eu/eurostat/web/short-term-business-statistics/data
     licence: cc-by-4.0
@@ -122,12 +126,14 @@ series:
     revisable: true
     news_topic_tags: [EUROPE & ECB, MACROECONOMICS, GLOBAL ECONOMY]
   retail_sales:
-    provider: dbnomics
+    provider: oecd
     # Retail trade volume index, monthly, calendar+seasonally adjusted.
     # OECD short-term economic statistics does carry a euro-area (20
     # countries) aggregate. Confirmed live 2026-08-11.
+    # Migrated 2026-08-13 off DBnomics' OECD mirror (systemically 74-135 days
+    # behind) direct to the OECD SDMX API -- see indicators/providers/oecd.py.
     provider_series_id: OECD/DSD_STES@DF_INDSERV/EA20.M.TOVM.IX.G47.Y._Z._Z.N
-    fallback_providers: [eurostat]
+    fallback_providers: [eurostat, dbnomics]
     source_agency: Eurostat
     source_url: https://ec.europa.eu/eurostat/web/short-term-business-statistics/data
     licence: cc-by-4.0
@@ -253,15 +259,17 @@ series:
     revisable: false
     news_topic_tags: [EUROPE & ECB, MACROECONOMICS]
   equity_index:
-    provider: dbnomics
+    provider: oecd
     # OECD share price index, monthly, euro-area (20 countries) aggregate.
     # Stooq (the only daily, no-key source) is bot-gated for non-browser
     # clients as of this writing (confirmed live 2026-08-11, see
     # indicators/providers/stooq.py's docstring) -- kept as a fallback in
     # case that changes; the ticker itself remains unverified. Confirmed
     # live 2026-08-11.
+    # Migrated 2026-08-13 off DBnomics' OECD mirror (systemically 74-135 days
+    # behind) direct to the OECD SDMX API -- see indicators/providers/oecd.py.
     provider_series_id: OECD/DSD_STES@DF_FINMARK/EA20.M.SHARE.IX._Z._Z._Z._Z.N
-    fallback_providers: [stooq]
+    fallback_providers: [stooq, dbnomics]
     source_agency: OECD (Financial Market Statistics)
     source_url: https://data-explorer.oecd.org/
     licence: oecd-terms

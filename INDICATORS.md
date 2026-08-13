@@ -123,16 +123,22 @@ as a real provider mapping (above) or as an explicit unavailable marker:
 skipping it, so the gap is visible in the db, not silently missing.
 
 **Providers implemented:** `dbnomics`, `ecb`, `eurostat`, `ons`, `boe`,
-`stooq`, `bls`, and `bis` (`indicators/providers/*.py`), covering every
-provider referenced across the five Phase-1 countries' `series/*.yaml`.
-`bls` (US Bureau of Labor Statistics public API) and `bis` (Bank for
-International Settlements Statistics API) were added 2026-08-13 to
-migrate series off DBnomics mirrors that had stopped tracking upstream:
+`stooq`, `bls`, `bis`, and `oecd` (`indicators/providers/*.py`), covering
+every provider referenced across the five Phase-1 countries'
+`series/*.yaml`. `bls` (US Bureau of Labor Statistics public API), `bis`
+(Bank for International Settlements Statistics API), and `oecd` (OECD
+SDMX Data API) were added 2026-08-13 to migrate series off DBnomics
+mirrors that had stopped tracking upstream:
 `us.cpi_headline`/`cpi_core`/`unemployment_rate`/`wages_nominal` (BLS
-mirror frozen at Jan 2025) and `us`/`gb`/`ie`/`de.house_prices` (BIS
-mirror frozen at Q1 2025) -- see `indicators/providers/bls.py` and
-`bis.py`'s module docstrings, including BLS's unregistered-tier quota
-constraints and the optional `BLS_API_KEY`.
+mirror frozen at Jan 2025), `us`/`gb`/`ie`/`de.house_prices` (BIS mirror
+frozen at Q1 2025), and ~24 `retail_sales`/`industrial_production`/
+`consumer_confidence`/`equity_index`/`govt_bond_10y`/`unemployment_rate`/
+`wages_nominal` series across `us`/`gb`/`de`/`ie`/`eu` (OECD mirror
+systemically 74-135 days behind) -- see `indicators/providers/bls.py`,
+`bis.py`, and `oecd.py`'s module docstrings, including BLS's
+unregistered-tier quota constraints, the optional `BLS_API_KEY`, and
+OECD's unusually strict rate limiting (config.yaml's `oecd` concurrency/
+delay settings are deliberately the most conservative of any provider).
 Every one of them
 routes its HTTP call through `indicators/http.py`'s `get()` rather than
 calling `httpx` directly -- see "Rate-limit safety" below. A `provider`
