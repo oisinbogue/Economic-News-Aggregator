@@ -150,12 +150,13 @@ series:
     unavailable_reason: US is the USD base currency; a vs-USD exchange rate does not apply to itself.
     news_topic_tags: [GLOBAL ECONOMY, TRADE & GLOBALISATION]
   house_prices:
-    provider: dbnomics
+    provider: bis
     # BIS Selected residential property prices, real index (2010=100),
-    # quarterly. Confirmed live 2026-08-11 against
-    # https://api.db.nomics.world/v22/series/BIS/WS_SPP/Q.US.R.628.
+    # quarterly. Migrated 2026-08-13 off the DBnomics BIS/WS_SPP mirror
+    # (frozen at Q1 2025) direct to the BIS Statistics API, which returns
+    # data through Q1 2026 -- see indicators/providers/bis.py.
     provider_series_id: BIS/WS_SPP/Q.US.R.628
-    fallback_providers: []
+    fallback_providers: [dbnomics]
     source_agency: Bank for International Settlements
     source_url: https://www.bis.org/statistics/pp.htm
     licence: bis-terms

@@ -163,6 +163,7 @@ indicators:
   eurostat_base_url: https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data
   ons_base_url: https://api.ons.gov.uk/v1/data
   boe_base_url: https://www.bankofengland.co.uk/boeapps/iadb/fromshowcolumns.asp
+  bis_base_url: https://stats.bis.org/api/v2/data/dataflow
   fetch_concurrency: 5
   fetch_timeout_seconds: 20
   # Rate-limit safety (INDICATORS_BRIEF.md §8): per-provider concurrency cap
@@ -180,6 +181,7 @@ indicators:
     boe: 1
     stooq: 2
     bls: 2
+    bis: 2
   provider_delay_seconds:
     dbnomics: 0.2
     ecb: 0.5
@@ -196,3 +198,4 @@ indicators:
     # (that's handled by _is_due_for_refresh_release_aware()'s ~10-day
     # far-from-release interval keeping BLS series off most runs).
     bls: 1.0
+    bis: 0.5

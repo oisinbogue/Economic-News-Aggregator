@@ -123,13 +123,16 @@ as a real provider mapping (above) or as an explicit unavailable marker:
 skipping it, so the gap is visible in the db, not silently missing.
 
 **Providers implemented:** `dbnomics`, `ecb`, `eurostat`, `ons`, `boe`,
-`stooq`, and `bls` (`indicators/providers/*.py`), covering every provider
-referenced across the five Phase-1 countries' `series/*.yaml`. `bls` (US
-Bureau of Labor Statistics public API) was added 2026-08-13 to migrate
-`us.cpi_headline`/`cpi_core`/`unemployment_rate`/`wages_nominal` off a
-DBnomics mirror that had stopped tracking upstream (frozen at Jan 2025)
--- see `indicators/providers/bls.py`'s module docstring for the API's
-unregistered-tier quota constraints and the optional `BLS_API_KEY`.
+`stooq`, `bls`, and `bis` (`indicators/providers/*.py`), covering every
+provider referenced across the five Phase-1 countries' `series/*.yaml`.
+`bls` (US Bureau of Labor Statistics public API) and `bis` (Bank for
+International Settlements Statistics API) were added 2026-08-13 to
+migrate series off DBnomics mirrors that had stopped tracking upstream:
+`us.cpi_headline`/`cpi_core`/`unemployment_rate`/`wages_nominal` (BLS
+mirror frozen at Jan 2025) and `us`/`gb`/`ie`/`de.house_prices` (BIS
+mirror frozen at Q1 2025) -- see `indicators/providers/bls.py` and
+`bis.py`'s module docstrings, including BLS's unregistered-tier quota
+constraints and the optional `BLS_API_KEY`.
 Every one of them
 routes its HTTP call through `indicators/http.py`'s `get()` rather than
 calling `httpx` directly -- see "Rate-limit safety" below. A `provider`
