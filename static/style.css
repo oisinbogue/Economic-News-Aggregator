@@ -1011,8 +1011,16 @@ body.dark .help-dialog code { background: rgba(255,255,255,0.08); }
 .indicator-stale-note { color: var(--warn); font-size: 13px; font-family: var(--sans); margin-top: 6px; }
 .indicator-next-release { color: var(--muted); font-size: 13px; font-family: var(--sans); margin-top: 4px; }
 .indicator-notes { margin-top: 4px; }
-.indicator-series-chart { max-width: 480px; margin-bottom: 24px; }
-.indicator-series-chart .spark { height: 80px; color: var(--accent); }
+.indicator-series-chart { max-width: 640px; margin-bottom: 24px; }
+
+.axis-chart { width: 100%; height: auto; display: block; color: var(--accent); }
+.axis-chart .axis-grid { stroke: var(--rule-soft); stroke-width: 1; }
+.axis-chart .axis-line { stroke: var(--muted); stroke-width: 1; }
+.axis-chart .axis-label {
+  font-family: var(--sans);
+  font-size: 10.5px;
+  fill: var(--muted);
+}
 
 .indicator-meta-list {
   display: grid;

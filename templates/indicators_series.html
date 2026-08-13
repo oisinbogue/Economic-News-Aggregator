@@ -53,8 +53,8 @@
   ({{ series.observations|length }} observation{{ "s" if series.observations|length != 1 else "" }})
 </p>
 
-<h2 class="section-title">History <span class="section-sub">last {{ card.sparkline|length }} points, downsampled</span></h2>
-<div class="indicator-series-chart">{{ cards_macro.sparkline(card) }}</div>
+<h2 class="section-title">History <span class="section-sub">last {{ chart_points|length }} points, downsampled</span></h2>
+<div class="indicator-series-chart">{{ cards_macro.axis_chart(chart_points, series.unit, series.unit_currency, series.scale) }}</div>
 
 <h2 class="section-title">Recent observations</h2>
 {% if recent_observations %}

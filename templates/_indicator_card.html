@@ -24,6 +24,51 @@
 {% endif %}
 {% endmacro %}
 
+{% macro axis_chart(points, unit, unit_currency, scale) %}
+{% if points and points|length > 1 %}
+  {% set values = points | map(attribute='value') | list %}
+  {% set ns = namespace(min=values[0], max=values[0]) %}
+  {% for v in values %}
+    {% if v < ns.min %}{% set ns.min = v %}{% endif %}
+    {% if v > ns.max %}{% set ns.max = v %}{% endif %}
+  {% endfor %}
+  {% set span = (ns.max - ns.min) if ns.max != ns.min else 1 %}
+  {% set w = 640 %}
+  {% set h = 220 %}
+  {% set pad_l = 64 %}
+  {% set pad_r = 12 %}
+  {% set pad_t = 12 %}
+  {% set pad_b = 28 %}
+  {% set plot_w = w - pad_l - pad_r %}
+  {% set plot_h = h - pad_t - pad_b %}
+  {% set step = (plot_w / (points|length - 1)) %}
+  {% set coords = [] %}
+  {% for p in points %}
+    {% set x = (pad_l + loop.index0 * step) | round(2) %}
+    {% set y = (pad_t + plot_h - ((p.value - ns.min) / span * plot_h)) | round(2) %}
+    {% if coords.append(x ~ "," ~ y) %}{% endif %}
+  {% endfor %}
+  {% set mid_value = (ns.min + ns.max) / 2 %}
+  {% set mid_y = (pad_t + plot_h / 2) | round(2) %}
+  {% set bottom_y = (pad_t + plot_h) | round(2) %}
+  {% set rising = points[-1].value >= points[0].value %}
+<svg class="axis-chart" viewBox="0 0 {{ w }} {{ h }}" role="img" aria-label="{{ points|length }} observations from {{ points[0].period_start }} to {{ points[-1].period_start }}: {{ 'rising' if rising else 'falling' }}, from {{ points[0].value }} to {{ points[-1].value }}">
+  <title>{{ 'Rising' if rising else 'Falling' }} trend, {{ points|length }} observations, {{ points[0].period_start }} to {{ points[-1].period_start }}</title>
+  <line x1="{{ pad_l }}" y1="{{ pad_t }}" x2="{{ w - pad_r }}" y2="{{ pad_t }}" class="axis-grid"></line>
+  <line x1="{{ pad_l }}" y1="{{ mid_y }}" x2="{{ w - pad_r }}" y2="{{ mid_y }}" class="axis-grid"></line>
+  <line x1="{{ pad_l }}" y1="{{ bottom_y }}" x2="{{ w - pad_r }}" y2="{{ bottom_y }}" class="axis-grid"></line>
+  <line x1="{{ pad_l }}" y1="{{ pad_t }}" x2="{{ pad_l }}" y2="{{ bottom_y }}" class="axis-line"></line>
+  <line x1="{{ pad_l }}" y1="{{ bottom_y }}" x2="{{ w - pad_r }}" y2="{{ bottom_y }}" class="axis-line"></line>
+  <text x="{{ pad_l - 8 }}" y="{{ pad_t + 4 }}" class="axis-label" text-anchor="end">{{ ns.max | fmt_value(unit, unit_currency, scale) }}</text>
+  <text x="{{ pad_l - 8 }}" y="{{ mid_y + 4 }}" class="axis-label" text-anchor="end">{{ mid_value | fmt_value(unit, unit_currency, scale) }}</text>
+  <text x="{{ pad_l - 8 }}" y="{{ bottom_y + 4 }}" class="axis-label" text-anchor="end">{{ ns.min | fmt_value(unit, unit_currency, scale) }}</text>
+  <text x="{{ pad_l }}" y="{{ h - 6 }}" class="axis-label" text-anchor="start">{{ points[0].period_start }}</text>
+  <text x="{{ w - pad_r }}" y="{{ h - 6 }}" class="axis-label" text-anchor="end">{{ points[-1].period_start }}</text>
+  <polyline points="{{ coords|join(' ') }}" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" class="axis-chart-line"></polyline>
+</svg>
+{% endif %}
+{% endmacro %}
+
 {% macro indicator_card(card, from_page="index") %}
 {# `from_page` sets the relative path back to this card's series page:
    "index" (indicators/index.html -> indicators/<iso>/<key>/) needs the

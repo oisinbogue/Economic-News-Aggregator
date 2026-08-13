@@ -128,20 +128,35 @@ def is_stale(last_period_end: str | None, frequency: str, now: datetime | None =
 # Sparkline downsampling
 # --------------------------------------------------------------------------
 
-def downsample(values: list[float], target: int = SPARKLINE_POINTS) -> list[float]:
-    """Reduces a value series to at most `target` evenly-spaced points.
+def _downsample_indices(n: int, target: int) -> list[int]:
+    """Picks at most `target` indices spread evenly across `range(n)`.
 
     Picks by index across the whole span (rather than taking the last N)
-    so the sparkline keeps the shape of the full history. Spacing runs
-    from index 0 to index n-1 inclusive, so both the first and the last
-    point always survive -- the line has to end on the value the card
-    displays, or the sparkline and the headline number disagree.
+    so a downsampled series keeps the shape of the full history. Spacing
+    runs from index 0 to index n-1 inclusive, so both the first and the
+    last point always survive -- the line has to end on the value the
+    card displays, or the chart and the headline number disagree.
     """
-    n = len(values)
     if n <= target or target < 2:
-        return values[:target] if target < 2 else values
-    indices = sorted({round(i * (n - 1) / (target - 1)) for i in range(target)})
-    return [values[i] for i in indices]
+        return list(range(n))[:target] if target < 2 else list(range(n))
+    return sorted({round(i * (n - 1) / (target - 1)) for i in range(target)})
+
+
+def downsample(values: list[float], target: int = SPARKLINE_POINTS) -> list[float]:
+    """Reduces a value series to at most `target` evenly-spaced points."""
+    return [values[i] for i in _downsample_indices(len(values), target)]
+
+
+def downsample_points(observations: list[dict], target: int = SPARKLINE_POINTS) -> list[dict]:
+    """Like `downsample`, but keeps each surviving point's `period_start`
+    alongside its value -- needed to label a chart's x-axis, which a bare
+    list of values cannot do.
+    """
+    indices = _downsample_indices(len(observations), target)
+    return [
+        {"period_start": observations[i]["period_start"], "value": observations[i]["value"]}
+        for i in indices
+    ]
 
 
 # --------------------------------------------------------------------------

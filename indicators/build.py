@@ -47,6 +47,7 @@ from indicators.export import (
     _revisions_by_series,
     build_manifest_entry,
     build_series_history,
+    downsample_points,
 )
 from indicators import presentation
 from indicators.presentation import enrich_card
@@ -200,6 +201,7 @@ def render_indicators(output_dir: Path) -> dict:
         iso, indicator_key = series["country"], series["indicator_key"]
         observations = observations_by_series.get(series_id, [])
         history = build_series_history(series, observations, revisions_by_series.get(series_id, []))
+        chart_points = downsample_points(observations)
 
         series_dir = indicators_dir / iso / indicator_key
         series_dir.mkdir(parents=True, exist_ok=True)
@@ -208,6 +210,7 @@ def render_indicators(output_dir: Path) -> dict:
                 site=site_meta,
                 series=history,
                 card=cards_by_id[series_id],
+                chart_points=chart_points,
                 country={"iso": iso, "name": _country_label(iso, countries), "flag": presentation.country_flag(iso)},
                 # Newest first for the table -- `observations` itself stays
                 # oldest-first everywhere else (chart/CSV order).
