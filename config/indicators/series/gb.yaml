@@ -11,7 +11,10 @@
 country: gb
 series:
   gdp_real:
-    provider: dbnomics
+    provider: oecd
+    # Migrated 2026-08-14: missed by the 2026-08-13 OECD migration, which
+    # moved the DSD_STES/DSD_LFS/DSD_EAR series but left the QNA ones on
+    # the stale DBnomics mirror despite their OECD provider_series_id.
     # Real GDP, chain-linked volume, national currency, quarterly, SA.
     # OECD Quarterly National Accounts. Confirmed live 2026-08-11 against
     # https://api.db.nomics.world/v22/series/OECD/DSD_NAMAIN1@DF_QNA_EXPENDITURE_NATIO_CURR/Q.Y.GBR.S1.S1.B1GQ._Z._Z._Z.XDC.L.N.T0102.
@@ -42,6 +45,11 @@ series:
     news_topic_tags: [MACROECONOMICS]
   cpi_core:
     provider: ons
+    # `transform_default: level` overrides core.yaml's `yoy`: ONS DKO8 is
+    # already an ANNUAL RATE (history ranges -0.1 to 8.2), unlike
+    # cpi_headline's D7BT which is a genuine index (48.4 to 142.5) and so
+    # keeps the yoy default.
+    transform_default: level
     # ONS core CPI excluding energy, food, alcohol & tobacco -- not
     # reliably mirrored on DBnomics/FRED at time of writing; sourced direct
     # from the ONS API instead. CDID DKO8 (dataset MM23), confirmed live

@@ -166,6 +166,10 @@ def sync_series_from_config() -> int:
     core_indicators = get_core_indicators()
 
     rows = []
+    # series_id -> (provider, provider_series_id) as configured, so the
+    # post-upsert fetch_log cleanup can diff against what's in the db
+    # without re-deriving these from positional indices into `rows`.
+    configured_sources: dict[str, tuple[str, str]] = {}
     for iso, country in countries.items():
         series = get_series(iso)
         for indicator_key, core_def in core_indicators.items():
@@ -176,6 +180,10 @@ def sync_series_from_config() -> int:
             resolved = {**core_def, **entry}
             unavailable = bool(entry.get("unavailable"))
             target_band = resolved.get("target_band") or [None, None]
+            configured_sources[f"{iso}.{indicator_key}"] = (
+                resolved.get("provider") or "none",
+                resolved.get("provider_series_id") or "",
+            )
 
             rows.append((
                 f"{iso}.{indicator_key}",
@@ -213,6 +221,18 @@ def sync_series_from_config() -> int:
             ))
 
     with get_connection() as conn:
+        # Which series are about to change source? Captured BEFORE the
+        # upsert overwrites the old values -- see the fetch_log cleanup
+        # after it for why this matters.
+        previous_sources = {
+            row["series_id"]: (row["provider"], row["provider_series_id"])
+            for row in conn.execute("SELECT series_id, provider, provider_series_id FROM series")
+        }
+        resourced = [
+            series_id for series_id, source in configured_sources.items()
+            if series_id in previous_sources and previous_sources[series_id] != source
+        ]
+
         conn.executemany(
             """
             INSERT INTO series (
@@ -260,6 +280,21 @@ def sync_series_from_config() -> int:
             """,
             rows,
         )
+
+        # A series that just changed provider (or provider_series_id) has
+        # no successful fetch FROM ITS NEW SOURCE, however recently it
+        # succeeded against the old one. `indicators.fetch`'s incremental
+        # due-check keys purely on the most recent status='ok' fetch_log
+        # row, so without this a migrated series stays "not due" for a full
+        # refresh interval and keeps serving the old provider's data --
+        # which is exactly how the 2026-08-13 DBnomics migration shipped
+        # correct config and provider modules that never actually ran.
+        # Dropping those rows makes last_ok_at None, i.e. due immediately.
+        if resourced:
+            conn.executemany(
+                "DELETE FROM fetch_log WHERE series_id = ? AND status = 'ok'",
+                [(series_id,) for series_id in resourced],
+            )
 
     return len(rows)
 

@@ -12,9 +12,12 @@
 country: de
 series:
   gdp_real:
-    provider: dbnomics
+    provider: oecd
     # Real GDP, chain-linked volume, national currency, quarterly, SA.
     # OECD Quarterly National Accounts. Confirmed live 2026-08-11.
+    # Migrated 2026-08-14: missed by the 2026-08-13 OECD migration, which
+    # moved the DSD_STES/DSD_LFS/DSD_EAR series but left the QNA ones on
+    # the stale DBnomics mirror despite their OECD provider_series_id.
     provider_series_id: OECD/DSD_NAMAIN1@DF_QNA_EXPENDITURE_NATIO_CURR/Q.Y.DEU.S1.S1.B1GQ._Z._Z._Z.XDC.L.N.T0102
     fallback_providers: [destatis]
     source_agency: Destatis (Federal Statistical Office of Germany)
@@ -26,9 +29,14 @@ series:
     revisable: true
     news_topic_tags: [EUROPE & ECB, MACROECONOMICS, GLOBAL ECONOMY]
   cpi_headline:
-    provider: dbnomics
+    provider: eurostat
     # Eurostat HICP, all items, annual rate of change. Confirmed live
-    # 2026-08-11.
+    # 2026-08-11. Migrated 2026-08-14 off the DBnomics Eurostat mirror
+    # (frozen at Dec 2025) direct to Eurostat, matching cpi_core below.
+    # `transform_default: level` overrides core.yaml's `yoy`: the RCH_A
+    # unit is ALREADY an annual rate of change, so applying yoy on top
+    # would report the change in the inflation rate as the rate itself.
+    transform_default: level
     provider_series_id: Eurostat/prc_hicp_manr/M.RCH_A.CP00.DE
     fallback_providers: [destatis]
     source_agency: Destatis
@@ -41,6 +49,8 @@ series:
     news_topic_tags: [EUROPE & ECB, MACROECONOMICS]
   cpi_core:
     provider: eurostat
+    # See cpi_headline above on why this overrides core.yaml's `yoy`.
+    transform_default: level
     # Eurostat HICP excluding energy & unprocessed food, member-state
     # breakdown. Corrected 2026-08-10: see eu.yaml's cpi_core note --
     # prc_hicp_manr's real dimension order is freq.unit.coicop.geo, unit

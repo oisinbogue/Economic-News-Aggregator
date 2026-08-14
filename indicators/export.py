@@ -38,11 +38,12 @@ from __future__ import annotations
 
 import csv
 import json
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 from indicators.config import get_config, resolve_path
 from indicators.db import get_connection, init_db
+from indicators.transform import Point, apply_transform
 
 # Target length of a manifest sparkline. The grid draws these a few dozen
 # pixels wide, so more points than this is invisible detail paid for in
@@ -227,6 +228,39 @@ def _next_release_by_series(conn) -> dict[str, str]:
     }
 
 
+def apply_series_transform(observations: list[dict], transform_default: str, frequency: str) -> list[dict]:
+    """Turns a series' raw fetched levels into the "as displayed" series
+    named by its `transform_default` (INDICATORS_BRIEF.md §5: "what the
+    card shows") -- the same yoy/mom/qoq/annualised/level transform
+    `compute_derived()` applies to a derived series' components. Every
+    consumer of `observations` (manifest cards, the series JSON/CSV, the
+    series page's chart and table) must read this transformed series, not
+    the raw levels `observations` stores, or a `yoy` series shows its
+    underlying index/level number instead of a percent change.
+
+    A `yoy`/`mom`/`qoq` transform has no matching prior period for a
+    series' earliest points, so the result can be shorter than the input
+    -- `period_end`/`fetched_at`/etc. are carried over from the matching
+    raw row by period_start. `value_usd` is dropped for anything but
+    `level`: a currency conversion of a percent change is meaningless.
+    """
+    if not observations:
+        return []
+    points = [Point(date.fromisoformat(o["period_start"]), o["value"]) for o in observations]
+    transformed = apply_transform(points, transform_default, frequency)
+    by_period = {o["period_start"]: o for o in observations}
+    result = []
+    for p in transformed:
+        period_start = p.period_start.isoformat()
+        source = by_period[period_start]
+        result.append({
+            **source,
+            "value": p.value,
+            "value_usd": source["value_usd"] if transform_default == "level" else None,
+        })
+    return result
+
+
 # --------------------------------------------------------------------------
 # manifest.json
 # --------------------------------------------------------------------------
@@ -290,9 +324,31 @@ def build_manifest_entry(
     }
 
 
+def _displayed_observations_by_series(conn, series_rows: list[dict]) -> dict[str, list[dict]]:
+    """`_observations_by_series()` with each series' `transform_default`
+    applied, i.e. the "as displayed" values rather than the raw fetched
+    levels.
+
+    Every export consumer must go through this rather than reading
+    `_observations_by_series()` directly -- see `apply_series_transform()`.
+    Skipping it is what made a `yoy` series like de.gdp_real render its raw
+    chain-linked volume level (907,884) formatted as a percent.
+    """
+    raw = _observations_by_series(conn)
+    return {
+        series["series_id"]: apply_series_transform(
+            raw.get(series["series_id"], []),
+            series["transform_default"],
+            series["frequency"],
+        )
+        for series in series_rows
+    }
+
+
 def build_manifest(conn) -> dict:
     now = _now()
-    observations = _observations_by_series(conn)
+    series_rows = _active_series(conn)
+    observations = _displayed_observations_by_series(conn, series_rows)
     next_releases = _next_release_by_series(conn)
     entries = [
         build_manifest_entry(
@@ -301,7 +357,7 @@ def build_manifest(conn) -> dict:
             next_releases.get(series["series_id"]),
             now,
         )
-        for series in _active_series(conn)
+        for series in series_rows
     ]
     return {
         "generated": now.isoformat(),
@@ -407,10 +463,10 @@ def write_exports(conn, output_dir: Path) -> dict:
     for stale_file in target.glob("*.csv"):
         stale_file.unlink()
 
-    observations_by_series = _observations_by_series(conn)
+    series_rows = _active_series(conn)
+    observations_by_series = _displayed_observations_by_series(conn, series_rows)
     revisions_by_series = _revisions_by_series(conn)
 
-    series_rows = _active_series(conn)
     for series in series_rows:
         series_id = series["series_id"]
         observations = observations_by_series.get(series_id, [])

@@ -200,3 +200,44 @@ def test_sync_upsert_updates_changed_fields_in_place(indicators_env, tmp_path):
         ).fetchone()
     assert count == 10
     assert row["provider_series_id"] == "FRED/CHANGED"
+
+
+def _log_ok_fetch(conn, series_id: str) -> None:
+    conn.execute(
+        "INSERT INTO fetch_log (series_id, run_at, status, detail) VALUES (?, ?, 'ok', NULL)",
+        (series_id, "2026-08-11T13:23:00+00:00"),
+    )
+
+
+def test_sync_clears_ok_fetch_log_for_a_series_that_changed_source(indicators_env, tmp_path):
+    """Regression: the 2026-08-13 provider migration shipped correct config
+    and provider modules that never ran, because `indicators.fetch`'s
+    incremental due-check saw a recent status='ok' row from the OLD
+    provider and skipped the series.
+    """
+    db_mod.init_db()
+    db_mod.sync_series_from_config()
+    with db_mod.get_connection() as conn:
+        _log_ok_fetch(conn, "us.gdp_real")
+        _log_ok_fetch(conn, "us.cpi_headline")
+
+    us_path = tmp_path / "indicators" / "series" / "us.yaml"
+    data = yaml.safe_load(us_path.read_text(encoding="utf-8"))
+    data["series"]["gdp_real"]["provider"] = "oecd"
+    _write_yaml(us_path, data)
+    config_mod.get_series.cache_clear()
+
+    db_mod.sync_series_from_config()
+
+    with db_mod.get_connection() as conn:
+        moved = conn.execute(
+            "SELECT COUNT(*) AS n FROM fetch_log WHERE series_id = 'us.gdp_real' AND status = 'ok'"
+        ).fetchone()["n"]
+        untouched = conn.execute(
+            "SELECT COUNT(*) AS n FROM fetch_log WHERE series_id = 'us.cpi_headline' AND status = 'ok'"
+        ).fetchone()["n"]
+
+    # The migrated series looks never-successfully-fetched, so it is due
+    # immediately; its unchanged neighbour keeps its history.
+    assert moved == 0
+    assert untouched == 1

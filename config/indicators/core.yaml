@@ -73,7 +73,10 @@ indicators:
     direction_good: neutral
   house_prices:
     topic: housing
-    unit: index
+    # `percent`, not `index`: transform_default is yoy, so what the card
+    # actually displays is a year-on-year percent change, not the
+    # underlying index level.
+    unit: percent
     frequency: Q
     transform_default: yoy
     direction_good: neutral
@@ -103,7 +106,9 @@ indicators:
     direction_good: up
   equity_index:
     topic: markets
-    unit: index
+    # `percent`, not `index`: see house_prices above -- transform_default
+    # is yoy, so the displayed value is a percent change.
+    unit: percent
     # Corrected 2026-08-11: primary source is now the OECD monthly share
     # price index (Stooq -- the only daily, no-key equity source -- is
     # bot-gated for non-browser clients as of this writing; kept as a

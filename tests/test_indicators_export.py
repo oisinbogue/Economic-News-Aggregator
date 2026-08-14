@@ -38,7 +38,12 @@ def _insert_series(conn, series_id: str, *, frequency: str = "M", **overrides) -
         "tier": "core",
         "unit": "percent",
         "frequency": frequency,
-        "transform_default": "yoy",
+        # `level` so a fixture's handful of observations survives to the
+        # export unchanged -- these tests assert export plumbing (reference
+        # periods, sparkline caps, CSV round-trips), and a yoy transform
+        # would legitimately drop every point that has no prior-year match.
+        # The transform itself is covered separately below.
+        "transform_default": "level",
         "direction_good": "neutral",
         "provider": "dbnomics",
         "provider_series_id": "TEST/SERIES",
@@ -247,6 +252,47 @@ def test_stale_flag_for_a_series_with_an_old_last_observation(populated, tmp_pat
 def test_stale_rule_is_one_and_a_half_expected_intervals(frequency, days_since_period_end, expected_stale):
     period_end = (NOW - timedelta(days=days_since_period_end)).strftime("%Y-%m-%d")
     assert export_mod.is_stale(period_end, frequency, now=NOW) is expected_stale
+
+
+# --------------------------------------------------------------------------
+# transform_default is applied to exported values
+# --------------------------------------------------------------------------
+
+def test_manifest_applies_the_series_transform_rather_than_exporting_raw_levels(conn, tmp_path):
+    """Regression: de.gdp_real shipped its raw chain-linked volume level
+    (907,884) to the card formatted as a percent, because
+    `apply_series_transform` existed but was never called.
+    """
+    _insert_series(conn, "de.gdp_real", transform_default="yoy")
+    # 13 months: an index rising 100 -> 106 over the year, so the newest
+    # point's yoy is +6%, not the raw index level of 106.
+    _insert_monthly_observations(
+        conn,
+        "de.gdp_real",
+        [100.0, 100.5, 101.0, 101.5, 102.0, 102.5, 103.0, 103.5, 104.0, 104.5, 105.0, 105.5, 106.0],
+        "2026-07-01",
+    )
+    export_mod.write_exports(conn, tmp_path / "site")
+    manifest = json.loads(
+        (export_mod.data_dir(tmp_path / "site") / "manifest.json").read_text(encoding="utf-8")
+    )
+    entry = manifest["series"][0]
+    assert entry["latest_value"] == pytest.approx(6.0)
+
+
+def test_level_series_are_exported_unchanged(conn, tmp_path):
+    """The mirror of the above: a series whose source already publishes a
+    rate (Eurostat HICP RCH_A, ONS DKO8) is configured `level`, and must
+    reach the card untouched rather than being differenced again.
+    """
+    _insert_series(conn, "de.cpi_headline", transform_default="level")
+    _insert_monthly_observations(conn, "de.cpi_headline", [2.4, 2.6, 2.0], "2026-07-01")
+    export_mod.write_exports(conn, tmp_path / "site")
+    manifest = json.loads(
+        (export_mod.data_dir(tmp_path / "site") / "manifest.json").read_text(encoding="utf-8")
+    )
+    entry = manifest["series"][0]
+    assert entry["latest_value"] == pytest.approx(2.0)
 
 
 def test_series_with_no_observations_is_stale(conn, tmp_path):

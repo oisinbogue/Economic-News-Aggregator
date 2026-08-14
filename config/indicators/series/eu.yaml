@@ -33,6 +33,11 @@ series:
     news_topic_tags: [EUROPE & ECB, MACROECONOMICS, GLOBAL ECONOMY]
   cpi_headline:
     provider: ecb
+    # `transform_default: level` overrides core.yaml's `yoy`: the ICP key's
+    # ANR unit is already an annual rate of change (history ranges -0.6 to
+    # 10.6), so applying yoy on top would report the change in the
+    # inflation rate as the rate itself.
+    transform_default: level
     # ECB HICP flash/final annual rate, euro area. Confirmed live
     # 2026-08-10 against
     # https://data-api.ecb.europa.eu/service/data/ICP/M.U2.N.000000.4.ANR?format=jsondata.
@@ -48,6 +53,8 @@ series:
     news_topic_tags: [EUROPE & ECB, MACROECONOMICS]
   cpi_core:
     provider: eurostat
+    # See cpi_headline above on why this overrides core.yaml's `yoy`.
+    transform_default: level
     # Eurostat HICP excluding energy & unprocessed food, euro-area
     # aggregate. Corrected 2026-08-10: the previous key
     # (M.CP-HI00XEF.EA20) 400'd against a live query -- prc_hicp_manr's
