@@ -42,8 +42,8 @@ from indicators.config import get_config, get_countries, resolve_path, validate
 from indicators.db import get_connection, init_db
 from indicators.export import (
     _active_series,
+    _displayed_observations_by_series,
     _next_release_by_series,
-    _observations_by_series,
     _revisions_by_series,
     build_manifest_entry,
     build_series_history,
@@ -124,7 +124,13 @@ def render_indicators(output_dir: Path) -> dict:
     now = datetime.now(timezone.utc)
     with get_connection() as conn:
         series_rows = _active_series(conn)
-        observations_by_series = _observations_by_series(conn)
+        # Transformed ("as displayed") observations, not raw fetched levels --
+        # see indicators.export._displayed_observations_by_series. Reading
+        # the raw table directly here is what let a `yoy` series' HTML pages
+        # (cards, chart, history table) keep showing its underlying level
+        # even after indicators.export's JSON/CSV/manifest were fixed to go
+        # through the transform.
+        observations_by_series = _displayed_observations_by_series(conn, series_rows)
         revisions_by_series = _revisions_by_series(conn)
         next_releases = _next_release_by_series(conn)
 
