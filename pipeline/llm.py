@@ -1,10 +1,18 @@
-"""Shared Cerebras API plumbing: auth, throttling, and the raw call.
+"""Shared LLM API plumbing: auth, throttling, and the raw call.
 
 Split out of pipeline/summarize.py so pipeline/curate.py (Phase 3, LLM top-10
 curation) shares the same rate limiter instead of each module independently
 guessing at a safe pace.
 
-Usage: from pipeline.cerebras import call, get_api_key, load_dotenv
+Provider-agnostic by design (formerly pipeline/cerebras.py, hardcoded to
+Cerebras): base_url, model, and the API key's env var name all come from
+config.yaml's llm: block, so swapping providers -- which happened once
+already, 2026-08-26, when Cerebras force-migrated free accounts to a $0
+pay-as-you-go balance -- is a config change, not a code change, as long as
+the new provider speaks the OpenAI-compatible chat/completions shape (Gemini,
+Groq, and most others do).
+
+Usage: from pipeline.llm import call, get_api_key, load_dotenv
 """
 
 from __future__ import annotations
@@ -14,23 +22,13 @@ import time
 
 import httpx
 
-from pipeline.config import resolve_path
-
-CEREBRAS_URL = "https://api.cerebras.ai/v1/chat/completions"
-
-# Free tier is 5 req/min (also 30K tokens/min, 1M tokens/day, 8,192-token
-# context -- all satisfied by capping prompt size at each call site). Stay
-# under 5/min across the whole process rather than tracking a rolling
-# window: 60/5 = 12s, plus a margin for clock/latency slack.
-MIN_SECONDS_BETWEEN_CALLS = 13.0
-
-_last_call_at = 0.0
+from pipeline.config import get_config, resolve_path
 
 
 def load_dotenv() -> None:
-    """Minimal .env loader so CEREBRAS_API_KEY works locally without adding
-    a dependency. GitHub Actions supplies the same var via a repo secret --
-    no .env file involved there, so this is a no-op in CI."""
+    """Minimal .env loader so the configured API key env var works locally
+    without adding a dependency. GitHub Actions supplies the same var via a
+    repo secret -- no .env file involved there, so this is a no-op in CI."""
     env_path = resolve_path(".env")
     if not env_path.exists():
         return
@@ -43,20 +41,33 @@ def load_dotenv() -> None:
 
 
 def get_api_key() -> str:
-    api_key = os.environ.get("CEREBRAS_API_KEY")
+    env_var = get_config()["llm"]["api_key_env"]
+    api_key = os.environ.get(env_var)
     if not api_key:
         raise RuntimeError(
-            "CEREBRAS_API_KEY is not set. Add it to .env locally, or as the "
-            "CEREBRAS_API_KEY GitHub Actions secret in CI."
+            f"{env_var} is not set. Add it to .env locally, or as the "
+            f"{env_var} GitHub Actions secret in CI."
         )
     return api_key
 
 
+# Stay under the configured requests-per-minute across the whole process
+# rather than tracking a rolling window: 60/rpm, plus a margin for
+# clock/latency slack.
+_last_call_at = 0.0
+
+
+def _min_seconds_between_calls() -> float:
+    rpm = get_config()["llm"]["rpm"]
+    return 60.0 / rpm + 1.0
+
+
 def _throttle() -> None:
     global _last_call_at
+    min_seconds = _min_seconds_between_calls()
     elapsed = time.monotonic() - _last_call_at
-    if elapsed < MIN_SECONDS_BETWEEN_CALLS:
-        time.sleep(MIN_SECONDS_BETWEEN_CALLS - elapsed)
+    if elapsed < min_seconds:
+        time.sleep(min_seconds - elapsed)
     _last_call_at = time.monotonic()
 
 
@@ -71,19 +82,25 @@ RETRY_BACKOFF_SECONDS = 20.0
 def call(client: httpx.Client, api_key: str, model: str, prompt: str, max_tokens: int, temperature: float = 0.3) -> str:
     """Raises RuntimeError (not KeyError) if the model produced no content.
 
-    gpt-oss-120b (see config.yaml's llm.model comment) is a reasoning model:
-    its hidden "reasoning" tokens are drawn from the same max_tokens budget
-    as the visible answer, and a prompt that makes it "think" a lot can burn
-    the whole budget before it writes any content -- finish_reason='length'
-    with message.content missing entirely rather than merely short. Callers
-    need generous max_tokens headroom for this model, not just enough for
+    Some models (reasoning models -- Cerebras's old gpt-oss-120b was one) draw
+    hidden "thinking" tokens from the same max_tokens budget as the visible
+    answer, and a prompt that makes the model "think" a lot can burn the
+    whole budget before it writes any content -- finish_reason='length' with
+    message.content missing entirely rather than merely short. Callers need
+    generous max_tokens headroom for models like this, not just enough for
     the expected answer length.
+
+    A 402 here means the provider account itself needs attention (expired
+    free tier, unfunded pay-as-you-go balance, etc.) -- not something a
+    retry fixes. It surfaces via resp.raise_for_status() same as any other
+    4xx; check the configured provider's billing/account dashboard.
     """
+    base_url = get_config()["llm"]["base_url"]
     resp = None
     for attempt in range(MAX_429_RETRIES + 1):
         _throttle()
         resp = client.post(
-            CEREBRAS_URL,
+            base_url,
             headers={"Authorization": f"Bearer {api_key}"},
             json={
                 "model": model,
@@ -103,7 +120,7 @@ def call(client: httpx.Client, api_key: str, model: str, prompt: str, max_tokens
     content = choice.get("message", {}).get("content")
     if not content:
         raise RuntimeError(
-            f"Cerebras returned no content (finish_reason={choice.get('finish_reason')!r}); "
+            f"LLM returned no content (finish_reason={choice.get('finish_reason')!r}); "
             "likely ran out of max_tokens on hidden reasoning before writing an answer -- "
             "raise max_tokens at the call site."
         )

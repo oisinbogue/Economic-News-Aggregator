@@ -1,8 +1,8 @@
-"""Cerebras summarisation + translation layer.
+"""LLM summarisation + translation layer.
 
 For each article with processed_status='fetched':
   1. If the source feed's language isn't English, translate title+body to
-     English via a Cerebras chat completion (original_title/original_raw_text
+     English via an LLM chat completion (original_title/original_raw_text
      are kept so the archive/search stays queryable in the source language --
      see brief feature #7).
   2. Generate a 2-3 sentence summary *and* the article's topics and primary
@@ -18,16 +18,17 @@ For each article with processed_status='fetched':
      everything else.
 
 Tagging rides along on step 2's call rather than getting its own, because the
-Cerebras free tier throttles on *requests*, not tokens (pipeline.cerebras --
-one call per 13s process-wide). Asking for topics and a country in the same
-completion costs a handful of extra output tokens and zero extra rate-limit
-budget; a second call per article would roughly double the pipeline's wall
-clock. Rows whose tag block parses are written with tag_source='llm' and
-non-NULL topics, which is exactly the condition pipeline.tag's query skips --
-so the keyword tagger there degrades naturally into a parse-failure fallback
-without either module needing to know about the other's outcome.
+configured provider's free tier throttles on *requests*, not tokens
+(pipeline.llm -- one call per ~60/rpm seconds process-wide, see config.yaml's
+llm: block). Asking for topics and a country in the same completion costs a
+handful of extra output tokens and zero extra rate-limit budget; a second
+call per article would roughly double the pipeline's wall clock. Rows whose
+tag block parses are written with tag_source='llm' and non-NULL topics,
+which is exactly the condition pipeline.tag's query skips -- so the keyword
+tagger there degrades naturally into a parse-failure fallback without either
+module needing to know about the other's outcome.
 
-Rate limiting is handled by pipeline.cerebras (shared with pipeline.curate).
+Rate limiting is handled by pipeline.llm (shared with pipeline.curate).
 
 Usage: python -m pipeline.summarize
 """
@@ -40,7 +41,7 @@ from typing import NamedTuple
 
 import httpx
 
-from pipeline.cerebras import call as cerebras_call, get_api_key, load_dotenv
+from pipeline.llm import call as llm_call, get_api_key, load_dotenv
 from pipeline.config import get_config
 from pipeline.db import get_connection, init_db
 from pipeline.geo import detect_countries
@@ -77,14 +78,16 @@ def contains_refusal_phrase(text: str) -> bool:
 # something, which is precisely the guessing the keyword tagger already did.
 NONE_TOKEN = "NONE"
 
-# gpt-oss-120b draws hidden reasoning tokens from the same budget as the
-# visible answer and, when it runs out, returns *no content at all* rather
-# than a truncated answer (see pipeline.cerebras.call). The summary-only
-# prompt allowed 900. Classifying against 8 themes plus a candidate list is
-# markedly more "thinking" per call than summarising alone, while the extra
-# visible output is only ~20 tokens -- so the headroom, not the answer, is
-# what has to grow. 2400 stays well inside the 8,192-token context once the
-# ~700-token prompt is accounted for.
+# Sized for Cerebras's old gpt-oss-120b, a reasoning model that draws hidden
+# thinking tokens from the same budget as the visible answer and, when it
+# runs out, returns *no content at all* rather than a truncated answer (see
+# pipeline.llm.call's docstring). The summary-only prompt allowed 900;
+# classifying against 8 themes plus a candidate list is markedly more
+# "thinking" per call than summarising alone, while the extra visible output
+# is only ~20 tokens -- so the headroom, not the answer, is what had to grow.
+# Left at 2400 after the 2026-08-26 move to Gemini Flash-Lite: still ample
+# headroom under that model's much larger context window, and safe if a
+# future provider swap reintroduces a reasoning model.
 MAX_TOKENS = 2400
 
 
@@ -201,7 +204,7 @@ def rank_countries(chosen: str | None, candidates: list[str]) -> list[str]:
 def summarise_and_tag(
     client: httpx.Client, api_key: str, model: str, title: str, body: str, candidates: list[str]
 ) -> Analysis:
-    """One Cerebras call for summary + topics + primary country."""
+    """One LLM call for summary + topics + primary country."""
     if not body:
         return Analysis("No article body text was available to summarise.", None, None)
 
@@ -210,7 +213,7 @@ def summarise_and_tag(
 
     result = None
     for _ in range(2):
-        raw = cerebras_call(client, api_key, model, prompt, max_tokens=MAX_TOKENS)
+        raw = llm_call(client, api_key, model, prompt, max_tokens=MAX_TOKENS)
         result = parse_response(raw, themes, candidates)
         # Retry once on a refusal (pre-existing behaviour) and on a tag block
         # that won't parse -- one extra call is the same cost the refusal
@@ -228,7 +231,7 @@ def summarise_and_tag(
 
 
 def translate_to_english(client: httpx.Client, api_key: str, model: str, title: str, body: str) -> tuple[str, str]:
-    """Translates title+body to English via the same Cerebras call pattern
+    """Translates title+body to English via the same LLM call pattern
     used for summarisation. Returns (english_title, english_body)."""
     prompt = (
         "Translate the following news article title and body into English. "
@@ -242,7 +245,7 @@ def translate_to_english(client: httpx.Client, api_key: str, model: str, title: 
     )
     # Translated body can run to ~4000 chars (~1000 tokens) plus reasoning
     # overhead -- 3000 leaves headroom on top of that.
-    raw = cerebras_call(client, api_key, model, prompt, max_tokens=3000)
+    raw = llm_call(client, api_key, model, prompt, max_tokens=3000)
 
     if "TITLE:" in raw and "BODY:" in raw:
         _, _, after_title = raw.partition("TITLE:")
@@ -349,7 +352,7 @@ def process_all(limit: int | None = None) -> dict:
 def main() -> dict:
     load_dotenv()
     init_db()
-    print("Summarising + tagging fetched articles via Cerebras...")
+    print("Summarising + tagging fetched articles via LLM...")
     started = datetime.now(timezone.utc)
     stats = process_all()
     duration = (datetime.now(timezone.utc) - started).total_seconds()

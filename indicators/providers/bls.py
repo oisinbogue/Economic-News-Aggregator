@@ -63,7 +63,7 @@ REGISTERED_YEAR_SPAN = 20
 
 
 def _load_dotenv() -> None:
-    """Minimal .env loader, mirrors pipeline/cerebras.py's -- so
+    """Minimal .env loader, mirrors pipeline/llm.py's -- so
     BLS_API_KEY works locally without adding a dependency. GitHub Actions
     supplies the same var via a repo secret in CI, where no .env file
     exists, so this is a no-op there."""

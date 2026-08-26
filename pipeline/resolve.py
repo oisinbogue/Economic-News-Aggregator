@@ -11,7 +11,7 @@ status='open':
      -- unless `predictions.resolution_grace_days` has elapsed since the
      horizon, in which case it's marked 'expired' with no verdict rather
      than checked forever.
-  3. If candidates exist, ask Cerebras to propose a verdict (correct /
+  3. If candidates exist, ask the LLM to propose a verdict (correct /
      incorrect / unresolvable) citing which candidate articles support it.
      This is only ever a *proposal*: status becomes 'pending_review', never
      'resolved' -- brief feature #8 explicitly says not to auto-publish an
@@ -29,7 +29,7 @@ from datetime import date, datetime, timedelta, timezone
 
 import httpx
 
-from pipeline.cerebras import call as cerebras_call, get_api_key, load_dotenv
+from pipeline.llm import call as llm_call, get_api_key, load_dotenv
 from pipeline.cluster import _sig_words
 from pipeline.config import get_config
 from pipeline.db import get_connection, init_db
@@ -198,7 +198,7 @@ def resolve_one(client: httpx.Client, api_key: str, model: str, conn, prediction
     )
 
     prompt = build_prompt(prediction, candidates, context_articles)
-    raw = cerebras_call(client, api_key, model, prompt, max_tokens=900)
+    raw = llm_call(client, api_key, model, prompt, max_tokens=900)
     parsed = parse_verdict(raw, len(candidates))
     if not parsed or parsed["verdict"] not in VALID_VERDICTS:
         return "skipped"

@@ -106,7 +106,7 @@ jobs:
 
       - name: Summarise + translate
         env:
-          CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python -m pipeline.summarize
 
       - name: Embed article summaries
@@ -114,7 +114,7 @@ jobs:
 
       - name: Extract predictions
         env:
-          CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python -m pipeline.predictions
 
       - name: Tag (country + topics)
@@ -128,12 +128,12 @@ jobs:
 
       - name: Curate daily top 10
         env:
-          CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python -m pipeline.curate
 
       - name: Resolve due predictions
         env:
-          CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GH_TOKEN: ${{ github.token }}
         run: python -m pipeline.resolve
 

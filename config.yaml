@@ -37,28 +37,28 @@ run:
   # 20 is generous relative to typical per-feed article volume between runs
   # (6 runs/day) -- it only bites during genuine breaking-news bursts.
   max_articles_per_feed_per_run: 20
-  # Cerebras free tier is 5 req/min (pipeline.cerebras throttles to one call
-  # every 13s across the whole process). A run can touch up to 4 throttled
-  # stages -- summarize (up to 2 calls/article), predictions, curate (1
-  # call), resolve -- so these limits are kept modest to keep a single
-  # incremental Actions run comfortably under GitHub's job time budget
-  # rather than maximising throughput per run; the workflow runs 6x/day
-  # (.github/workflows/pipeline.yml) so a smaller per-run cap still clears
-  # the backlog within a few hours.
+  # A run can touch up to 4 throttled LLM stages -- summarize (up to 2
+  # calls/article), predictions, curate (1 call), resolve -- sharing one
+  # daily request budget from the provider in the llm: block below.
   #
-  # Raised 20 -> 80 on 2026-07-21: a one-off ~2,400-article backfill on
-  # 18 Jul outpaced 20/run (120/day) so badly that nothing cleared
-  # summarize/tag/cluster for 3+ days and the homepage looked frozen even
-  # though every scheduled run was succeeding. 80/run (~17 min at the
-  # 13s/call Cerebras throttle in pipeline/cerebras.py) still leaves the
-  # free-tier 1M-tokens/day budget with plenty of headroom -- see that
-  # module's rate-limit comment.
-  # Was bumped to 400 on 2026-07-21 for a single one-off manual backlog
-  # push; reverted back to 80 after that run burned through the Cerebras
-  # rate/daily budget and caused the scheduled workflow's curate step to
-  # fail with a 429 (nothing left in the budget by the time curate made
-  # its call).
-  max_summaries_per_run: 80
+  # Raised 80 -> 200 on 2026-08-26 alongside the Cerebras -> Gemini
+  # Flash-Lite migration (see llm: block). Cerebras's free tier was 5
+  # req/min, which forced both a 13s/call throttle and this 80/run cap to
+  # avoid burning the whole daily token budget on one stage; Flash-Lite's
+  # free tier is 30 RPM / 1,500 RPD / 1M TPM, i.e. requests (not tokens) are
+  # now the binding constraint. 200/run x 6 runs/day = 1,200 requests/day,
+  # leaving ~300/day of the 1,500 RPD budget for predictions + curate +
+  # resolve + any translate-path second calls in summarize itself.
+  #
+  # (History: raised 20 -> 80 on 2026-07-21 after a ~2,400-article backfill
+  # on 18 Jul outpaced 20/run (120/day) so badly that nothing cleared
+  # summarize/tag/cluster for 3+ days despite every scheduled run
+  # succeeding -- a one-off bump to 400 that same day burned through
+  # Cerebras's budget and made curate fail with a 429, hence the revert to
+  # 80. Same failure mode to watch for here: don't bump this without also
+  # checking the other three stages' combined request cost stays under
+  # 1,500/day.)
+  max_summaries_per_run: 200
   max_predictions_per_run: 10  # pipeline.predictions (extraction) and pipeline.resolve (resolution) both read this
   recovery_check_interval_hours: 24  # brief feature #5: how often an auto-deactivated feed gets one probe retry rather than being permanently dead
   recovery_probes_per_run: 15  # cap on how many inactive feeds get probed in a single run, alongside the active-feed fetch
@@ -112,14 +112,38 @@ curate:
   repeat_lookback_days: 3  # how many prior days' top 10s to check for already-featured stories (soft dedup signal in the prompt, not a hard exclusion)
 
 llm:
-  provider: cerebras
-  # Llama 3.3 70B (the brief's original choice) is no longer offered on this
-  # account's free tier -- /v1/models returns zai-glm-4.7, gemma-4-31b, and
-  # gpt-oss-120b. Using gpt-oss-120b (confirmed with user 2026-07-18);
-  # zai-glm-4.7 is being deprecated 2026-08-17.
-  model: gpt-oss-120b
-  # CEREBRAS_API_KEY is read from the environment (.env locally, GitHub
-  # Actions secret in CI) -- never stored here.
+  # Migrated off Cerebras on 2026-08-26: Cerebras force-migrated all
+  # personal accounts from a free tier to pay-as-you-go with a $0 starting
+  # balance (no warning, no grace period beyond a one-time $5 credit tied
+  # to adding a card) -- every call started failing with 402 Payment
+  # Required. Picked Gemini over Groq because Groq deprecated the only two
+  # models that fit this pipeline's daily token budget
+  # (llama-3.3-70b-versatile, llama-3.1-8b-instant) on 2026-08-16, and
+  # because pipeline.summarize also does translation (see that module's
+  # docstring), which a small 8B model handles worse than Flash-Lite.
+  # Gemini AI Studio's free tier has no card requirement and no stated
+  # expiry, unlike every other provider surveyed.
+  provider: gemini
+  # OpenAI-compatible endpoint -- pipeline.llm.call() speaks the OpenAI
+  # chat/completions shape, so any provider offering this compatibility
+  # layer is a base_url + model swap, nothing else.
+  base_url: https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
+  # Flash-Lite, not Flash: Pro-series models are paid-only as of April 2026,
+  # and Flash-Lite's free-tier limits (30 RPM / 1,500 RPD / 1M TPM) comfortably
+  # cover this pipeline's ~726 calls/day. Confirm against /v1beta/models if
+  # Google renames/retires this id -- the lineup has moved fast all year
+  # (same reason config.yaml's old Cerebras comment had to keep being updated).
+  model: gemini-3.1-flash-lite
+  # Name of the env var holding the key -- GEMINI_API_KEY is read from the
+  # environment (.env locally, GitHub Actions secret in CI) -- never stored
+  # here. Keeping the var name in config (not hardcoded in pipeline/llm.py)
+  # means a future provider swap doesn't need a code change to pick a
+  # different secret.
+  api_key_env: GEMINI_API_KEY
+  # Free-tier requests/minute -- pipeline.llm throttles to 60/rpm seconds
+  # between calls (with a margin) to stay under this across the whole
+  # process, the same way the old Cerebras throttle worked.
+  rpm: 30
 
 predictions:
   # brief feature #8: how long after a prediction's horizon_date we keep

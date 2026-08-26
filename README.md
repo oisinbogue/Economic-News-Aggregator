@@ -58,11 +58,11 @@ The free tier is also 5 req/min (not 30 as stated in the brief).
 
 ```
 pip install -r requirements.txt
-cp .env.example .env   # fill in CEREBRAS_API_KEY once you have one
+cp .env.example .env   # fill in GEMINI_API_KEY once you have one
 python -m pipeline.db              # initialise the schema
 python -m pipeline.reconcile_feeds # sync the feeds table from config/feeds.yaml
 python -m pipeline.fetch           # fetch new articles from active feeds (also probes inactive feeds for auto-recovery)
-python -m pipeline.summarize       # summarise + translate fetched articles via Cerebras
+python -m pipeline.summarize       # summarise + translate fetched articles via the configured LLM
 python -m pipeline.predictions     # extract falsifiable predictions from summarised articles
 python -m pipeline.tag             # country + topic tagging via config/taxonomy.yaml
 python -m pipeline.cluster         # group same-story articles (carousel-ready)
@@ -90,6 +90,9 @@ snapshot to the `db-latest` GitHub Release, restoring from it automatically
 if the cache ever comes back empty. The workflow also deploys the rendered
 `site/` directory to GitHub Pages via `actions/upload-pages-artifact` +
 `actions/deploy-pages` (a separate `deploy` job, not a `gh-pages` branch
-commit). Add `CEREBRAS_API_KEY` as a repo secret at Settings → Secrets and
+commit). Add `GEMINI_API_KEY` as a repo secret at Settings → Secrets and
 variables → Actions, and set Pages source to "GitHub Actions" (Settings →
-Pages), before enabling the schedule.
+Pages), before enabling the schedule. The LLM provider/model/key-env-var are
+all set in `config.yaml`'s `llm:` block (see `pipeline/llm.py`) — swapping
+providers again in future is a config change, not a code change, provided
+the new provider speaks the OpenAI-compatible chat/completions shape.

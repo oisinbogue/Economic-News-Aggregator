@@ -2,7 +2,7 @@
 
 For each article with processed_status IN ('summarised', 'done') that hasn't
 been checked yet (articles.prediction_checked = 0):
-  1. Ask Cerebras whether the article contains an explicit, falsifiable
+  1. Ask the LLM whether the article contains an explicit, falsifiable
      prediction -- who/what made the claim, which metric or event, which
      direction, and a concrete resolution date. This is a second LLM pass
      over already-summarised text, run as its own module (rather than
@@ -32,7 +32,7 @@ from datetime import date, datetime, timezone
 
 import httpx
 
-from pipeline.cerebras import call as cerebras_call, get_api_key, load_dotenv
+from pipeline.llm import call as llm_call, get_api_key, load_dotenv
 from pipeline.config import get_config
 from pipeline.db import get_connection, init_db
 
@@ -125,7 +125,7 @@ def process_all(limit: int | None = None) -> dict:
         for row in rows:
             try:
                 prompt = build_prompt(row["title"], row["summary"])
-                raw = cerebras_call(client, api_key, model, prompt, max_tokens=900)
+                raw = llm_call(client, api_key, model, prompt, max_tokens=900)
                 prediction = parse_prediction(raw)
             except Exception as exc:
                 prediction = None

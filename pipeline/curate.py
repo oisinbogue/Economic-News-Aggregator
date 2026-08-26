@@ -1,6 +1,6 @@
 """LLM-curated daily top 10 (brief feature #3).
 
-Replaces v1's keyword-count sort with a Cerebras judgement call on
+Replaces v1's keyword-count sort with an LLM judgement call on
 significance -- v1's TOP_N=5 (aggregator.py:100) picked the highest keyword
 `score`, which the brief explicitly says not to carry forward.
 
@@ -8,12 +8,13 @@ For "today" (UTC date):
   1. Candidate clusters = every cluster whose representative article was
      fetched within `curate.candidate_window_hours` (config.yaml), most
      recent first, capped at `curate.max_candidates` so the shortlist fits
-     comfortably inside Cerebras's 8,192-token context in one call. This is
-     deliberately its own knob, not `cluster.window_days` (which exists to
-     stop union-find linking unrelated stories months apart) -- if the 24h
-     window returns fewer than `curate.min_candidates`, it's widened to 48h
-     so the diversity caps in step 3 have enough of a pool to work with.
-  2. Ask Cerebras for a JSON-ranked list of `curate.oversample_count`
+     comfortably inside the configured model's context window in one call.
+     This is deliberately its own knob, not `cluster.window_days` (which
+     exists to stop union-find linking unrelated stories months apart) --
+     if the 24h window returns fewer than `curate.min_candidates`, it's
+     widened to 48h so the diversity caps in step 3 have enough of a pool
+     to work with.
+  2. Ask the LLM for a JSON-ranked list of `curate.oversample_count`
      candidates (more than 10) with a one-sentence rationale each, validated
      against a Pydantic schema with one retry on malformed output. The
      oversample gives the diversity re-pick loop (step 3) room to skip
@@ -41,7 +42,7 @@ import httpx
 import yaml
 from pydantic import BaseModel, ValidationError
 
-from pipeline.cerebras import call as cerebras_call, get_api_key, load_dotenv
+from pipeline.llm import call as llm_call, get_api_key, load_dotenv
 from pipeline.config import get_config, resolve_path
 from pipeline.db import get_connection, init_db
 from pipeline.timeutil import utc_today
@@ -192,7 +193,7 @@ def _strip_code_fence(raw: str) -> str:
 def _request_curation(
     client: httpx.Client, api_key: str, model: str, prompt: str, valid_ids: set[int], pick_count: int
 ) -> list[CuratorPick]:
-    """Calls Cerebras, validates the JSON response against CuratorOutput,
+    """Calls the LLM, validates the JSON response against CuratorOutput,
     and retries once (with the validation error appended to the prompt) on
     malformed output before giving up. Hallucinated cluster IDs (not in
     valid_ids) and duplicate IDs are dropped rather than treated as a
@@ -200,12 +201,13 @@ def _request_curation(
     current_prompt = prompt
     last_error: Exception | None = None
     for attempt in range(2):
-        # gpt-oss-120b reasons through each candidate before writing output --
-        # with max_candidates=40 that reasoning alone ran ~700 tokens and got
-        # cut off before any output (see pipeline.cerebras.call). 6000 leaves
-        # headroom for the larger oversampled JSON response and still fits
-        # comfortably inside the 8,192-token context alongside the prompt.
-        raw = cerebras_call(client, api_key, model, current_prompt, max_tokens=6000)
+        # Cerebras's old gpt-oss-120b reasoned through each candidate before
+        # writing output -- with max_candidates=40 that reasoning alone ran
+        # ~700 tokens and got cut off before any output (see
+        # pipeline.llm.call's docstring). 6000 leaves headroom for the
+        # larger oversampled JSON response and comfortably fits the
+        # configured model's context window alongside the prompt.
+        raw = llm_call(client, api_key, model, current_prompt, max_tokens=6000)
         try:
             data = json.loads(_strip_code_fence(raw))
             output = CuratorOutput.model_validate(data)
@@ -337,7 +339,7 @@ def process_all() -> dict:
 def main() -> dict:
     load_dotenv()
     init_db()
-    print("Curating daily top 10 via Cerebras...")
+    print("Curating daily top 10 via LLM...")
     stats = process_all()
     print(f"Done: {stats['picked']} of {stats['candidates']} candidate(s) picked for today's top 10.")
     sys.stdout.flush()
